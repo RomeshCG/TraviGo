@@ -42,47 +42,50 @@ function Home() {
             backgroundRepeat: "no-repeat",
           }}
         >
-          <h1 className="text-5xl font-extrabold drop-shadow-lg">
-            Discover Your Perfect Stay
-          </h1>
-          <p className="text-lg mt-6 max-w-2xl">
+          <h1 className="text-6xl font-extrabold text-white animate-pulse">
+  Discover Your Perfect Stay
+</h1>
+
+
+          <p className="text-xl mt-6 max-w-2xl leading-relaxed animate-fade-in">
             Where Your Dream Vacation Becomes a Reality. Customize your travel
             experience with our exclusive packages.
           </p>
           <button className="mt-8 bg-blue-600 px-6 py-3 rounded-lg shadow-md hover:bg-blue-700 transition">
-            More About
+            More About <FaArrowRight className="ml-2 inline" />
           </button>
         </div>
 
-        {/* Services Section with Clickable Cards */}
-        <div className="absolute bottom-10 left-1/2 transform -translate-x-1/2 flex gap-6 bg-white bg-opacity-80 p-4 rounded-lg shadow-lg">
-          {[
-            {
-              title: "Hotels",
-              ref: hotelsRef,
-              desc: "Find the best hotels for your stay.",
-            },
-            {
-              title: "Vehicles",
-              ref: vehiclesRef,
-              desc: "Rent vehicles for your travel needs.",
-            },
-            {
-              title: "Guides",
-              ref: guidesRef,
-              desc: "Hire experienced tour guides.",
-            },
-          ].map((service, index) => (
-            <div
-              key={index}
-              className="p-4 text-center cursor-pointer hover:bg-gray-200 transition rounded-lg"
-              onClick={() => scrollToSection(service.ref)}
-            >
-              <h3 className="text-2xl font-bold">{service.title}</h3>
-              <p className="text-gray-600">{service.desc}</p>
-            </div>
-          ))}
-        </div>
+       {/* Services Section with Clickable Cards */}
+<div className="absolute bottom-10 left-1/2 transform -translate-x-1/2 flex gap-6 bg-white/60 p-4 rounded-lg shadow-lg backdrop-blur-md">
+  {[
+    {
+      title: "Hotels",
+      ref: hotelsRef,
+      desc: "Find the best hotels for your stay.",
+    },
+    {
+      title: "Vehicles",
+      ref: vehiclesRef,
+      desc: "Rent vehicles for your travel needs.",
+    },
+    {
+      title: "Guides",
+      ref: guidesRef,
+      desc: "Hire experienced tour guides.",
+    },
+  ].map((service, index) => (
+    <div
+      key={index}
+      className="p-4 text-center cursor-pointer hover:bg-gray-200 transition rounded-lg"
+      onClick={() => scrollToSection(service.ref)}
+    >
+      <h3 className="text-2xl font-bold text-blue-600">{service.title}</h3>
+      <p className="text-gray-700 mt-2">{service.desc}</p>
+    </div>
+  ))}
+</div>
+
       </div>
 
       {/* Welcome Section */}
@@ -91,18 +94,32 @@ function Home() {
           <div className="flex flex-col md:flex-row items-center gap-8">
             {/* Left Section (Text - 35%) */}
             <div className="md:w-1/2 text-center md:text-left">
-              <h2 className="text-4xl font-bold">
-                Welcome to <span className="text-blue-600">TraviGo</span>
+              <h2 className="text-5xl font-bold bg-gradient-to-r from-blue-600 to-purple-500 bg-clip-text text-transparent">
+                Welcome to <span>TraviGo</span>
               </h2>
-              <p className="mt-6 text-gray-700 text-base">
-              Welcome to TraviGo, your ultimate travel companion for exploring the breathtaking beauty of Sri Lanka. At TraviGo, we believe that every journey should be as unique as the traveler. Whether you're planning a serene beach getaway, an adventurous trek through lush mountains, or a cultural exploration of ancient cities, we are here to make your travel dreams come true.
+              <p className="mt-6 text-lg text-gray-800 leading-relaxed">
+                Welcome to TraviGo, your ultimate travel companion for exploring
+                the breathtaking beauty of Sri Lanka. At TraviGo, we believe that
+                every journey should be as unique as the traveler. Whether you're
+                planning a serene beach getaway, an adventurous trek through lush
+                mountains, or a cultural exploration of ancient cities, we are
+                here to make your travel dreams come true.
 
-<br /><br />Our platform offers a seamless experience, connecting you with the best hotels, reliable vehicle rentals, and experienced tour guides tailored to your preferences. With TraviGo, you can effortlessly plan your entire trip, from accommodation to transportation, ensuring a hassle-free and memorable adventure.
+                <br /><br />Our platform offers a seamless experience, connecting
+                you with the best hotels, reliable vehicle rentals, and
+                experienced tour guides tailored to your preferences. With
+                TraviGo, you can effortlessly plan your entire trip, from
+                accommodation to transportation, ensuring a hassle-free and
+                memorable adventure.
 
-<br /> <br />We are passionate about showcasing the rich culture, stunning landscapes, and warm hospitality of Sri Lanka. Let us take care of the details while you focus on creating unforgettable memories. Start your journey with TraviGo today and discover the magic of Sri Lanka like never before!
+                <br /><br />We are passionate about showcasing the rich culture,
+                stunning landscapes, and warm hospitality of Sri Lanka. Let us
+                take care of the details while you focus on creating
+                unforgettable memories. Start your journey with TraviGo today and
+                discover the magic of Sri Lanka like never before!
               </p>
               <button className="mt-8 bg-blue-600 text-white px-6 py-3 rounded-lg flex items-center gap-2 hover:bg-blue-700 transition">
-                Read More <FaArrowRight />
+                Read More <FaArrowRight className="ml-2 inline" />
               </button>
             </div>
 
@@ -127,45 +144,49 @@ function Home() {
 
       {/* Our Services Section */}
       <div className="py-12 bg-gray-100">
-  <div className="container mx-auto px-4">
-    <h2 className="text-4xl font-bold text-center mb-12">Our Services</h2>
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-      {[
-        {
-          title: "Luxury Stays",
-          img: HotelsImg,
-          desc: "Discover the perfect stay with TraviGo. From luxury resorts to cozy boutique hotels, we offer a wide range of accommodations to suit every traveler's needs.",
-        },
-        {
-          title: "Tour Packages",
-          img: TourGuide,
-          desc: " Explore Sri Lanka with ease. Rent reliable vehicles, from compact cars to spacious SUVs, and enjoy seamless travel experiences tailored to your preferences..",
-        },
-        {
-          title: "Vehicle Rentals",
-          img: CarRental,
-          desc: "Experience Sri Lanka like a local. Hire expert tour guides who will take you on unforgettable journeys through the island's rich culture and stunning landscapes.",
-        },
-      ].map((service, index) => (
-        <div
-          key={index}
-          className="bg-white rounded-xl shadow-lg overflow-hidden text-center p-6"
-        >
-          <img
-            src={service.img}
-            alt={service.title}
-            className="w-full h-64 object-cover rounded-lg"
-          />
-          <h3 className="text-xl font-semibold mt-6">{service.title}</h3>
-          <p className="text-gray-600 mt-4">{service.desc}</p>
-          <button className="mt-6 bg-blue-600 text-white px-5 py-2 rounded-lg flex items-center gap-2 mx-auto hover:bg-blue-700 transition">
-            Read More <FaArrowRight />
-          </button>
+        <div className="container mx-auto px-4">
+          <h2 className="text-5xl font-bold text-center bg-gradient-to-r from-blue-600 to-purple-500 bg-clip-text text-transparent mb-12">
+            Our Services
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {[
+              {
+                title: "Luxury Stays",
+                img: HotelsImg,
+                desc: "Discover the perfect stay with TraviGo. From luxury resorts to cozy boutique hotels, we offer a wide range of accommodations to suit every traveler's needs.",
+              },
+              {
+                title: "Tour Packages",
+                img: TourGuide,
+                desc: "Explore Sri Lanka with ease. Rent reliable vehicles, from compact cars to spacious SUVs, and enjoy seamless travel experiences tailored to your preferences.",
+              },
+              {
+                title: "Vehicle Rentals",
+                img: CarRental,
+                desc: "Experience Sri Lanka like a local. Hire expert tour guides who will take you on unforgettable journeys through the island's rich culture and stunning landscapes.",
+              },
+            ].map((service, index) => (
+              <div
+                key={index}
+                className="bg-white rounded-xl shadow-lg overflow-hidden text-center p-6"
+              >
+                <img
+                  src={service.img}
+                  alt={service.title}
+                  className="w-full h-64 object-cover rounded-lg"
+                />
+                <h3 className="text-2xl font-semibold mt-6 text-blue-600">
+                  {service.title}
+                </h3>
+                <p className="text-gray-700 mt-4">{service.desc}</p>
+                <button className="mt-6 bg-blue-600 text-white px-5 py-2 rounded-lg flex items-center gap-2 mx-auto hover:bg-blue-700 transition">
+                  Read More <FaArrowRight className="ml-2 inline" />
+                </button>
+              </div>
+            ))}
+          </div>
         </div>
-      ))}
-    </div>
-  </div>
-</div>
+      </div>
 
       {/* Contact Us Section */}
       <div className="bg-gray-100 py-12">
