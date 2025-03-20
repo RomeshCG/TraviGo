@@ -35,7 +35,7 @@ function Header() {
             <img
               src={logo}
               alt="TraviGo Logo"
-              className="w-auto h-20 lg:h-14 transition-all duration-300 hover:scale-105"
+              className="w-auto h-12 lg:h-14 transition-all duration-300 hover:scale-105"
             />
           </Link>
 
