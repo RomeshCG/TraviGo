@@ -28,7 +28,7 @@ router.post('/register', async (req, res) => {
 
     const newUser = new User({
       username,
-      password, // For now, storing plain password (not secure, add bcrypt later)
+      password,
       email,
       phoneNumber,
       country,
@@ -42,4 +42,29 @@ router.post('/register', async (req, res) => {
   }
 });
 
+
+//Login Route
+router.post('/login', async (req, res) => {
+  const { username, password } = req.body;
+
+  if (!username || !password) {
+    return res.status(400).json({ message: 'Username and password are required' });
+  }
+
+  try {
+    const existingUser = await User.findOne({ username });
+    if (!existingUser) {
+      return res.status(400).json({ message: 'Invalid username or password' });
+    }
+
+    if (existingUser.password !== password) {
+      return res.status(400).json({ message: 'Invalid username or password' });
+    }
+
+    res.status(200).json({ message: 'Login successful', user: existingUser });
+  } catch (error) {
+    console.error('Login error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
 module.exports = router;

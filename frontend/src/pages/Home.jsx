@@ -111,12 +111,6 @@ function Home() {
                 TraviGo, you can effortlessly plan your entire trip, from
                 accommodation to transportation, ensuring a hassle-free and
                 memorable adventure.
-
-                <br /><br />We are passionate about showcasing the rich culture,
-                stunning landscapes, and warm hospitality of Sri Lanka. Let us
-                take care of the details while you focus on creating
-                unforgettable memories. Start your journey with TraviGo today and
-                discover the magic of Sri Lanka like never before!
               </p>
               <button className="mt-8 bg-blue-600 text-white px-6 py-3 rounded-lg flex items-center gap-2 hover:bg-blue-700 transition">
                 Read More <FaArrowRight className="ml-2 inline" />
