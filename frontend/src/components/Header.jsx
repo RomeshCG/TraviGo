@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import logo from "../assets/logo.png"; // Ensure this path is correct
+import SignIn from "../pages/SignIn";
 
 function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -84,7 +85,7 @@ function Header() {
           {/* Login and Register Buttons */}
           <div className="hidden lg:flex items-center space-x-4">
             <Link to="/login" className="bg-blue-600 text-white px-6 py-3 rounded-full font-medium hover:bg-[#1a2f6e] transition-all duration-300 shadow-md hover:shadow-lg">Login</Link>
-            <Link to="/register" className="bg-green-600 text-white px-6 py-3 rounded-full font-medium hover:bg-[#146b3a] transition-all duration-300 shadow-md hover:shadow-lg">Register</Link>
+            <Link to="/signin" className="bg-green-600 text-white px-6 py-3 rounded-full font-medium hover:bg-[#146b3a] transition-all duration-300 shadow-md hover:shadow-lg">Register</Link>
           </div>
 
           {/* Mobile Menu */}
