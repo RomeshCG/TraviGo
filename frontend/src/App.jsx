@@ -1,35 +1,37 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import Sidebar from "./components/Sidebar";
+import AdminDashboard from "./pages/AdminDashboard";
+import ContactUs from "./pages/ContactUs";
 
 function App() {
-  const [count, setCount] = useState(0)
-
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    <Router>
+      <Routes>
+        {/* Admin routes with Sidebar */}
+        <Route
+          path="/admin/*"
+          element={
+            <div className="flex h-screen">
+              <Sidebar />
+              <Routes>
+                <Route path="hotel-listings" element={<AdminDashboard />} />
+                <Route path="vehicle-listings" element={<AdminDashboard />} />
+                <Route path="users" element={<AdminDashboard />} />
+                <Route path="reports" element={<AdminDashboard />} />
+                <Route path="ui-manage" element={<AdminDashboard />} />
+                {/* Default admin route */}
+                <Route path="/" element={<AdminDashboard />} />
+              </Routes>
+            </div>
+          }
+        />
+        {/* Contact Us route without Sidebar */}
+        <Route path="/contact-us" element={<ContactUs />} />
+        {/* Default route */}
+        <Route path="/" element={<ContactUs />} />
+      </Routes>
+    </Router>
+  );
 }
 
-export default App
+export default App;
