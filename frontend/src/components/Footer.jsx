@@ -5,6 +5,7 @@ import PayHere from "../assets/payhere.png";
 import { FaFacebookF, FaInstagram, FaTwitter, FaLinkedinIn } from "react-icons/fa";
 
 
+
 const Footer = () => {
   // State for newsletter subscription
   const [email, setEmail] = useState("");
@@ -117,7 +118,7 @@ const Footer = () => {
             </form>
             {/* Service Provider Login */}
             <a
-              href="/service-provider-login"
+              href="/service-provider/login"
               className="block bg-gray-800 text-white p-2 rounded-lg text-center hover:bg-gray-700 transition duration-300"
             >
               Service Provider Login

@@ -14,7 +14,7 @@ router.get('/test', (req, res) => {
   res.json({ message: 'Backend is working!' });
 });
 
-// Register route
+// Register route for users (Tourists)
 router.post('/register', async (req, res) => {
   const { username, password, email, phoneNumber, country } = req.body;
 
@@ -47,7 +47,7 @@ router.post('/register', async (req, res) => {
 });
 
 
-//Login Route
+//Login Route for users (Tourists)
 router.post('/login', async (req, res) => {
   const { username, password } = req.body;
 
@@ -74,6 +74,7 @@ router.post('/login', async (req, res) => {
 
 
 
+// All service provider register route
 router.post('/service-provider/register', async (req, res) => {
   const { name, email, password, providerType } = req.body;
 
@@ -110,6 +111,8 @@ router.post('/service-provider/register', async (req, res) => {
   }
 });
 
+
+// Advanced register route for service providers
 router.post('/service-provider/register-advanced', async (req, res) => {
   const { providerId, providerType, advancedDetails } = req.body;
 
@@ -178,6 +181,40 @@ router.post('/service-provider/register-advanced', async (req, res) => {
     res.status(201).json({ message: 'Advanced details registered successfully' });
   } catch (error) {
     console.error('Advanced registration error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+
+//All service provider login route
+router.post('/service-provider/login', async (req,res) =>{
+  const {email, password} =req.body;
+
+  if(!email|| !password){
+    return res.status(400).json({message:'Email and Password are Required'});
+  }
+
+  try{
+    const trimmedEmail = email.trim();
+    const trimmedPassword = password.trim();
+
+    const existingProvider = await ServiceProvider.findOne({
+      email: { $regex: new RegExp(`^${trimmedEmail}$`, 'i')}
+    });
+
+    if (!existingProvider) {
+      console.log(`Service provider not found: ${trimmedEmail}`);
+      return res.status(400).json({ message: 'Invalid email or password' });
+    }
+
+    if (existingProvider.password !== trimmedPassword) {
+      console.log(`Password mismatch for service provider ${trimmedEmail}`);
+      return res.status(400).json({ message: 'Invalid email or password' });
+    }
+
+    res.status(200).json({ message: 'Login successful', provider: existingProvider });
+  } catch (error) {
+    console.error('Service provider login error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });
