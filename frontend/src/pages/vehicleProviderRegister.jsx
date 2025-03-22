@@ -170,7 +170,7 @@ function VehicleProviderRegister() {
             type="submit"
             className="w-full bg-orange-500 text-white py-2 rounded hover:bg-orange-600"
           >
-            Register
+            Register Now
           </button>
         </form>
       </div>
