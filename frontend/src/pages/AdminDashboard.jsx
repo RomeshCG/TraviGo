@@ -1,52 +1,85 @@
+import { Link } from "react-router-dom";
+
 const AdminDashboard = () => {
-    // Sample data for the list (you can replace this with data from an API)
-    const listings = [
-      { id: 1, name: "The Grand Horizon" },
-      { id: 2, name: "Queens Hotel" },
-      { id: 3, name: "Grand Kandyan" },
-    ];
-  
-    const handleSeeMore = (id) => {
-      console.log(`See more for listing ${id}`);
-      // Add logic to navigate to a details page or show more details
-    };
-  
-    const handleDelete = (id) => {
-      console.log(`Delete listing ${id}`);
-      // Add logic to delete the listing (e.g., API call)
-    };
-  
-    return (
-      <div className="flex-1 p-6 bg-gray-100">
-        <div className="max-w-4xl mx-auto">
-          <h2 className="text-2xl font-bold mb-6">Hotel Listings</h2>
-          <div className="space-y-4">
-            {listings.map((listing) => (
-              <div
-                key={listing.id}
-                className="flex items-center justify-between p-4 bg-pink-50 rounded-lg shadow-md"
-              >
-                <span className="text-lg font-medium">{listing.name}</span>
-                <div className="space-x-2">
-                  <button
-                    onClick={() => handleSeeMore(listing.id)}
-                    className="text-gray-600 hover:text-gray-800"
-                  >
-                    See More &gt;
-                  </button>
-                  <button
-                    onClick={() => handleDelete(listing.id)}
-                    className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600"
-                  >
-                    Delete
-                  </button>
-                </div>
-              </div>
-            ))}
+  // Sample stats (you can replace these with real data from an API)
+  const stats = {
+    totalHotels: 25,
+    totalVehicles: 15,
+    totalUsers: 120,
+    totalReports: 8,
+    uiElements: 5,
+  };
+
+  return (
+    <div className="flex-1 p-6 bg-gray-100">
+      <div className="max-w-4xl mx-auto">
+        <h2 className="text-2xl font-bold mb-6">Admin Dashboard</h2>
+        <div className="mb-8">
+          <p className="text-lg text-gray-700">
+            Welcome to the TraviGo Admin Dashboard! Manage your tourism platform efficiently from here.
+          </p>
+        </div>
+
+        {/* Quick Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <div className="p-4 bg-white rounded-lg shadow-md">
+            <h3 className="text-lg font-medium text-gray-800">Hotels</h3>
+            <p className="text-2xl font-bold text-indigo-900">{stats.totalHotels}</p>
+            <Link
+              to="/admin/hotel-listings"
+              className="text-indigo-600 hover:text-indigo-800"
+            >
+              View Hotels
+            </Link>
+          </div>
+          <div className="p-4 bg-white rounded-lg shadow-md">
+            <h3 className="text-lg font-medium text-gray-800">Vehicles</h3>
+            <p className="text-2xl font-bold text-indigo-900">{stats.totalVehicles}</p>
+            <Link
+              to="/admin/vehicle-listings"
+              className="text-indigo-600 hover:text-indigo-800"
+            >
+              View Vehicles
+            </Link>
+          </div>
+          <div className="p-4 bg-white rounded-lg shadow-md">
+            <h3 className="text-lg font-medium text-gray-800">Users</h3>
+            <p className="text-2xl font-bold text-indigo-900">{stats.totalUsers}</p>
+            <Link
+              to="/admin/users"
+              className="text-indigo-600 hover:text-indigo-800"
+            >
+              View Users
+            </Link>
+          </div>
+        </div>
+
+        {/* Quick Links */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="p-4 bg-white rounded-lg shadow-md">
+            <h3 className="text-lg font-medium text-gray-800">Reports</h3>
+            <p className="text-gray-600">Total Reports: {stats.totalReports}</p>
+            <Link
+              to="/admin/reports"
+              className="text-indigo-600 hover:text-indigo-800"
+            >
+              View Reports
+            </Link>
+          </div>
+          <div className="p-4 bg-white rounded-lg shadow-md">
+            <h3 className="text-lg font-medium text-gray-800">UI Management</h3>
+            <p className="text-gray-600">UI Elements: {stats.uiElements}</p>
+            <Link
+              to="/admin/ui-manage"
+              className="text-indigo-600 hover:text-indigo-800"
+            >
+              Manage UI
+            </Link>
           </div>
         </div>
       </div>
-    );
-  };
-  
-  export default AdminDashboard;
+    </div>
+  );
+};
+
+export default AdminDashboard;

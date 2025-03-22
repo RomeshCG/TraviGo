@@ -36,7 +36,7 @@ const ContactUs = () => {
         <div className="flex-1">
           <h1 className="text-4xl font-bold text-blue-900 mb-4">LET'S TALK WITH US</h1>
           <p className="text-gray-600 mb-6">
-            Questions, comments, or suggestions? Simply fill in the form and we’ll be in touch shortly.
+          Have questions about your trip, need travel recommendations, or want to share feedback? We’re here to make your travel experience seamless and unforgettable. Fill out the form below, and our team will get back to you shortly.
           </p>
           <div className="space-y-4">
             <p className="flex items-center text-gray-700">
@@ -110,7 +110,7 @@ const ContactUs = () => {
                   value={formData.firstName}
                   onChange={handleChange}
                   className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="John"
+                  placeholder="First Name*"
                   required
                 />
               </div>
