@@ -1,35 +1,43 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import Sidebar from "./components/Sidebar";
+import Header from "./components/Header";
+import Dashboard from "./pages/Dashboard";
+import AboutUs from "./pages/AboutUs";
+import HotelBooking from "./pages/HotelBooking";
+import VehicleRental from "./pages/VehicleRental";
+import TourGuides from "./pages/TourGuides";
+import TravelPackages from "./pages/TravelPackages";
+import ExploreDestinations from "./pages/ExploreDestinations";
+import MyBooking from "./pages/MyBooking";
+import EditProfile from "./pages/EditProfile";
+import AccountSettings from "./pages/AccountSettings";
 
 function App() {
-  const [count, setCount] = useState(0)
-
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+    <Router>
+      <div className="flex h-screen bg-gray-100">
+        {/* Sidebar */}
+        <Sidebar />
+        {/* Main Content */}
+        <div className="flex-1 flex flex-col">
+          <Header />
+          <Routes>
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/about" element={<AboutUs />} />
+            <Route path="/hotels" element={<HotelBooking />} />
+            <Route path="/vehicles" element={<VehicleRental />} />
+            <Route path="/guides" element={<TourGuides />} />
+            <Route path="/packages" element={<TravelPackages />} />
+            <Route path="/explore" element={<ExploreDestinations />} />
+            <Route path="/my-booking" element={<MyBooking />} />
+            <Route path="/edit-profile" element={<EditProfile />} />
+            <Route path="/account-settings" element={<AccountSettings />} />
+            <Route path="/sign-out" element={<div className="p-6">Sign Out Page (Placeholder)</div>} />
+          </Routes>
+        </div>
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    </Router>
+  );
 }
 
-export default App
+export default App;
