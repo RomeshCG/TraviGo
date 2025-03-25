@@ -12,6 +12,7 @@ const mongoose = require('mongoose');
 const multer = require('multer');
 const path = require('path');
 const TourGuideBooking = require('../models/TourBookings');
+const ContactMessage = require('../models/ContactMessage');
 
 // Test route 
 router.get('/test', (req, res) => {
@@ -144,6 +145,32 @@ router.put('/user/update-profile-picture', upload.single('profilePicture'), asyn
   }
 });
 
+
+// Route to handle contact form submission
+router.post('/contact', async (req, res) => {
+  try {
+    const { firstName, lastName, email, phone, message } = req.body;
+
+    if (!firstName || !lastName || !email || !phone || !message) {
+      return res.status(400).json({ message: 'All fields are required' });
+    }
+
+    const newMessage = new ContactMessage({
+      firstName,
+      lastName,
+      email,
+      phone,
+      message,
+    });
+
+    await newMessage.save();
+
+    res.status(201).json({ message: 'Message sent successfully! We will get back to you soon.' });
+  } catch (error) {
+    console.error('Contact form submission error:', error);
+    res.status(500).json({ message: 'Server error. Please try again later.' });
+  }
+});
 
 
 
