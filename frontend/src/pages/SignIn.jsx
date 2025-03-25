@@ -1,8 +1,7 @@
 import { useState } from 'react';
-import { Link, Navigate } from 'react-router-dom';
-import Header from '../components/Header';
-import Footer from '../components/Footer';
+import { Link, useNavigate } from 'react-router-dom'; // Import useNavigate
 import SimpleHeader from '../components/SimpleHeader';
+import Footer from '../components/Footer';
 
 const SignIn = () => {
   const [formData, setFormData] = useState({
@@ -15,6 +14,7 @@ const SignIn = () => {
   });
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const navigate = useNavigate(); // Use useNavigate hook for redirection
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -46,9 +46,9 @@ const SignIn = () => {
 
       const data = await response.json();
       if (response.ok) {
-        setSuccess(data.message);
+        setSuccess(data.message || 'Registration successful! Redirecting to login...');
         setError('');
-        // Optionally redirect to login page or clear form
+        // Clear the form
         setFormData({
           username: '',
           password: '',
@@ -57,13 +57,14 @@ const SignIn = () => {
           phoneNumber: '',
           country: '',
         });
-        Navigate('/login'); // to redirect login page
+        // Redirect to login page after a short delay
+        setTimeout(() => navigate('/login'), 2000);
       } else {
-        setError(data.message);
+        setError(data.message || 'Failed to register');
         setSuccess('');
       }
-    } catch {
-      // No variable name, so no unused variable warning
+    } catch (err) {
+      console.error('Registration error:', err); // Add error logging
       setError('Failed to connect to the server');
       setSuccess('');
     }

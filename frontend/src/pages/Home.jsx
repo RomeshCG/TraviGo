@@ -1,6 +1,6 @@
 import React, { useRef } from "react";
 import Header from "../components/Header";
-import ContactUs from "../components/ContactUsSmall"; // Ensure this component exists
+import ContactUs from "../components/ContactUsSmall"; 
 import Footer from "../components/Footer";
 import { FaArrowRight } from "react-icons/fa";
 import backgroundImage from "../assets/TraviGoHero.jpg";

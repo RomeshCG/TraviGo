@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import SimpleHeader from '../components/SimpleHeader';
 import Footer from '../components/Footer';
-import BackgroundImage from '../assets/login_page_img.jpg';
+import backgroundImage from '../assets/login_page_img.jpg'; // Ensure this path matches your project
 
 const ServiceProviderLogin = () => {
   const [formData, setFormData] = useState({
@@ -49,16 +49,25 @@ const ServiceProviderLogin = () => {
   };
 
   return (
-    <div
-      className="min-h-screen flex flex-col bg-cover bg-center"
-      style={{
-        backgroundImage: `url('linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url(${BackgroundImage})')`, // Replace with your image URL
-      }}
-    >
+    <div className="min-h-screen flex flex-col">
       <SimpleHeader />
-      <main className="flex-grow flex mt-20 lg:mt-24 mb-12 lg:mb-16">
-        <div className="w-full flex justify-center items-center p-6">
-          <div className="bg-white bg-opacity-90 shadow-lg rounded-lg p-8 w-full max-w-md mt-6 lg:mt-8">
+      <div
+        className="min-h-screen flex items-center justify-center bg-cover bg-center"
+        style={{
+          backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url(${backgroundImage})`,
+        }}
+      >
+        <div className="flex flex-col lg:flex-row items-center justify-between w-full max-w-5xl p-6">
+          {/* Left Section: Text */}
+          <div className="text-white mb-8 lg:mb-0 lg:w-1/2">
+            <h1 className="text-4xl lg:text-5xl font-bold mb-4">PARTNER WITH TRAVIGO</h1>
+            <p className="text-lg">
+              Earn more with TraviGo Partner Programe.
+            </p>
+          </div>
+
+          {/* Right Section: Form */}
+          <div className="bg-white bg-opacity-90 rounded-lg p-8 w-full max-w-md">
             <h2 className="text-2xl font-semibold text-center mb-6">Service Provider Login</h2>
             {error && <p className="text-red-500 text-center mb-4">{error}</p>}
             {success && <p className="text-green-500 text-center mb-4">{success}</p>}
@@ -92,9 +101,26 @@ const ServiceProviderLogin = () => {
                 Log In
               </button>
             </form>
+            <div className="flex justify-center space-x-4 mt-4">
+              <button className="bg-red-500 text-white p-2 rounded-full hover:bg-red-600 transition">
+                G
+              </button>
+              <button className="bg-blue-700 text-white p-2 rounded-full hover:bg-blue-800 transition">
+                F
+              </button>
+              <button className="bg-black text-white p-2 rounded-full hover:bg-gray-800 transition">
+                X
+              </button>
+            </div>
+            <p className="text-center mt-4 text-sm">
+              Don't have an account?{' '}
+              <Link to="/service-provider/register" className="text-blue-600 hover:underline">
+                Register Here
+              </Link>
+            </p>
           </div>
         </div>
-      </main>
+      </div>
       <Footer />
     </div>
   );

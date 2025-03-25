@@ -48,8 +48,13 @@ const TourGuideRegister = () => {
 
       const data = await response.json();
       if (response.ok) {
-        setSuccess('Advanced registration completed successfully!');
-        setTimeout(() => navigate('/tour-guide/dashboard'), 2000);
+        setSuccess('Advanced registration completed successfully! Redirecting to login...');
+        // Clear localStorage to avoid stale data
+        localStorage.removeItem('provider');
+        localStorage.removeItem('providerId');
+        localStorage.removeItem('providerType');
+        // Redirect to login page
+        setTimeout(() => navigate('/service-provider/login'), 2000);
       } else {
         setError(data.message || 'Failed to register advanced details');
       }

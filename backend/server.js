@@ -9,6 +9,7 @@ const port = process.env.PORT || 5000;
 // middleware
 app.use(cors());
 app.use(express.json());
+app.use('/uploads', express.static('uploads'));
 
 //mongoDB Connection
 const  connectDB = require('./config/db');

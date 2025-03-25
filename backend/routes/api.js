@@ -1,19 +1,36 @@
 const express = require('express');
 const router = express.Router();
-const User = require('../models/user')
+const bcrypt = require('bcryptjs'); 
+const User = require('../models/user');
 const ServiceProvider = require('../models/ServiceProvider');
 const HotelOwner = require('../models/HotelOwner');
 const TourGuide = require('../models/TourGuide');
 const VehicleProvider = require('../models/VehicleProvider');
+const TourPackage = require('../models/TourPackage');
+const Review = require('../models/Review'); 
+const mongoose = require('mongoose'); 
 const multer = require('multer');
 const path = require('path');
+const TourGuideBooking = require('../models/TourBookings');
 
-
-
-// Test route (already exists)
+// Test route 
 router.get('/test', (req, res) => {
   res.json({ message: 'Backend is working!' });
 });
+
+
+//config multer storage
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, 'uploads/'); // Ensure this directory exists
+  },
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + path.extname(file.originalname)); // Unique filename
+  },
+});
+const upload = multer({ storage });
+
+
 
 // Register route for users (Tourists)
 router.post('/register', async (req, res) => {
@@ -31,9 +48,12 @@ router.post('/register', async (req, res) => {
       return res.status(400).json({ message: 'Username or email already exists' });
     }
 
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
     const newUser = new User({
       username,
-      password,
+      password: hashedPassword, 
       email,
       phoneNumber,
       country,
@@ -47,7 +67,7 @@ router.post('/register', async (req, res) => {
   }
 });
 
-//Login Route for users (Tourists)
+// Login Route for users (Tourists)
 router.post('/login', async (req, res) => {
   const { username, password } = req.body;
 
@@ -61,11 +81,20 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ message: 'Invalid username or password' });
     }
 
-    if (existingUser.password !== password) {
+    const isMatch = await bcrypt.compare(password, existingUser.password);
+    if (!isMatch) {
       return res.status(400).json({ message: 'Invalid username or password' });
     }
 
-    res.status(200).json({ message: 'Login successful', user: existingUser });
+    const userResponse = {
+      _id: existingUser._id,
+      username: existingUser.username,
+      email: existingUser.email,
+      phoneNumber: existingUser.phoneNumber,
+      country: existingUser.country,
+    };
+
+    res.status(200).json({ message: 'Login successful', user: userResponse });
   } catch (error) {
     console.error('Login error:', error);
     res.status(500).json({ message: 'Server error' });
@@ -73,7 +102,9 @@ router.post('/login', async (req, res) => {
 });
 
 
-//service provider login
+
+
+// Service provider registration
 router.post('/service-provider/register', async (req, res) => {
   const { name, email, password, providerType } = req.body;
   if (!name || !email || !password || !providerType) {
@@ -85,7 +116,17 @@ router.post('/service-provider/register', async (req, res) => {
   try {
     const existingProvider = await ServiceProvider.findOne({ email });
     if (existingProvider) return res.status(400).json({ message: 'Email already exists' });
-    const newProvider = new ServiceProvider({ name, email, password, providerType });
+
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    const newProvider = new ServiceProvider({
+      name,
+      email,
+      password: hashedPassword,
+      providerType,
+    });
+
     await newProvider.save();
     res.status(201).json({
       message: 'Basic details registered successfully',
@@ -98,7 +139,8 @@ router.post('/service-provider/register', async (req, res) => {
   }
 });
 
-// tour guide advanced registration
+
+// Tour guide advanced registration
 router.post('/service-provider/register-advanced', async (req, res) => {
   const { providerId, providerType, advancedDetails } = req.body;
   if (!providerId || !providerType || !advancedDetails) {
@@ -126,7 +168,7 @@ router.post('/service-provider/register-advanced', async (req, res) => {
         location,
       });
       await tourGuide.save();
-    } // Add other provider types as needed
+    } // Add other provider types boys
 
     provider.isAdvancedRegistrationComplete = true;
     await provider.save();
@@ -138,18 +180,81 @@ router.post('/service-provider/register-advanced', async (req, res) => {
 });
 
 
-//service provider login
+//tour guide profile picture updates route
+// Update profile picture with file upload
+router.put('/tour-guide/update-profile-picture', upload.single('profilePicture'), async (req, res) => {
+  try {
+    const { tourGuideId } = req.body;
+    if (!tourGuideId || !req.file) {
+      return res.status(400).json({ message: 'Tour guide ID and profile picture file are required' });
+    }
+    const tourGuide = await TourGuide.findById(tourGuideId);
+    if (!tourGuide) {
+      return res.status(404).json({ message: 'Tour guide not found' });
+    }
+    tourGuide.profilePicture = `/uploads/${req.file.filename}`;
+    await tourGuide.save();
+    res.status(200).json({ message: 'Profile picture updated successfully', tourGuide });
+  } catch (error) {
+    console.error('Update profile picture error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+
+
+// Service provider login
 router.post('/service-provider/login', async (req, res) => {
   const { email, password } = req.body;
   if (!email || !password) return res.status(400).json({ message: 'Email and password are required' });
   try {
     const existingProvider = await ServiceProvider.findOne({ email: { $regex: new RegExp(`^${email.trim()}$`, 'i') } });
-    if (!existingProvider || existingProvider.password !== password) {
+    if (!existingProvider) {
       return res.status(400).json({ message: 'Invalid email or password' });
     }
-    res.status(200).json({ message: 'Login successful', provider: existingProvider });
+ 
+    const isMatch = await bcrypt.compare(password, existingProvider.password);
+    if (!isMatch) {
+      return res.status(400).json({ message: 'Invalid email or password' });
+    }
+
+    const providerResponse = {
+      _id: existingProvider._id,
+      name: existingProvider.name,
+      email: existingProvider.email,
+      providerType: existingProvider.providerType,
+      isAdvancedRegistrationComplete: existingProvider.isAdvancedRegistrationComplete,
+    };
+
+    res.status(200).json({ message: 'Login successful', provider: providerResponse });
   } catch (error) {
     console.error('Service provider login error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+
+// update tour guide profile
+router.put('/tour-guide/update-profile', async (req, res) => {
+  try {
+    const { tourGuideId, name, bio, location, languages, yearsOfExperience, certification } = req.body;
+    if (!tourGuideId) {
+      return res.status(400).json({ message: 'Tour guide ID is required' });
+    }
+    const tourGuide = await TourGuide.findById(tourGuideId);
+    if (!tourGuide) {
+      return res.status(404).json({ message: 'Tour guide not found' });
+    }
+    tourGuide.name = name || tourGuide.name;
+    tourGuide.bio = bio || tourGuide.bio;
+    tourGuide.location = location || tourGuide.location;
+    tourGuide.languages = languages || tourGuide.languages;
+    tourGuide.yearsOfExperience = yearsOfExperience !== undefined ? yearsOfExperience : tourGuide.yearsOfExperience;
+    tourGuide.certification = certification || tourGuide.certification;
+    await tourGuide.save();
+    res.status(200).json({ message: 'Profile updated successfully', tourGuide });
+  } catch (error) {
+    console.error('Update profile error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });
@@ -188,32 +293,77 @@ router.get('/tour-guide/provider/:providerId', async (req, res) => {
   }
 });
 
-// tour guide tour packages
+// Tour guide tour packages
 router.get('/tour-guide/:tourGuideId/tour-packages', async (req, res) => {
   try {
-    const tourPackages = await TourPackage.find({ tourGuideId: req.params.tourGuideId });
+    const { tourGuideId } = req.params;
+
+    // Validate tourGuideId
+    if (!mongoose.Types.ObjectId.isValid(tourGuideId)) {
+      return res.status(400).json({ message: 'Invalid tour guide ID' });
+    }
+
+    // Check if tour guide exists
+    const tourGuide = await TourGuide.findById(tourGuideId);
+    if (!tourGuide) {
+      return res.status(404).json({ message: 'Tour guide not found' });
+    }
+
+    const tourPackages = await TourPackage.find({ tourGuideId });
     res.status(200).json(tourPackages);
   } catch (error) {
-    console.error('Fetch tour packages error:', error.stack); 
+    console.error('Fetch tour packages error:', error.stack);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
 
-//tour guide reviews
+//tour-guide-bookings
+router.get('/tour-guide/:tourGuideId/tour-guide-bookings', async (req, res) => {
+  try {
+    const { tourGuideId } = req.params;
+    const tourGuideBookings = await TourGuideBooking.find({ tourGuideId })
+      .populate('touristId', 'username')
+      .populate('tourPackageId', 'title');
+    if (!tourGuideBookings || tourGuideBookings.length === 0) {
+      return res.status(404).json({ message: 'No tour guide bookings found' });
+    }
+    res.status(200).json(tourGuideBookings);
+  } catch (error) {
+    console.error('Fetch tour guide bookings error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+
+
+// Tour guide reviews
 router.get('/tour-guide/:tourGuideId/reviews', async (req, res) => {
   try {
-    const reviews = await Review.find({ tourGuideId: req.params.tourGuideId }).populate('touristId', 'username');
+    const { tourGuideId } = req.params;
+
+    // Validate tourGuideId
+    if (!mongoose.Types.ObjectId.isValid(tourGuideId)) {
+      return res.status(400).json({ message: 'Invalid tour guide ID' });
+    }
+
+    // Check if tour guide exists
+    const tourGuide = await TourGuide.findById(tourGuideId);
+    if (!tourGuide) {
+      return res.status(404).json({ message: 'Tour guide not found' });
+    }
+
+    const reviews = await Review.find({ tourGuideId }).populate('touristId', 'username');
     const averageRating = reviews.length
       ? reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length
       : 0;
     res.status(200).json({ reviews, averageRating });
   } catch (error) {
-    console.error('Fetch reviews error:', error.stack); 
+    console.error('Fetch reviews error:', error.stack);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
 
-// new tour packacges
+// New tour packages
 router.post('/tour-guide/tour-package', async (req, res) => {
   const { tourGuideId, title, description, duration, price, location, images, itinerary, maxParticipants } = req.body;
   try {
@@ -241,7 +391,7 @@ router.post('/tour-guide/tour-package', async (req, res) => {
   }
 });
 
-// make tour package
+// Make tour package
 router.put('/tour-guide/tour-package/:id/publish', async (req, res) => {
   try {
     const tourPackage = await TourPackage.findById(req.params.id);
@@ -259,8 +409,7 @@ router.put('/tour-guide/tour-package/:id/publish', async (req, res) => {
   }
 });
 
-
-//tour package delete
+// Tour package delete
 router.delete('/tour-guide/tour-package/:id', async (req, res) => {
   try {
     const tourPackage = await TourPackage.findById(req.params.id);
@@ -269,7 +418,7 @@ router.delete('/tour-guide/tour-package/:id', async (req, res) => {
     if (tourGuide.verificationStatus !== 'verified') {
       return res.status(403).json({ message: 'You must be verified to delete tour packages' });
     }
-    await tourPackage.remove();
+    await tourPackage.deleteOne(); // Updated to use deleteOne() instead of remove()
     res.status(200).json({ message: 'Tour package deleted successfully' });
   } catch (error) {
     console.error('Tour package delete error:', error);

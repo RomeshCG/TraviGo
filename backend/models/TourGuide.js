@@ -10,7 +10,7 @@ const tourGuideSchema = new mongoose.Schema({
   certification: String,
   verificationStatus: { type: String, default: 'pending' },
   verifiedBadge: { type: Boolean, default: false },
-  profilePicture: String,
+  profilePicture: { type: String, default: '' },
 });
 
 module.exports = mongoose.model('TourGuide', tourGuideSchema);

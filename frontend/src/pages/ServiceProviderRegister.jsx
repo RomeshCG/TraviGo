@@ -33,8 +33,11 @@ const ServiceProviderRegister = () => {
       const data = await response.json();
       if (response.ok) {
         setSuccess(data.message);
+        // Clear any existing provider data
+        localStorage.removeItem('provider');
         localStorage.setItem('providerId', data.providerId);
         localStorage.setItem('providerType', data.providerType);
+        console.log('Registered providerId:', data.providerId); // Add log
         if (data.providerType === 'HotelProvider') {
           navigate('/service-provider/register/hotel');
         } else if (data.providerType === 'TourGuide') {
