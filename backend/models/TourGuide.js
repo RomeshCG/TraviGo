@@ -1,11 +1,16 @@
 const mongoose = require('mongoose');
 
 const tourGuideSchema = new mongoose.Schema({
-  providerId: { type: mongoose.Schema.Types.ObjectId, ref: 'ServiceProvider', required: true },
-  yearsOfExperience: { type: Number, required: true },
-  languages: [{ type: String, required: true }],
-  certification: { type: String, required: true },
-  createdAt: { type: Date, default: Date.now },
+  providerId: { type: String, required: true, unique: true },
+  name: { type: String, required: true },
+  bio: String,
+  location: String,
+  languages: [String],
+  yearsOfExperience: Number,
+  certification: String,
+  verificationStatus: { type: String, default: 'pending' },
+  verifiedBadge: { type: Boolean, default: false },
+  profilePicture: String,
 });
 
 module.exports = mongoose.model('TourGuide', tourGuideSchema);

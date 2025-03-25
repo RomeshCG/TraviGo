@@ -1,11 +1,12 @@
 const express = require('express');
 const router = express.Router();
 const User = require('../models/user')
-const multer = require('multer');
 const ServiceProvider = require('../models/ServiceProvider');
 const HotelOwner = require('../models/HotelOwner');
 const TourGuide = require('../models/TourGuide');
 const VehicleProvider = require('../models/VehicleProvider');
+const multer = require('multer');
+const path = require('path');
 
 
 
@@ -46,7 +47,6 @@ router.post('/register', async (req, res) => {
   }
 });
 
-
 //Login Route for users (Tourists)
 router.post('/login', async (req, res) => {
   const { username, password } = req.body;
@@ -73,35 +73,22 @@ router.post('/login', async (req, res) => {
 });
 
 
-
-// All service provider register route
+//service provider login
 router.post('/service-provider/register', async (req, res) => {
   const { name, email, password, providerType } = req.body;
-
   if (!name || !email || !password || !providerType) {
     return res.status(400).json({ message: 'All fields are required' });
   }
-
   if (!['HotelProvider', 'TourGuide', 'VehicleProvider'].includes(providerType)) {
     return res.status(400).json({ message: 'Invalid provider type' });
   }
-
   try {
-    const existingProvider = await ServiceProvider.findOne({ email }); // Error occurs here
-    if (existingProvider) {
-      return res.status(400).json({ message: 'Email already exists' });
-    }
-
-    const newProvider = new ServiceProvider({
-      name,
-      email,
-      password,
-      providerType,
-    });
-
+    const existingProvider = await ServiceProvider.findOne({ email });
+    if (existingProvider) return res.status(400).json({ message: 'Email already exists' });
+    const newProvider = new ServiceProvider({ name, email, password, providerType });
     await newProvider.save();
-    res.status(201).json({ 
-      message: 'Basic details registered successfully', 
+    res.status(201).json({
+      message: 'Basic details registered successfully',
       providerId: newProvider._id,
       providerType: newProvider.providerType,
     });
@@ -111,73 +98,38 @@ router.post('/service-provider/register', async (req, res) => {
   }
 });
 
-
-// Advanced register route for service providers
+// tour guide advanced registration
 router.post('/service-provider/register-advanced', async (req, res) => {
   const { providerId, providerType, advancedDetails } = req.body;
-
   if (!providerId || !providerType || !advancedDetails) {
     return res.status(400).json({ message: 'All fields are required' });
   }
-
   try {
     const provider = await ServiceProvider.findById(providerId);
-    if (!provider) {
-      return res.status(404).json({ message: 'Service provider not found' });
-    }
-
+    if (!provider) return res.status(404).json({ message: 'Service provider not found' });
     if (provider.providerType !== providerType) {
       return res.status(400).json({ message: 'Provider type mismatch' });
     }
 
-    if (providerType === 'HotelProvider') {
-      const { hotelName, hotelAddress, hotelLicenseNumber, numberOfRooms } = advancedDetails;
-      if (!hotelName || !hotelAddress || !hotelLicenseNumber || !numberOfRooms) {
-        return res.status(400).json({ message: 'All hotel details are required' });
-      }
-
-      const hotelOwner = new HotelOwner({
-        providerId,
-        hotelName,
-        hotelAddress,
-        hotelLicenseNumber,
-        numberOfRooms,
-      });
-
-      await hotelOwner.save();
-    } else if (providerType === 'TourGuide') {
-      const { yearsOfExperience, languages, certification } = advancedDetails;
-      if (!yearsOfExperience || !languages || !languages.length || !certification) {
+    if (providerType === 'TourGuide') {
+      const { yearsOfExperience, languages, certification, bio, location } = advancedDetails;
+      if (!yearsOfExperience || !languages || !languages.length || !certification || !bio || !location) {
         return res.status(400).json({ message: 'All tour guide details are required' });
       }
-
       const tourGuide = new TourGuide({
         providerId,
+        name: provider.name,
         yearsOfExperience,
         languages,
         certification,
+        bio,
+        location,
       });
-
       await tourGuide.save();
-    } else if (providerType === 'VehicleProvider') {
-      const { vehicleType, vehicleModel, licensePlate, insuranceDetails } = advancedDetails;
-      if (!vehicleType || !vehicleModel || !licensePlate || !insuranceDetails) {
-        return res.status(400).json({ message: 'All vehicle details are required' });
-      }
+    } // Add other provider types as needed
 
-      const vehicleProvider = new VehicleProvider({
-        providerId,
-        vehicleType,
-        vehicleModel,
-        licensePlate,
-        insuranceDetails,
-      });
-
-      await vehicleProvider.save();
-    } else {
-      return res.status(400).json({ message: 'Invalid provider type' });
-    }
-
+    provider.isAdvancedRegistrationComplete = true;
+    await provider.save();
     res.status(201).json({ message: 'Advanced details registered successfully' });
   } catch (error) {
     console.error('Advanced registration error:', error);
@@ -186,32 +138,15 @@ router.post('/service-provider/register-advanced', async (req, res) => {
 });
 
 
-//All service provider login route
-router.post('/service-provider/login', async (req,res) =>{
-  const {email, password} =req.body;
-
-  if(!email|| !password){
-    return res.status(400).json({message:'Email and Password are Required'});
-  }
-
-  try{
-    const trimmedEmail = email.trim();
-    const trimmedPassword = password.trim();
-
-    const existingProvider = await ServiceProvider.findOne({
-      email: { $regex: new RegExp(`^${trimmedEmail}$`, 'i')}
-    });
-
-    if (!existingProvider) {
-      console.log(`Service provider not found: ${trimmedEmail}`);
+//service provider login
+router.post('/service-provider/login', async (req, res) => {
+  const { email, password } = req.body;
+  if (!email || !password) return res.status(400).json({ message: 'Email and password are required' });
+  try {
+    const existingProvider = await ServiceProvider.findOne({ email: { $regex: new RegExp(`^${email.trim()}$`, 'i') } });
+    if (!existingProvider || existingProvider.password !== password) {
       return res.status(400).json({ message: 'Invalid email or password' });
     }
-
-    if (existingProvider.password !== trimmedPassword) {
-      console.log(`Password mismatch for service provider ${trimmedEmail}`);
-      return res.status(400).json({ message: 'Invalid email or password' });
-    }
-
     res.status(200).json({ message: 'Login successful', provider: existingProvider });
   } catch (error) {
     console.error('Service provider login error:', error);
@@ -219,5 +154,127 @@ router.post('/service-provider/login', async (req,res) =>{
   }
 });
 
+// New and Updated Tour Guide Routes
+router.post('/tour-guide/create', async (req, res) => {
+  const { providerId, name, bio, location, languages, yearsOfExperience, certification } = req.body;
+  try {
+    const existingTourGuide = await TourGuide.findOne({ providerId });
+    if (existingTourGuide) return res.status(400).json({ message: 'Tour guide already exists for this provider' });
+    const tourGuide = new TourGuide({
+      providerId,
+      name,
+      bio: bio || '',
+      location: location || '',
+      languages: languages || [],
+      yearsOfExperience: yearsOfExperience || 0,
+      certification: certification || '',
+    });
+    await tourGuide.save();
+    res.status(201).json(tourGuide);
+  } catch (error) {
+    console.error('Tour guide creation error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+router.get('/tour-guide/provider/:providerId', async (req, res) => {
+  try {
+    const tourGuide = await TourGuide.findOne({ providerId: req.params.providerId });
+    if (!tourGuide) return res.status(404).json({ message: 'Tour guide not found' });
+    res.status(200).json(tourGuide);
+  } catch (error) {
+    console.error('Error fetching tour guide:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// tour guide tour packages
+router.get('/tour-guide/:tourGuideId/tour-packages', async (req, res) => {
+  try {
+    const tourPackages = await TourPackage.find({ tourGuideId: req.params.tourGuideId });
+    res.status(200).json(tourPackages);
+  } catch (error) {
+    console.error('Fetch tour packages error:', error.stack); 
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+//tour guide reviews
+router.get('/tour-guide/:tourGuideId/reviews', async (req, res) => {
+  try {
+    const reviews = await Review.find({ tourGuideId: req.params.tourGuideId }).populate('touristId', 'username');
+    const averageRating = reviews.length
+      ? reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length
+      : 0;
+    res.status(200).json({ reviews, averageRating });
+  } catch (error) {
+    console.error('Fetch reviews error:', error.stack); 
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// new tour packacges
+router.post('/tour-guide/tour-package', async (req, res) => {
+  const { tourGuideId, title, description, duration, price, location, images, itinerary, maxParticipants } = req.body;
+  try {
+    const tourGuide = await TourGuide.findById(tourGuideId);
+    if (!tourGuide) return res.status(404).json({ message: 'Tour guide not found' });
+    if (tourGuide.verificationStatus !== 'verified') {
+      return res.status(403).json({ message: 'You must be verified to create tour packages' });
+    }
+    const tourPackage = new TourPackage({
+      tourGuideId,
+      title,
+      description,
+      duration,
+      price,
+      location,
+      images: images || [],
+      itinerary,
+      maxParticipants,
+    });
+    await tourPackage.save();
+    res.status(201).json({ message: 'Tour package created successfully', tourPackage });
+  } catch (error) {
+    console.error('Tour package creation error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// make tour package
+router.put('/tour-guide/tour-package/:id/publish', async (req, res) => {
+  try {
+    const tourPackage = await TourPackage.findById(req.params.id);
+    if (!tourPackage) return res.status(404).json({ message: 'Tour package not found' });
+    const tourGuide = await TourGuide.findById(tourPackage.tourGuideId);
+    if (tourGuide.verificationStatus !== 'verified') {
+      return res.status(403).json({ message: 'You must be verified to publish tour packages' });
+    }
+    tourPackage.status = 'published';
+    await tourPackage.save();
+    res.status(200).json({ message: 'Tour package published successfully', tourPackage });
+  } catch (error) {
+    console.error('Tour package publish error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+
+//tour package delete
+router.delete('/tour-guide/tour-package/:id', async (req, res) => {
+  try {
+    const tourPackage = await TourPackage.findById(req.params.id);
+    if (!tourPackage) return res.status(404).json({ message: 'Tour package not found' });
+    const tourGuide = await TourGuide.findById(tourPackage.tourGuideId);
+    if (tourGuide.verificationStatus !== 'verified') {
+      return res.status(403).json({ message: 'You must be verified to delete tour packages' });
+    }
+    await tourPackage.remove();
+    res.status(200).json({ message: 'Tour package deleted successfully' });
+  } catch (error) {
+    console.error('Tour package delete error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
 
 module.exports = router;

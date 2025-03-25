@@ -26,19 +26,15 @@ const ServiceProviderRegister = () => {
     try {
       const response = await fetch('/api/service-provider/register', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
       });
 
       const data = await response.json();
       if (response.ok) {
         setSuccess(data.message);
-        // Store providerId and providerType in localStorage for the next step
         localStorage.setItem('providerId', data.providerId);
         localStorage.setItem('providerType', data.providerType);
-        // Redirect to the appropriate advanced registration page
         if (data.providerType === 'HotelProvider') {
           navigate('/service-provider/register/hotel');
         } else if (data.providerType === 'TourGuide') {
