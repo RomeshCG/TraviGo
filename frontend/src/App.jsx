@@ -13,9 +13,19 @@ import ServiceProviderLogin from './pages/ServiceProviderLogin';
 import HotelProviderDashboard from './pages/hotel/HotelProviderDashboard';
 import VehicleProviderDashboard from './pages/vehicle/VehicleProviderDashboard';
 import TourGuideDashboard from "./pages/tourguide/TourGuideDashboard";
+import AboutUs from "./pages/Aboutus"
+import ContactUs from "./pages/ContactUs";
+import UserDashboard from './pages/user/UserDashboard';
+import EditProfile from './pages/user/EditProfile';
 
 
-
+const ProtectedRoute = ({ children }) => {
+  const user = localStorage.getItem('user');
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+  return children;
+};
 
 function App(){
   return (
@@ -25,7 +35,18 @@ function App(){
       <Route path="/" element={<Home />} />
       <Route path="/signin" element={<SignIn />} />
       <Route path="/login" element={<Login />} />
+      <Route
+          path="/user/dashboard"
+          element={
+            <ProtectedRoute>
+              <UserDashboard />
+            </ProtectedRoute>
+          }
+        />
+        
       <Route path="/dashboard" element={<Dashboard />} />
+      <Route path="/about" element={<AboutUs />} />
+      <Route path="/contact" element={<ContactUs/>} />
       <Route path="/service-provider/register" element={<ServiceProviderRegister />} />
       <Route path="/service-provider/register/hotel" element={<HotelProviderRegister />} />
       <Route path="/service-provider/register/tour-guide" element={<TourGuideRegister />} />

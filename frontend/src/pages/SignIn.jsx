@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom'; // Import useNavigate
+import { Link, useNavigate } from 'react-router-dom';
 import SimpleHeader from '../components/SimpleHeader';
 import Footer from '../components/Footer';
+import backgroundImage from '../assets/login_page_img.jpg';
 
 const SignIn = () => {
   const [formData, setFormData] = useState({
@@ -14,7 +15,7 @@ const SignIn = () => {
   });
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const navigate = useNavigate(); // Use useNavigate hook for redirection
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -64,7 +65,7 @@ const SignIn = () => {
         setSuccess('');
       }
     } catch (err) {
-      console.error('Registration error:', err); // Add error logging
+      console.error('Registration error:', err);
       setError('Failed to connect to the server');
       setSuccess('');
     }
@@ -73,23 +74,23 @@ const SignIn = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <SimpleHeader />
-      <main className="flex-grow flex mt-20 lg:mt-24 mb-12 lg:mb-16">
-        {/* Left Section: Background and Text */}
-        <div
-          className="hidden lg:flex lg:w-1/2 bg-cover bg-center flex-col justify-center p-10 text-white"
-          style={{
-            backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('https://images.unsplash.com/photo-1507521628349-dee9a8e4a1f1?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80')`,
-          }}
-        >
-          <h1 className="text-5xl font-bold mb-4">Your Journey Starts Here</h1>
-          <p className="text-lg">
-            Book hotels, rent vehicles, and hire tour guides all in one place. Easy, fast, and secure!
-          </p>
-        </div>
+      <div
+        className="min-h-screen flex items-center justify-center bg-cover bg-center"
+        style={{
+          backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url(${backgroundImage})`,
+        }}
+      >
+        <div className="flex flex-col lg:flex-row items-center justify-between w-full max-w-5xl p-6">
+          {/* Left Section: Text */}
+          <div className="text-white mb-8 lg:mb-0 lg:w-1/2">
+            <h1 className="text-4xl lg:text-5xl font-bold mb-4">Your Journey Starts Here</h1>
+            <p className="text-lg">
+              Book hotels, rent vehicles, and hire tour guides all in one place. Easy, fast, and secure!
+            </p>
+          </div>
 
-        {/* Right Section: Form */}
-        <div className="w-full lg:w-1/2 flex justify-center items-center p-6">
-          <div className="bg-white shadow-lg rounded-lg p-8 w-full max-w-md">
+          {/* Right Section: Form */}
+          <div className="bg-white bg-opacity-90 rounded-lg p-8 w-full max-w-md">
             <h2 className="text-2xl font-semibold text-center mb-6">Sign Up</h2>
             {error && <p className="text-red-500 text-center mb-4">{error}</p>}
             {success && <p className="text-green-500 text-center mb-4">{success}</p>}
@@ -175,7 +176,7 @@ const SignIn = () => {
             </p>
           </div>
         </div>
-      </main>
+      </div>
       <Footer />
     </div>
   );

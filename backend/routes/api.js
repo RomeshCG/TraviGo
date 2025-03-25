@@ -101,6 +101,49 @@ router.post('/login', async (req, res) => {
   }
 });
 
+// Get user by ID
+router.get('/user/:id', async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    const userResponse = {
+      _id: user._id,
+      username: user.username,
+      email: user.email,
+      phoneNumber: user.phoneNumber,
+      country: user.country,
+      createdAt: user.createdAt,
+      profilePicture: user.profilePicture || 'https://via.placeholder.com/150', // Default if no profile picture
+    };
+    res.status(200).json(userResponse);
+  } catch (error) {
+    console.error('Fetch user error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+//add profile picture user
+router.put('/user/update-profile-picture', upload.single('profilePicture'), async (req, res) => {
+  try {
+    const { userId } = req.body;
+    if (!userId || !req.file) {
+      return res.status(400).json({ message: 'User ID and profile picture file are required' });
+    }
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    user.profilePicture = `/uploads/${req.file.filename}`;
+    await user.save();
+    res.status(200).json({ message: 'Profile picture updated successfully', user });
+  } catch (error) {
+    console.error('Update user profile picture error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 
 
 
