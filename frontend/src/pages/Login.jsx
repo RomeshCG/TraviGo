@@ -36,8 +36,9 @@ const Login = () => {
       if (response.ok) {
         setSuccess(data.message);
         setError('');
-        // Store user data in localStorage (or a state management solution) for the dashboard
+        // Store user data and token in localStorage
         localStorage.setItem('user', JSON.stringify(data.user));
+        localStorage.setItem('token', data.token);
         // Redirect to the user dashboard
         navigate('/user/dashboard');
       } else {

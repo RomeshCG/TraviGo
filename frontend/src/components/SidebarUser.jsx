@@ -53,6 +53,7 @@ const SidebarUser = () => {
   const handleSignOut = () => {
     // Clear localStorage
     localStorage.removeItem('user');
+    localStorage.removeItem('token'); // Clear the token
     // Redirect to login page
     navigate('/login');
   };
@@ -189,7 +190,7 @@ const SidebarUser = () => {
           </li>
           <li className="mb-2">
             <NavLink
-              to="/user/about"
+              to="/about"
               className={({ isActive }) =>
                 `flex items-center p-3 rounded-lg text-gray-300 hover:bg-gray-700/50 hover:text-white transition-all duration-300 ${
                   isActive ? 'bg-gradient-to-r from-blue-600 to-blue-800 text-white' : ''

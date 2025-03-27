@@ -100,7 +100,6 @@ router.post('/login', async (req, res) => {
     console.error('Login error:', error);
     res.status(500).json({ message: 'Server error' });
   }
-  
 });
 
 // Get user by ID
