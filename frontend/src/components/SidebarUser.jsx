@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import {
   FaHome,
@@ -14,13 +14,41 @@ import {
   FaSignOutAlt,
 } from 'react-icons/fa';
 
+// Backend base URL (adjust this based on your backend URL)
+const BACKEND_URL = 'http://localhost:5000';
+
 const SidebarUser = () => {
   const navigate = useNavigate();
+  const [userData, setUserData] = useState(JSON.parse(localStorage.getItem('user')) || {});
 
-  // Get the user data from localStorage
-  const user = JSON.parse(localStorage.getItem('user')) || {};
-  const username = user.username || 'Guest';
-  const profilePicture = user.profilePicture || 'https://via.placeholder.com/150'; // Fallback to placeholder
+  // Listen for changes in localStorage to update the profile picture
+  useEffect(() => {
+    const handleStorageChange = () => {
+      const updatedUser = JSON.parse(localStorage.getItem('user')) || {};
+      setUserData(updatedUser);
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    // Also check for changes in the same tab
+    const interval = setInterval(() => {
+      const updatedUser = JSON.parse(localStorage.getItem('user')) || {};
+      if (JSON.stringify(updatedUser) !== JSON.stringify(userData)) {
+        setUserData(updatedUser);
+      }
+    }, 1000);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      clearInterval(interval);
+    };
+  }, [userData]);
+
+  const username = userData.username || 'Guest';
+  const profilePicture = userData.profilePicture
+    ? userData.profilePicture.startsWith('http')
+      ? userData.profilePicture
+      : `${BACKEND_URL}${userData.profilePicture}`
+    : 'https://via.placeholder.com/150'; // Fallback to placeholder
 
   const handleSignOut = () => {
     // Clear localStorage
@@ -65,7 +93,7 @@ const SidebarUser = () => {
           </li>
           <li className="mb-2">
             <NavLink
-              to="/explore"
+              to="/user/explore"
               className={({ isActive }) =>
                 `flex items-center p-3 rounded-lg text-gray-300 hover:bg-gray-700/50 hover:text-white transition-all duration-300 ${
                   isActive ? 'bg-gradient-to-r from-blue-600 to-blue-800 text-white' : ''
@@ -77,7 +105,7 @@ const SidebarUser = () => {
           </li>
           <li className="mb-2">
             <NavLink
-              to="/my-booking"
+              to="/user/my-booking"
               className={({ isActive }) =>
                 `flex items-center p-3 rounded-lg text-gray-300 hover:bg-gray-700/50 hover:text-white transition-all duration-300 ${
                   isActive ? 'bg-gradient-to-r from-blue-600 to-blue-800 text-white' : ''
@@ -89,7 +117,7 @@ const SidebarUser = () => {
           </li>
           <li className="mb-2">
             <NavLink
-              to="/edit-profile"
+              to="/user/edit-profile"
               className={({ isActive }) =>
                 `flex items-center p-3 rounded-lg text-gray-300 hover:bg-gray-700/50 hover:text-white transition-all duration-300 ${
                   isActive ? 'bg-gradient-to-r from-blue-600 to-blue-800 text-white' : ''
@@ -101,7 +129,7 @@ const SidebarUser = () => {
           </li>
           <li className="mb-2">
             <NavLink
-              to="/account-settings"
+              to="/user/account-settings"
               className={({ isActive }) =>
                 `flex items-center p-3 rounded-lg text-gray-300 hover:bg-gray-700/50 hover:text-white transition-all duration-300 ${
                   isActive ? 'bg-gradient-to-r from-blue-600 to-blue-800 text-white' : ''
@@ -113,7 +141,7 @@ const SidebarUser = () => {
           </li>
           <li className="mb-2">
             <NavLink
-              to="/hotels"
+              to="/user/hotels"
               className={({ isActive }) =>
                 `flex items-center p-3 rounded-lg text-gray-300 hover:bg-gray-700/50 hover:text-white transition-all duration-300 ${
                   isActive ? 'bg-gradient-to-r from-blue-600 to-blue-800 text-white' : ''
@@ -125,7 +153,7 @@ const SidebarUser = () => {
           </li>
           <li className="mb-2">
             <NavLink
-              to="/vehicles"
+              to="/user/vehicles"
               className={({ isActive }) =>
                 `flex items-center p-3 rounded-lg text-gray-300 hover:bg-gray-700/50 hover:text-white transition-all duration-300 ${
                   isActive ? 'bg-gradient-to-r from-blue-600 to-blue-800 text-white' : ''
@@ -137,7 +165,7 @@ const SidebarUser = () => {
           </li>
           <li className="mb-2">
             <NavLink
-              to="/guides"
+              to="/user/guides"
               className={({ isActive }) =>
                 `flex items-center p-3 rounded-lg text-gray-300 hover:bg-gray-700/50 hover:text-white transition-all duration-300 ${
                   isActive ? 'bg-gradient-to-r from-blue-600 to-blue-800 text-white' : ''
@@ -149,7 +177,7 @@ const SidebarUser = () => {
           </li>
           <li className="mb-2">
             <NavLink
-              to="/packages"
+              to="/user/packages"
               className={({ isActive }) =>
                 `flex items-center p-3 rounded-lg text-gray-300 hover:bg-gray-700/50 hover:text-white transition-all duration-300 ${
                   isActive ? 'bg-gradient-to-r from-blue-600 to-blue-800 text-white' : ''
@@ -157,6 +185,18 @@ const SidebarUser = () => {
               }
             >
               <FaSuitcase className="mr-3" /> Travel Packages
+            </NavLink>
+          </li>
+          <li className="mb-2">
+            <NavLink
+              to="/user/about"
+              className={({ isActive }) =>
+                `flex items-center p-3 rounded-lg text-gray-300 hover:bg-gray-700/50 hover:text-white transition-all duration-300 ${
+                  isActive ? 'bg-gradient-to-r from-blue-600 to-blue-800 text-white' : ''
+                }`
+              }
+            >
+              <FaInfoCircle className="mr-3" /> About Us
             </NavLink>
           </li>
         </ul>

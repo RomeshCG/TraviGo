@@ -1,9 +1,13 @@
 
 import React from 'react';
+import SidebarUser from '../../components/SidebarUser';
+import HeaderUser from '../../components/HeaderUser';
 
 const AccountSettings = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 p-6">
+      <HeaderUser />
+      <SidebarUser />
       <h1 className="text-3xl font-bold text-gray-900 mb-8">Account Settings</h1>
       <div className="max-w-lg mx-auto bg-white rounded-lg shadow-md p-6 space-y-6">
         {/* Change Password */}

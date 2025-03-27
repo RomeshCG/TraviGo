@@ -17,6 +17,13 @@ import AboutUs from "./pages/Aboutus"
 import ContactUs from "./pages/ContactUs";
 import UserDashboard from './pages/user/UserDashboard';
 import EditProfile from './pages/user/EditProfile';
+import ExploreDestinations from './pages/user/ExploreDestinations'; // New
+import MyBooking from './pages/user/MyBooking'; // New
+import AccountSettings from './pages/user/AccountSettings'; // New
+import HotelBooking from './pages/user/HotelBooking'; // New
+import VehicleRental from './pages/user/VehicleRental'; // New
+import TourGuides from './pages/user/TourGuide'; // New
+import TravelPackages from './pages/user/TravelPackages'; // New
 
 
 const ProtectedRoute = ({ children }) => {
@@ -40,6 +47,70 @@ function App(){
           element={
             <ProtectedRoute>
               <UserDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/user/explore"
+          element={
+            <ProtectedRoute>
+              <ExploreDestinations />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/user/my-booking"
+          element={
+            <ProtectedRoute>
+              <MyBooking />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/user/edit-profile"
+          element={
+            <ProtectedRoute>
+              <EditProfile />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/user/account-settings"
+          element={
+            <ProtectedRoute>
+              <AccountSettings />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/user/hotels"
+          element={
+            <ProtectedRoute>
+              <HotelBooking />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/user/vehicles"
+          element={
+            <ProtectedRoute>
+              <VehicleRental />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/user/guides"
+          element={
+            <ProtectedRoute>
+              <TourGuides />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/user/packages"
+          element={
+            <ProtectedRoute>
+              <TravelPackages />
             </ProtectedRoute>
           }
         />
