@@ -1,8 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import SimpleHeader from '../components/SimpleHeader';
 import Footer from '../components/Footer';
-import backgroundImage from '../assets/login_page_img.jpg'; // Ensure this path matches your project
+import backgroundImage from '../assets/login_page_img.jpg';
 
 const ServiceProviderLogin = () => {
   const [formData, setFormData] = useState({
@@ -12,6 +12,38 @@ const ServiceProviderLogin = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const navigate = useNavigate();
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    const token = localStorage.getItem("providerToken");
+    if (token) {
+      const verifyToken = async () => {
+        try {
+          const response = await fetch('/api/verify-provider-token', {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          const data = await response.json();
+          if (response.ok && data.message === "Token is valid") {
+            const { providerType } = data.provider;
+            let redirectPath = '';
+            if (providerType === 'HotelProvider') {
+              redirectPath = '/pages/hotel/dashboard';
+            } else if (providerType === 'TourGuide') {
+              redirectPath = '/tour-guide/dashboard';
+            } else if (providerType === 'VehicleProvider') {
+              redirectPath = '/pages/vehicle/dashboard';
+            }
+            if (redirectPath) {
+              navigate(redirectPath, { replace: true });
+            }
+          }
+        } catch (error) {
+          console.error("Token verification error on mount:", error);
+        }
+      };
+      verifyToken();
+    }
+  }, [navigate]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -31,19 +63,32 @@ const ServiceProviderLogin = () => {
 
       const data = await response.json();
       if (response.ok) {
+        console.log('Login response:', data); // Debug
         setSuccess('Login successful! Redirecting...');
-        localStorage.setItem('provider', JSON.stringify(data.provider));
-        if (data.provider.providerType === 'HotelProvider') {
-          setTimeout(() => navigate('/pages/hotel/dashboard'), 2000);
-        } else if (data.provider.providerType === 'TourGuide') {
-          setTimeout(() => navigate('/tour-guide/dashboard'), 2000);
-        } else if (data.provider.providerType === 'VehicleProvider') {
-          setTimeout(() => navigate('/pages/vehicle/dashboard'), 2000);
+        localStorage.setItem('providerToken', data.token);
+
+        const { providerType } = data.provider;
+        let redirectPath = '';
+        if (providerType === 'HotelProvider') {
+          redirectPath = '/pages/hotel/dashboard';
+        } else if (providerType === 'TourGuide') {
+          redirectPath = '/tour-guide/dashboard';
+        } else if (providerType === 'VehicleProvider') {
+          redirectPath = '/pages/vehicle/dashboard';
+        } else {
+          setError('Unknown provider type');
+          return;
         }
+
+        console.log('Navigating to:', redirectPath); // Debug
+        setTimeout(() => {
+          navigate(redirectPath, { replace: true });
+        }, 2000);
       } else {
         setError(data.message || 'Failed to log in');
       }
-    } catch {
+    } catch (err) {
+      console.error('Login error:', err);
       setError('Failed to connect to the server');
     }
   };
@@ -58,15 +103,12 @@ const ServiceProviderLogin = () => {
         }}
       >
         <div className="flex flex-col lg:flex-row items-center justify-between w-full max-w-5xl p-6">
-          {/* Left Section: Text */}
           <div className="text-white mb-8 lg:mb-0 lg:w-1/2">
             <h1 className="text-4xl lg:text-5xl font-bold mb-4">PARTNER WITH TRAVIGO</h1>
             <p className="text-lg">
               Earn more with TraviGo Partner Programe.
             </p>
           </div>
-
-          {/* Right Section: Form */}
           <div className="bg-white bg-opacity-90 rounded-lg p-8 w-full max-w-md">
             <h2 className="text-2xl font-semibold text-center mb-6">Service Provider Login</h2>
             {error && <p className="text-red-500 text-center mb-4">{error}</p>}

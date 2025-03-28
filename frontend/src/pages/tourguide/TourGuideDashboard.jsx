@@ -14,7 +14,7 @@ const TourGuideDashboard = () => {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [profilePictureFile, setProfilePictureFile] = useState(null);
-  const [isEditing, setIsEditing] = useState(false); // New state for edit mode
+  const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     bio: '',
@@ -22,7 +22,7 @@ const TourGuideDashboard = () => {
     languages: [],
     yearsOfExperience: 0,
     certification: '',
-  }); // New state for form data
+  });
   const navigate = useNavigate();
 
   const BASE_URL = 'http://localhost:5000';
@@ -33,13 +33,24 @@ const TourGuideDashboard = () => {
       setError('');
 
       try {
-        const provider = JSON.parse(localStorage.getItem('provider'));
-        console.log('Provider from localStorage:', provider);
-        if (!provider || !provider._id) {
+        const token = localStorage.getItem('providerToken');
+        if (!token) {
           setError('You need to log in to access the dashboard.');
           setTimeout(() => navigate('/service-provider/login'), 2000);
           return;
         }
+
+        // Fetch provider details using the token
+        const providerResponse = await fetch(`${BASE_URL}/api/verify-provider-token`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!providerResponse.ok) {
+          const errorData = await providerResponse.json();
+          throw new Error(errorData.message || 'Failed to verify provider');
+        }
+        const providerData = await providerResponse.json();
+        const provider = providerData.provider;
+        console.log('Provider from token:', provider);
 
         let response = await fetch(`${BASE_URL}/api/tour-guide/provider/${provider._id}`);
         if (response.status === 404) {
@@ -74,7 +85,6 @@ const TourGuideDashboard = () => {
         console.log('Fetched tour guide data:', data);
         setTourGuide(data);
 
-        // Initialize form data with current tour guide details
         if (data) {
           setFormData({
             name: data.name || '',
@@ -203,7 +213,6 @@ const TourGuideDashboard = () => {
     }
   };
 
-
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     if (name === 'languages') {
@@ -215,7 +224,6 @@ const TourGuideDashboard = () => {
     }
   };
 
-  
   const handleUpdateProfile = async (e) => {
     e.preventDefault();
     setError('');
@@ -239,6 +247,12 @@ const TourGuideDashboard = () => {
     } catch (err) {
       setError(`Failed to update profile: ${err.message}`);
     }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('providerToken');
+    toast.success('Logged out successfully!');
+    setTimeout(() => navigate('/service-provider/login', { replace: true }), 2000);
   };
 
   return (
@@ -301,6 +315,14 @@ const TourGuideDashboard = () => {
                 className="w-full bg-gradient-to-r from-yellow-500 to-orange-500 text-white py-2 rounded-lg hover:from-yellow-600 hover:to-orange-600 transition shadow-md mb-6"
               >
                 {isEditing ? 'Cancel Edit' : 'Edit Profile'}
+              </button>
+
+              {/* Logout Button */}
+              <button
+                onClick={handleLogout}
+                className="w-full bg-gradient-to-r from-red-500 to-pink-500 text-white py-2 rounded-lg hover:from-red-600 hover:to-pink-600 transition shadow-md mb-6"
+              >
+                Logout
               </button>
 
               {/* Profile Details or Edit Form */}

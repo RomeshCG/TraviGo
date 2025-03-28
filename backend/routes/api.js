@@ -1,26 +1,35 @@
 const express = require('express');
 const router = express.Router();
-const bcrypt = require('bcryptjs'); 
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken'); // Add jsonwebtoken
 const User = require('../models/user');
 const ServiceProvider = require('../models/ServiceProvider');
 const HotelOwner = require('../models/HotelOwner');
 const TourGuide = require('../models/TourGuide');
 const VehicleProvider = require('../models/VehicleProvider');
 const TourPackage = require('../models/TourPackage');
-const Review = require('../models/Review'); 
-const mongoose = require('mongoose'); 
+const Review = require('../models/Review');
+const mongoose = require('mongoose');
 const multer = require('multer');
 const path = require('path');
 const TourGuideBooking = require('../models/TourBookings');
 const ContactMessage = require('../models/ContactMessage');
 
-// Test route 
+// Load environment variables
+require('dotenv').config();
+const JWT_SECRET = process.env.JWT_SECRET;
+
+if (!JWT_SECRET) {
+  console.error('JWT_SECRET is not defined in .env file');
+  process.exit(1);
+}
+
+// Test route
 router.get('/test', (req, res) => {
   res.json({ message: 'Backend is working!' });
 });
 
-
-//config multer storage
+// Config multer storage
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, 'uploads/'); // Ensure this directory exists
@@ -30,8 +39,6 @@ const storage = multer.diskStorage({
   },
 });
 const upload = multer({ storage });
-
-
 
 // Register route for users (Tourists)
 router.post('/register', async (req, res) => {
@@ -54,7 +61,7 @@ router.post('/register', async (req, res) => {
 
     const newUser = new User({
       username,
-      password: hashedPassword, 
+      password: hashedPassword,
       email,
       phoneNumber,
       country,
@@ -87,6 +94,13 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ message: 'Invalid username or password' });
     }
 
+    // Generate JWT token for user
+    const token = jwt.sign(
+      { id: existingUser._id, username: existingUser.username },
+      JWT_SECRET,
+      { expiresIn: '1h' }
+    );
+
     const userResponse = {
       _id: existingUser._id,
       username: existingUser.username,
@@ -95,10 +109,39 @@ router.post('/login', async (req, res) => {
       country: existingUser.country,
     };
 
-    res.status(200).json({ message: 'Login successful', user: userResponse });
+    res.status(200).json({ message: 'Login successful', user: userResponse, token });
   } catch (error) {
     console.error('Login error:', error);
     res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Verify User Token
+router.get('/verify-token', async (req, res) => {
+  const token = req.headers['authorization']?.split(' ')[1]; // Expecting "Bearer <token>"
+  if (!token) {
+    return res.status(401).json({ message: 'No token provided' });
+  }
+
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    const user = await User.findById(decoded.id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    res.status(200).json({
+      message: 'Token is valid',
+      user: {
+        _id: user._id,
+        username: user.username,
+        email: user.email,
+        phoneNumber: user.phoneNumber,
+        country: user.country,
+      },
+    });
+  } catch (error) {
+    console.error('User token verification error:', error);
+    res.status(403).json({ message: 'Invalid or expired token' });
   }
 });
 
@@ -116,7 +159,7 @@ router.get('/user/:id', async (req, res) => {
       phoneNumber: user.phoneNumber,
       country: user.country,
       createdAt: user.createdAt,
-      profilePicture: user.profilePicture || 'https://via.placeholder.com/150', // Default if no profile picture
+      profilePicture: user.profilePicture || 'https://via.placeholder.com/150',
     };
     res.status(200).json(userResponse);
   } catch (error) {
@@ -125,7 +168,7 @@ router.get('/user/:id', async (req, res) => {
   }
 });
 
-//add profile picture user
+// Add profile picture user
 router.put('/user/update-profile-picture', upload.single('profilePicture'), async (req, res) => {
   try {
     const { userId } = req.body;
@@ -144,7 +187,6 @@ router.put('/user/update-profile-picture', upload.single('profilePicture'), asyn
     res.status(500).json({ message: 'Server error' });
   }
 });
-
 
 // Route to handle contact form submission
 router.post('/contact', async (req, res) => {
@@ -171,8 +213,6 @@ router.post('/contact', async (req, res) => {
     res.status(500).json({ message: 'Server error. Please try again later.' });
   }
 });
-
-
 
 // Service provider registration
 router.post('/service-provider/register', async (req, res) => {
@@ -209,7 +249,6 @@ router.post('/service-provider/register', async (req, res) => {
   }
 });
 
-
 // Tour guide advanced registration
 router.post('/service-provider/register-advanced', async (req, res) => {
   const { providerId, providerType, advancedDetails } = req.body;
@@ -238,7 +277,7 @@ router.post('/service-provider/register-advanced', async (req, res) => {
         location,
       });
       await tourGuide.save();
-    } // Add other provider types boys
+    } // Add other provider types as needed
 
     provider.isAdvancedRegistrationComplete = true;
     await provider.save();
@@ -249,9 +288,7 @@ router.post('/service-provider/register-advanced', async (req, res) => {
   }
 });
 
-
-//tour guide profile picture updates route
-// Update profile picture with file upload
+// Tour guide profile picture updates route
 router.put('/tour-guide/update-profile-picture', upload.single('profilePicture'), async (req, res) => {
   try {
     const { tourGuideId } = req.body;
@@ -271,8 +308,6 @@ router.put('/tour-guide/update-profile-picture', upload.single('profilePicture')
   }
 });
 
-
-
 // Service provider login
 router.post('/service-provider/login', async (req, res) => {
   const { email, password } = req.body;
@@ -282,11 +317,18 @@ router.post('/service-provider/login', async (req, res) => {
     if (!existingProvider) {
       return res.status(400).json({ message: 'Invalid email or password' });
     }
- 
+
     const isMatch = await bcrypt.compare(password, existingProvider.password);
     if (!isMatch) {
       return res.status(400).json({ message: 'Invalid email or password' });
     }
+
+    // Generate JWT token for service provider
+    const token = jwt.sign(
+      { id: existingProvider._id, email: existingProvider.email, providerType: existingProvider.providerType },
+      JWT_SECRET,
+      { expiresIn: '1h' }
+    );
 
     const providerResponse = {
       _id: existingProvider._id,
@@ -296,15 +338,43 @@ router.post('/service-provider/login', async (req, res) => {
       isAdvancedRegistrationComplete: existingProvider.isAdvancedRegistrationComplete,
     };
 
-    res.status(200).json({ message: 'Login successful', provider: providerResponse });
+    res.status(200).json({ message: 'Login successful', provider: providerResponse, token });
   } catch (error) {
     console.error('Service provider login error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });
 
+// Verify Service Provider Token
+router.get('/verify-provider-token', async (req, res) => {
+  const token = req.headers['authorization']?.split(' ')[1]; // Expecting "Bearer <token>"
+  if (!token) {
+    return res.status(401).json({ message: 'No token provided' });
+  }
 
-// update tour guide profile
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    const provider = await ServiceProvider.findById(decoded.id);
+    if (!provider) {
+      return res.status(404).json({ message: 'Service provider not found' });
+    }
+    res.status(200).json({
+      message: 'Token is valid',
+      provider: {
+        _id: provider._id,
+        name: provider.name,
+        email: provider.email,
+        providerType: provider.providerType,
+        isAdvancedRegistrationComplete: provider.isAdvancedRegistrationComplete,
+      },
+    });
+  } catch (error) {
+    console.error('Provider token verification error:', error);
+    res.status(403).json({ message: 'Invalid or expired token' });
+  }
+});
+
+// Update tour guide profile
 router.put('/tour-guide/update-profile', async (req, res) => {
   try {
     const { tourGuideId, name, bio, location, languages, yearsOfExperience, certification } = req.body;
@@ -387,7 +457,7 @@ router.get('/tour-guide/:tourGuideId/tour-packages', async (req, res) => {
   }
 });
 
-//tour-guide-bookings
+// Tour guide bookings
 router.get('/tour-guide/:tourGuideId/tour-guide-bookings', async (req, res) => {
   try {
     const { tourGuideId } = req.params;
@@ -403,8 +473,6 @@ router.get('/tour-guide/:tourGuideId/tour-guide-bookings', async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 });
-
-
 
 // Tour guide reviews
 router.get('/tour-guide/:tourGuideId/reviews', async (req, res) => {
@@ -488,7 +556,7 @@ router.delete('/tour-guide/tour-package/:id', async (req, res) => {
     if (tourGuide.verificationStatus !== 'verified') {
       return res.status(403).json({ message: 'You must be verified to delete tour packages' });
     }
-    await tourPackage.deleteOne(); // Updated to use deleteOne() instead of remove()
+    await tourPackage.deleteOne();
     res.status(200).json({ message: 'Tour package deleted successfully' });
   } catch (error) {
     console.error('Tour package delete error:', error);
