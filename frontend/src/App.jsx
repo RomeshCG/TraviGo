@@ -22,6 +22,7 @@ import SignIn from './pages/SignIn';
 import Login from './pages/Login';
 import HotelProviderRegister from './pages/HotelProviderRegister';
 import TourGuideRegister from './pages/TourGuideRegister';
+import ProviderReg from './pages/ServiceProviderRegister';
 
 
 
@@ -139,6 +140,7 @@ function App() {
         />
         <Route path="/about" element={<AboutUs />} />
         <Route path="/contact" element={<ContactUs />} />
+        <Route path="/service-provider/register" element={<ProviderReg />} />
         <Route path="/service-provider/register/hotel" element={<HotelProviderRegister />} />
         <Route path="/service-provider/register/tour-guide" element={<TourGuideRegister />} />
         <Route path="/service-provider/register/vehicle" element={<VehicleProviderRegister />} />
