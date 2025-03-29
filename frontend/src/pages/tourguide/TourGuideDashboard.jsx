@@ -14,7 +14,7 @@ const TourGuideDashboard = () => {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [profilePictureFile, setProfilePictureFile] = useState(null);
-  const [bannerFile, setBannerFile] = useState(null); // New state for banner file
+  const [bannerFile, setBannerFile] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
@@ -202,7 +202,7 @@ const TourGuideDashboard = () => {
     }
   };
 
-  const handleUpdateBanner = async () => { // New function for banner upload
+  const handleUpdateBanner = async () => {
     if (!bannerFile) {
       setError('Please select a banner file');
       return;
@@ -280,7 +280,7 @@ const TourGuideDashboard = () => {
         {isLoading ? (
           <div className="text-center">
             <p className="text-gray-600 text-lg">Loading...</p>
-            <div className="loader ease-linear rounded-full border-4 border-t-4 border-blue-500 h-12 w-12 mx-auto mt-4 animate-spin"></div>
+            <div className="loader ease-linear rounded-full border-4 border-t-4 border-green-500 h-12 w-12 mx-auto mt-4 animate-spin"></div>
           </div>
         ) : tourGuide ? (
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
@@ -299,9 +299,9 @@ const TourGuideDashboard = () => {
                   <img
                     src={tourGuide.profilePicture ? `${BASE_URL}${tourGuide.profilePicture}` : 'https://via.placeholder.com/100'}
                     alt="Profile"
-                    className="w-28 h-28 rounded-full border-4 border-gradient-to-r from-blue-500 to-indigo-500 shadow-lg"
+                    className="w-28 h-28 rounded-full border-4 border-gradient-to-r from-green-500 to-teal-500 shadow-lg"
                   />
-                  <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 opacity-20"></div>
+                  <div className="absolute inset-0 rounded-full bg-gradient-to-r from-green-500 to-teal-500 opacity-20"></div>
                 </div>
                 <div className="text-center mt-4">
                   <h2 className="text-2xl font-bold text-gray-800">{tourGuide.name}</h2>
@@ -315,7 +315,7 @@ const TourGuideDashboard = () => {
               <div className="mb-6">
                 <label className="block text-gray-700 mb-2 font-medium">Update Profile Picture</label>
                 <div className="flex items-center space-x-4">
-                  <label className="cursor-pointer bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 py-2 rounded-lg hover:from-blue-700 hover:to-indigo-700 transition shadow-md">
+                  <label className="cursor-pointer bg-gradient-to-r from-green-500 to-teal-500 text-white px-4 py-2 rounded-lg hover:from-green-600 hover:to-teal-600 transition shadow-md">
                     Choose File
                     <input
                       type="file"
@@ -327,7 +327,7 @@ const TourGuideDashboard = () => {
                 </div>
                 <button
                   onClick={handleUpdateProfilePicture}
-                  className="mt-4 w-full bg-gradient-to-r from-indigo-600 to-blue-600 text-white py-2 rounded-lg hover:from-indigo-700 hover:to-blue-700 transition shadow-md"
+                  className="mt-4 w-full bg-gradient-to-r from-green-500 to-teal-500 text-white py-2 rounded-lg hover:from-green-600 hover:to-teal-600 transition shadow-md"
                 >
                   Update Profile Picture
                 </button>
@@ -337,7 +337,7 @@ const TourGuideDashboard = () => {
               <div className="mb-6">
                 <label className="block text-gray-700 mb-2 font-medium">Update Banner</label>
                 <div className="flex items-center space-x-4">
-                  <label className="cursor-pointer bg-gradient-to-r from-purple-600 to-pink-600 text-white px-4 py-2 rounded-lg hover:from-purple-700 hover:to-pink-700 transition shadow-md">
+                  <label className="cursor-pointer bg-gradient-to-r from-green-500 to-teal-500 text-white px-4 py-2 rounded-lg hover:from-green-600 hover:to-teal-600 transition shadow-md">
                     Choose File
                     <input
                       type="file"
@@ -349,7 +349,7 @@ const TourGuideDashboard = () => {
                 </div>
                 <button
                   onClick={handleUpdateBanner}
-                  className="mt-4 w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-2 rounded-lg hover:from-purple-700 hover:to-pink-700 transition shadow-md"
+                  className="mt-4 w-full bg-gradient-to-r from-green-500 to-teal-500 text-white py-2 rounded-lg hover:from-green-600 hover:to-teal-600 transition shadow-md"
                 >
                   Update Banner
                 </button>
@@ -358,7 +358,7 @@ const TourGuideDashboard = () => {
               {/* Edit Profile Button */}
               <button
                 onClick={() => setIsEditing(!isEditing)}
-                className="w-full bg-gradient-to-r from-yellow-500 to-orange-500 text-white py-2 rounded-lg hover:from-yellow-600 hover:to-orange-600 transition shadow-md mb-6"
+                className="w-full bg-gradient-to-r from-green-500 to-teal-500 text-white py-2 rounded-lg hover:from-green-600 hover:to-teal-600 transition shadow-md mb-6"
               >
                 {isEditing ? 'Cancel Edit' : 'Edit Profile'}
               </button>
@@ -381,7 +381,7 @@ const TourGuideDashboard = () => {
                       name="name"
                       value={formData.name}
                       onChange={handleInputChange}
-                      className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
                       required
                     />
                   </div>
@@ -391,7 +391,7 @@ const TourGuideDashboard = () => {
                       name="bio"
                       value={formData.bio}
                       onChange={handleInputChange}
-                      className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
                       rows="3"
                     />
                   </div>
@@ -402,7 +402,7 @@ const TourGuideDashboard = () => {
                       name="location"
                       value={formData.location}
                       onChange={handleInputChange}
-                      className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
                     />
                   </div>
                   <div>
@@ -412,7 +412,7 @@ const TourGuideDashboard = () => {
                       name="languages"
                       value={formData.languages.join(', ')}
                       onChange={handleInputChange}
-                      className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
                       placeholder="e.g., English, Spanish, French"
                     />
                   </div>
@@ -423,7 +423,7 @@ const TourGuideDashboard = () => {
                       name="yearsOfExperience"
                       value={formData.yearsOfExperience}
                       onChange={handleInputChange}
-                      className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
                       min="0"
                     />
                   </div>
@@ -434,7 +434,7 @@ const TourGuideDashboard = () => {
                       name="certification"
                       value={formData.certification}
                       onChange={handleInputChange}
-                      className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
                     />
                   </div>
                   <button
@@ -456,7 +456,7 @@ const TourGuideDashboard = () => {
                 </div>
               )}
 
-              <Link to="/tour-guide/chat" className="mt-6 inline-block w-full text-center bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 rounded-lg hover:from-blue-700 hover:to-indigo-700 transition shadow-md">
+              <Link to="/tour-guide/chat" className="mt-6 inline-block w-full text-center bg-gradient-to-r from-green-500 to-teal-500 text-white py-3 rounded-lg hover:from-green-600 hover:to-teal-600 transition shadow-md">
                 Chat with Tourists
               </Link>
             </div>
@@ -493,7 +493,7 @@ const TourGuideDashboard = () => {
                           {pkg.status === 'draft' && (
                             <button
                               onClick={() => handlePublish(pkg._id)}
-                              className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white px-4 py-2 rounded-lg hover:from-blue-600 hover:to-indigo-600 transition shadow-md"
+                              className="bg-gradient-to-r from-green-500 to-teal-500 text-white px-4 py-2 rounded-lg hover:from-green-600 hover:to-teal-600 transition shadow-md"
                             >
                               Publish
                             </button>
