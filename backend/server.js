@@ -14,6 +14,8 @@ app.use(cors({
 app.use(express.json());
 app.use('/uploads', express.static('uploads'));
 
+app.use('/api', require('./routes/api'));
+
 // MongoDB Connection
 const connectDB = require('./config/db');
 connectDB();

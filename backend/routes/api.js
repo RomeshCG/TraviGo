@@ -564,4 +564,36 @@ router.delete('/tour-guide/tour-package/:id', async (req, res) => {
   }
 });
 
+// Tour guide banner upload route
+router.put('/tour-guide/update-banner', upload.single('banner'), async (req, res) => {
+  try {
+    const { tourGuideId } = req.body;
+    if (!tourGuideId || !req.file) {
+      return res.status(400).json({ message: 'Tour guide ID and banner file are required' });
+    }
+    const tourGuide = await TourGuide.findById(tourGuideId);
+    if (!tourGuide) {
+      return res.status(404).json({ message: 'Tour guide not found' });
+    }
+    tourGuide.banner = `/uploads/${req.file.filename}`;
+    await tourGuide.save();
+    res.status(200).json({ message: 'Banner updated successfully', tourGuide });
+  } catch (error) {
+    console.error('Update banner error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+//get tour guides to the list
+router.get('/tour-guides', async (req, res) => {
+  try {
+    const tourGuides = await TourGuide.find(); // Fetch all tour guides directly
+    console.log('Fetched tour guides (direct):', tourGuides);
+    res.json(tourGuides);
+  } catch (error) {
+    console.error('Error fetching tour guides:', error);
+    res.status(500).json({ message: 'Error fetching tour guides', error });
+  }
+});
+
 module.exports = router;

@@ -14,6 +14,7 @@ const TourGuideDashboard = () => {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [profilePictureFile, setProfilePictureFile] = useState(null);
+  const [bannerFile, setBannerFile] = useState(null); // New state for banner file
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
@@ -40,7 +41,6 @@ const TourGuideDashboard = () => {
           return;
         }
 
-        // Fetch provider details using the token
         const providerResponse = await fetch(`${BASE_URL}/api/verify-provider-token`, {
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -50,7 +50,6 @@ const TourGuideDashboard = () => {
         }
         const providerData = await providerResponse.json();
         const provider = providerData.provider;
-        console.log('Provider from token:', provider);
 
         let response = await fetch(`${BASE_URL}/api/tour-guide/provider/${provider._id}`);
         if (response.status === 404) {
@@ -82,7 +81,6 @@ const TourGuideDashboard = () => {
         }
 
         const data = await response.json();
-        console.log('Fetched tour guide data:', data);
         setTourGuide(data);
 
         if (data) {
@@ -97,35 +95,29 @@ const TourGuideDashboard = () => {
         }
 
         if (data._id) {
-          // Fetch tour packages
           const packagesResponse = await fetch(`${BASE_URL}/api/tour-guide/${data._id}/tour-packages`);
           if (packagesResponse.ok) {
             const packagesData = await packagesResponse.json();
             setTourPackages(packagesData);
           } else {
-            console.error('Failed to fetch tour packages:', await packagesResponse.json());
             setTourPackages([]);
           }
 
-          // Fetch reviews
           const reviewsResponse = await fetch(`${BASE_URL}/api/tour-guide/${data._id}/reviews`);
           if (reviewsResponse.ok) {
             const reviewsData = await reviewsResponse.json();
             setReviews(reviewsData.reviews || []);
             setAverageRating(reviewsData.averageRating || 0);
           } else {
-            console.error('Failed to fetch reviews:', await reviewsResponse.json());
             setReviews([]);
             setAverageRating(0);
           }
 
-          // Fetch tour guide bookings
           const bookingsResponse = await fetch(`${BASE_URL}/api/tour-guide/${data._id}/tour-guide-bookings`);
           if (bookingsResponse.ok) {
             const bookingsData = await bookingsResponse.json();
             setTourGuideBookings(bookingsData);
           } else {
-            console.error('Failed to fetch tour guide bookings:', await bookingsResponse.json());
             setTourGuideBookings([]);
           }
         } else {
@@ -190,7 +182,6 @@ const TourGuideDashboard = () => {
     }
     setError('');
     try {
-      console.log('Tour guide ID:', tourGuide._id);
       const formData = new FormData();
       formData.append('tourGuideId', tourGuide._id);
       formData.append('profilePicture', profilePictureFile);
@@ -201,14 +192,39 @@ const TourGuideDashboard = () => {
       const data = await response.json();
       if (response.ok) {
         setTourGuide({ ...tourGuide, profilePicture: data.tourGuide.profilePicture });
-        console.log('Updated profile picture path:', data.tourGuide.profilePicture);
         toast.success('Profile picture updated successfully!');
         setProfilePictureFile(null);
       } else {
         setError(data.message || 'Failed to update profile picture');
       }
     } catch (err) {
-      console.error('Profile picture update error:', err);
+      setError(`Failed to connect to the server: ${err.message}`);
+    }
+  };
+
+  const handleUpdateBanner = async () => { // New function for banner upload
+    if (!bannerFile) {
+      setError('Please select a banner file');
+      return;
+    }
+    setError('');
+    try {
+      const formData = new FormData();
+      formData.append('tourGuideId', tourGuide._id);
+      formData.append('banner', bannerFile);
+      const response = await fetch(`${BASE_URL}/api/tour-guide/update-banner`, {
+        method: 'PUT',
+        body: formData,
+      });
+      const data = await response.json();
+      if (response.ok) {
+        setTourGuide({ ...tourGuide, banner: data.tourGuide.banner });
+        toast.success('Banner updated successfully!');
+        setBannerFile(null);
+      } else {
+        setError(data.message || 'Failed to update banner');
+      }
+    } catch (err) {
       setError(`Failed to connect to the server: ${err.message}`);
     }
   };
@@ -271,6 +287,14 @@ const TourGuideDashboard = () => {
             {/* Profile Section */}
             <div className="lg:col-span-1 bg-white rounded-2xl shadow-xl p-6 transform hover:shadow-2xl transition-shadow duration-300">
               <div className="flex flex-col items-center mb-6">
+                {/* Banner Display */}
+                <div className="w-full mb-4">
+                  <img
+                    src={tourGuide.banner ? `${BASE_URL}${tourGuide.banner}` : 'https://via.placeholder.com/300x100?text=No+Banner'}
+                    alt="Banner"
+                    className="w-full h-32 object-cover rounded-lg border border-gray-200"
+                  />
+                </div>
                 <div className="relative">
                   <img
                     src={tourGuide.profilePicture ? `${BASE_URL}${tourGuide.profilePicture}` : 'https://via.placeholder.com/100'}
@@ -306,6 +330,28 @@ const TourGuideDashboard = () => {
                   className="mt-4 w-full bg-gradient-to-r from-indigo-600 to-blue-600 text-white py-2 rounded-lg hover:from-indigo-700 hover:to-blue-700 transition shadow-md"
                 >
                   Update Profile Picture
+                </button>
+              </div>
+
+              {/* Banner Upload Section */}
+              <div className="mb-6">
+                <label className="block text-gray-700 mb-2 font-medium">Update Banner</label>
+                <div className="flex items-center space-x-4">
+                  <label className="cursor-pointer bg-gradient-to-r from-purple-600 to-pink-600 text-white px-4 py-2 rounded-lg hover:from-purple-700 hover:to-pink-700 transition shadow-md">
+                    Choose File
+                    <input
+                      type="file"
+                      onChange={(e) => setBannerFile(e.target.files[0])}
+                      className="hidden"
+                    />
+                  </label>
+                  <span className="text-gray-600 text-sm truncate">{bannerFile ? bannerFile.name : 'No file chosen'}</span>
+                </div>
+                <button
+                  onClick={handleUpdateBanner}
+                  className="mt-4 w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-2 rounded-lg hover:from-purple-700 hover:to-pink-700 transition shadow-md"
+                >
+                  Update Banner
                 </button>
               </div>
 

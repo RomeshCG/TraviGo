@@ -15,12 +15,14 @@ import AccountSettings from './pages/user/AccountSettings';
 import HotelBooking from './pages/user/HotelBooking';
 import VehicleRental from './pages/user/VehicleRental';
 import TourGuides from './pages/user/TourGuide';
+import TourGuidess from './pages/TourGuides';
 import TravelPackages from './pages/user/TravelPackages';
 import Home from './pages/Home';
 import SignIn from './pages/SignIn';
 import Login from './pages/Login';
 import HotelProviderRegister from './pages/HotelProviderRegister';
 import TourGuideRegister from './pages/TourGuideRegister';
+
 
 
 // Protected Route Component
@@ -144,6 +146,7 @@ function App() {
         <Route path="/tour-guide/dashboard" element={<TourGuideDashboard />} />
         <Route path="/pages/hotel/dashboard" element={<HotelProviderDashboard />} />
         <Route path="/pages/vehicle/dashboard" element={<VehicleProviderDashboard />} />
+        <Route path="/tour-guides" element={<TourGuidess />} />
       </Routes>
     </Router>
   );
