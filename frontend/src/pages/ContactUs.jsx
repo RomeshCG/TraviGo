@@ -13,20 +13,39 @@ const ContactUs = () => {
     phone: "",
     message: "",
   });
+  const [errors, setErrors] = useState({}); // Added for validation errors
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
   };
 
+  // Added validation function
+  const validateForm = () => {
+    const newErrors = {};
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const phoneRegex = /^\d{10,}$/;
+
+    if (!emailRegex.test(formData.email))
+      newErrors.email = "Please enter a valid email";
+    if (!phoneRegex.test(formData.phone))
+      newErrors.phone = "Phone number must be at least 10 digits";
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // Added validation check
+    if (!validateForm()) return;
+
     try {
-      const response = await fetch('/api/contact', {
-        method: 'POST',
+      const response = await fetch("/api/contact", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(formData),
       });
@@ -51,7 +70,7 @@ const ContactUs = () => {
         });
       } else {
         // Show error toast
-        toast.error(data.message || 'Failed to send message', {
+        toast.error(data.message || "Failed to send message", {
           position: "top-right",
           autoClose: 3000,
           hideProgressBar: false,
@@ -60,8 +79,8 @@ const ContactUs = () => {
         });
       }
     } catch (error) {
-      console.error('Contact form submission error:', error);
-      toast.error('Failed to connect to the server', {
+      console.error("Contact form submission error:", error);
+      toast.error("Failed to connect to the server", {
         position: "top-right",
         autoClose: 3000,
         hideProgressBar: false,
@@ -163,7 +182,6 @@ const ContactUs = () => {
               </p>
             </div>
 
-            
             <div className="mt-6">
               <h3 className="text-xl font-semibold text-blue-900 mb-2">
                 Office Hours
@@ -277,10 +295,15 @@ const ContactUs = () => {
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className={`w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                    errors.email ? "border-red-500" : "border-gray-300"
+                  }`}
                   placeholder="Email*"
                   required
                 />
+                {errors.email && (
+                  <p className="text-red-500 text-sm mt-1">{errors.email}</p>
+                )}
               </div>
               <div>
                 <input
@@ -288,10 +311,15 @@ const ContactUs = () => {
                   name="phone"
                   value={formData.phone}
                   onChange={handleChange}
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className={`w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                    errors.phone ? "border-red-500" : "border-gray-300"
+                  }`}
                   placeholder="Phone Number*"
                   required
                 />
+                {errors.phone && (
+                  <p className="text-red-500 text-sm mt-1">{errors.phone}</p>
+                )}
               </div>
               <div>
                 <textarea
@@ -334,15 +362,15 @@ const ContactUs = () => {
             Find Us on the Map
           </h3>
           <div className="w-full h-64 bg-gray-200 rounded-lg shadow-md overflow-hidden">
-            {/* Placeholder for Google Maps iframe */}
             <iframe
-              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d31645.235789614!2d80.60669384999999!3d7.2905717!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3ae366266498acd3%3A0x411a3818a832b14d!2sKandy%2C%20Sri%20Lanka!5e0!3m2!1sen!2s!4v1698765432109!5m2!1sen!2s"
+              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3957.538421876216!2d80.63580157590943!3d7.293238113738233!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3ae3662bf4dc596b%3A0x241ec0705b249640!2sQueens%20Hotel!5e0!3m2!1sen!2slk!4v1743356617580!5m2!1sen!2slk"
               width="100%"
               height="100%"
               style={{ border: 0 }}
               allowFullScreen=""
               loading="lazy"
-              title="Kandy, Sri Lanka Location"
+              referrerPolicy="no-referrer-when-downgrade"
+              title="Queens Hotel Kandy Location"
             ></iframe>
           </div>
         </div>

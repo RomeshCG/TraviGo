@@ -1,18 +1,44 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
-import { FaHotel, FaCar, FaUserTie, FaUsers, FaChartBar, FaPaintBrush, FaSignOutAlt, FaTachometerAlt } from "react-icons/fa";
+import { FaHotel, FaCar, FaUserTie, FaUsers, FaChartBar, FaPaintBrush, FaSignOutAlt, FaTachometerAlt, FaUserPlus } from "react-icons/fa";
 
 const SidebarAdmin = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [admin, setAdmin] = useState(null);
   const navigate = useNavigate();
 
+  const handleLogout = useCallback(() => {
+    localStorage.removeItem('admin');
+    localStorage.removeItem('adminToken');
+    setIsOpen(false);
+    navigate('/admin/login');
+  }, [navigate]); // 'navigate' is a dependency because it's used inside
+
   useEffect(() => {
     const storedAdmin = localStorage.getItem('admin');
-    if (storedAdmin) {
-      setAdmin(JSON.parse(storedAdmin));
+    const token = localStorage.getItem('adminToken');
+
+    if (!token) {
+      navigate('/admin/login'); // Redirect if no token
+      return;
     }
-  }, []);
+
+    // Verify admin token on mount
+    fetch('/api/verify-admin-token', {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.message === 'Token is valid' && storedAdmin) {
+          setAdmin(JSON.parse(storedAdmin));
+        } else {
+          handleLogout(); // Invalid token, log out
+        }
+      })
+      .catch(() => handleLogout());
+  }, [navigate, handleLogout]); // Added handleLogout to dependencies
 
   const getInitials = (name) => {
     if (!name) return "A";
@@ -25,11 +51,27 @@ const SidebarAdmin = () => {
     return `${firstInitial}${lastInitial}`;
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('admin');
-    localStorage.removeItem('adminToken');
-    setIsOpen(false);
-    navigate('/admin/login');
+  const generateAdminToken = async () => {
+    const token = localStorage.getItem('adminToken');
+    try {
+      const response = await fetch('/api/admin/generate-registration-token', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      const data = await response.json();
+      if (response.ok) {
+        const registrationToken = data.token;
+        alert(`Generated Admin Registration Token: ${registrationToken}\nShare this with the new admin.`);
+        navigate('/admin/register', { state: { registrationToken } });
+      } else {
+        alert('Failed to generate token: ' + data.message);
+      }
+    } catch (error) {
+      alert('Error generating token: ' + error.message);
+    }
   };
 
   return (
@@ -168,6 +210,23 @@ const SidebarAdmin = () => {
               >
                 <FaPaintBrush className="w-5 h-5" />
                 <span>UI Manager</span>
+              </NavLink>
+            </li>
+            <li>
+              <NavLink
+                to="/admin/register"
+                className={({ isActive }) =>
+                  `flex items-center space-x-2 p-4 hover:bg-pink-100 hover:text-black ${
+                    isActive ? "bg-pink-100 text-black" : ""
+                  }`
+                }
+                onClick={() => {
+                  generateAdminToken(); // Generate token and navigate
+                  setIsOpen(false);
+                }}
+              >
+                <FaUserPlus className="w-5 h-5" />
+                <span>Add New Admin</span>
               </NavLink>
             </li>
           </ul>

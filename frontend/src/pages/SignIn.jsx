@@ -13,22 +13,37 @@ const SignIn = () => {
     phoneNumber: '',
     country: '',
   });
-  const [error, setError] = useState('');
+  const [errors, setErrors] = useState({});
   const [success, setSuccess] = useState('');
   const navigate = useNavigate();
 
+  const validateForm = () => {
+    const newErrors = {};
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const phoneRegex = /^\d{10,}$/;
+
+    if (!formData.username) newErrors.username = 'Username is required';
+    if (!emailRegex.test(formData.email)) newErrors.email = 'Please enter a valid email';
+    if (!phoneRegex.test(formData.phoneNumber)) newErrors.phoneNumber = 'Phone number must be at least 10 digits';
+    if (formData.password.length < 7) newErrors.password = 'Password must be at least 7 characters';
+    if (formData.password !== formData.rePassword) newErrors.rePassword = 'Passwords do not match';
+    if (!formData.country) newErrors.country = 'Country is required';
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+    if (errors[e.target.name]) setErrors({ ...errors, [e.target.name]: '' });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setErrors({});
+    setSuccess('');
 
-    // Basic client-side validation
-    if (formData.password !== formData.rePassword) {
-      setError('Passwords do not match');
-      return;
-    }
+    if (!validateForm()) return;
 
     try {
       const response = await fetch('/api/register', {
@@ -48,8 +63,6 @@ const SignIn = () => {
       const data = await response.json();
       if (response.ok) {
         setSuccess(data.message || 'Registration successful! Redirecting to login...');
-        setError('');
-        // Clear the form
         setFormData({
           username: '',
           password: '',
@@ -58,16 +71,12 @@ const SignIn = () => {
           phoneNumber: '',
           country: '',
         });
-        // Redirect to login page after a short delay
         setTimeout(() => navigate('/login'), 2000);
       } else {
-        setError(data.message || 'Failed to register');
-        setSuccess('');
+        setErrors({ submit: data.message || 'Failed to register' });
       }
-    } catch (err) {
-      console.error('Registration error:', err);
-      setError('Failed to connect to the server');
-      setSuccess('');
+    } catch {
+      setErrors({ submit: 'Failed to connect to the server' });
     }
   };
 
@@ -81,18 +90,15 @@ const SignIn = () => {
         }}
       >
         <div className="flex flex-col lg:flex-row items-center justify-between w-full max-w-5xl p-6">
-          {/* Left Section: Text */}
           <div className="text-white mb-8 lg:mb-0 lg:w-1/2">
             <h1 className="text-4xl lg:text-5xl font-bold mb-4">Your Journey Starts Here</h1>
             <p className="text-lg">
               Book hotels, rent vehicles, and hire tour guides all in one place. Easy, fast, and secure!
             </p>
           </div>
-
-          {/* Right Section: Form */}
           <div className="bg-white bg-opacity-90 rounded-lg p-8 w-full max-w-md">
             <h2 className="text-2xl font-semibold text-center mb-6">Sign Up</h2>
-            {error && <p className="text-red-500 text-center mb-4">{error}</p>}
+            {errors.submit && <p className="text-red-500 text-center mb-4">{errors.submit}</p>}
             {success && <p className="text-green-500 text-center mb-4">{success}</p>}
             <form onSubmit={handleSubmit}>
               <div className="mb-4">
@@ -102,9 +108,12 @@ const SignIn = () => {
                   value={formData.username}
                   onChange={handleChange}
                   placeholder="Username"
-                  className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className={`w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                    errors.username ? 'border-red-500' : 'border-gray-300'
+                  }`}
                   required
                 />
+                {errors.username && <p className="text-red-500 text-sm mt-1">{errors.username}</p>}
               </div>
               <div className="mb-4">
                 <input
@@ -113,9 +122,12 @@ const SignIn = () => {
                   value={formData.password}
                   onChange={handleChange}
                   placeholder="Password"
-                  className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className={`w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                    errors.password ? 'border-red-500' : 'border-gray-300'
+                  }`}
                   required
                 />
+                {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password}</p>}
               </div>
               <div className="mb-4">
                 <input
@@ -124,9 +136,12 @@ const SignIn = () => {
                   value={formData.rePassword}
                   onChange={handleChange}
                   placeholder="Re-enter Password"
-                  className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className={`w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                    errors.rePassword ? 'border-red-500' : 'border-gray-300'
+                  }`}
                   required
                 />
+                {errors.rePassword && <p className="text-red-500 text-sm mt-1">{errors.rePassword}</p>}
               </div>
               <div className="mb-4">
                 <input
@@ -135,9 +150,12 @@ const SignIn = () => {
                   value={formData.email}
                   onChange={handleChange}
                   placeholder="Email"
-                  className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className={`w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                    errors.email ? 'border-red-500' : 'border-gray-300'
+                  }`}
                   required
                 />
+                {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
               </div>
               <div className="mb-4">
                 <input
@@ -146,9 +164,12 @@ const SignIn = () => {
                   value={formData.phoneNumber}
                   onChange={handleChange}
                   placeholder="Phone number"
-                  className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className={`w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                    errors.phoneNumber ? 'border-red-500' : 'border-gray-300'
+                  }`}
                   required
                 />
+                {errors.phoneNumber && <p className="text-red-500 text-sm mt-1">{errors.phoneNumber}</p>}
               </div>
               <div className="mb-6">
                 <input
@@ -157,9 +178,12 @@ const SignIn = () => {
                   value={formData.country}
                   onChange={handleChange}
                   placeholder="Country"
-                  className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className={`w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                    errors.country ? 'border-red-500' : 'border-gray-300'
+                  }`}
                   required
                 />
+                {errors.country && <p className="text-red-500 text-sm mt-1">{errors.country}</p>}
               </div>
               <button
                 type="submit"

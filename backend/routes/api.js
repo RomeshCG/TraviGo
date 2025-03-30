@@ -649,8 +649,8 @@ router.get('/tour-guides', async (req, res) => {
 
 
 // Admin Registration Route
-router.post('/admin/register', async (req, res) => {
-  const { username, email, password } = req.body;
+router.post('/admin/register', verifyAdminToken, async (req, res) => {
+  const { username, email, password, adminToken } = req.body;
 
   if (!username || !email || !password) {
     return res.status(400).json({ message: 'All fields are required' });
@@ -748,5 +748,128 @@ router.get('/verify-admin-token', async (req, res) => {
     res.status(403).json({ message: 'Invalid or expired token' });
   }
 });
+
+
+const isAdmin = async (req, res, next) => {
+  const token = req.headers['authorization']?.split(' ')[1];
+  if (!token) {
+    return res.status(401).json({ message: 'No token provided' });
+  }
+
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    if (decoded.role !== 'admin') {
+      return res.status(403).json({ message: 'Access denied: Admins only' });
+    }
+    req.adminId = decoded.id;
+    next();
+  } catch (error) {
+    res.status(403).json({ message: 'Invalid or expired token' });
+  }
+};
+
+// Get all tour guides
+router.get('/tourguides', isAdmin, async (req, res) => {
+  try {
+    const tourGuides = await TourGuide.find()
+      .select('-__v') // Exclude version key
+      .lean(); // Convert to plain JavaScript object
+    res.json(tourGuides);
+  } catch (error) {
+    console.error('Error fetching tour guides:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Verify tour guide
+router.put('/tourguides/verify/:id', isAdmin, async (req, res) => {
+  try {
+    const tourGuide = await TourGuide.findById(req.params.id);
+    if (!tourGuide) return res.status(404).json({ message: 'Tour guide not found' });
+
+    tourGuide.verificationStatus = 'verified';
+    tourGuide.verifiedBadge = true;
+    await tourGuide.save();
+    res.json(tourGuide);
+  } catch (error) {
+    console.error('Error verifying tour guide:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Unverify tour guide
+router.put('/tourguides/unverify/:id', isAdmin, async (req, res) => {
+  try {
+    const tourGuide = await TourGuide.findById(req.params.id);
+    if (!tourGuide) return res.status(404).json({ message: 'Tour guide not found' });
+
+    tourGuide.verificationStatus = 'pending';
+    tourGuide.verifiedBadge = false;
+    await tourGuide.save();
+    res.json(tourGuide);
+  } catch (error) {
+    console.error('Error unverifying tour guide:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Ban tour guide
+router.put('/tourguides/ban/:id', isAdmin, async (req, res) => {
+  try {
+    const tourGuide = await TourGuide.findById(req.params.id);
+    if (!tourGuide) return res.status(404).json({ message: 'Tour guide not found' });
+
+    tourGuide.isBanned = true;
+    await tourGuide.save();
+    res.json(tourGuide);
+  } catch (error) {
+    console.error('Error banning tour guide:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Unban tour guide
+router.put('/tourguides/unban/:id', isAdmin, async (req, res) => {
+  try {
+    const tourGuide = await TourGuide.findById(req.params.id);
+    if (!tourGuide) return res.status(404).json({ message: 'Tour guide not found' });
+
+    tourGuide.isBanned = false;
+    await tourGuide.save();
+    res.json(tourGuide);
+  } catch (error) {
+    console.error('Error unbanning tour guide:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Delete tour guide
+router.delete('/tourguides/:id', isAdmin, async (req, res) => {
+  try {
+    const tourGuide = await TourGuide.findByIdAndDelete(req.params.id);
+    if (!tourGuide) return res.status(404).json({ message: 'Tour guide not found' });
+    res.json({ message: 'Tour guide deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting tour guide:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Generate registration token
+router.post('/api/admin/generate-registration-token', isAdmin, async (req, res) => {
+  try {
+    const registrationToken = jwt.sign(
+      { issuer: req.adminId, purpose: 'admin-registration' },
+      JWT_SECRET,
+      { expiresIn: '1h' } // Token expires in 1 hour
+    );
+    res.status(200).json({ token: registrationToken });
+  } catch (error) {
+    console.error('Token generation error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+
 
 module.exports = router;

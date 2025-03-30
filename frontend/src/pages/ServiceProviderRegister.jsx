@@ -10,18 +10,34 @@ const ServiceProviderRegister = () => {
     password: '',
     providerType: '',
   });
-  const [error, setError] = useState('');
+  const [errors, setErrors] = useState({});
   const [success, setSuccess] = useState('');
   const navigate = useNavigate();
 
+  const validateForm = () => {
+    const newErrors = {};
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!formData.name) newErrors.name = 'Full name is required';
+    if (!emailRegex.test(formData.email)) newErrors.email = 'Please enter a valid email';
+    if (formData.password.length < 7) newErrors.password = 'Password must be at least 7 characters';
+    if (!formData.providerType) newErrors.providerType = 'Please select a provider type';
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+    if (errors[e.target.name]) setErrors({ ...errors, [e.target.name]: '' });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
+    setErrors({});
     setSuccess('');
+
+    if (!validateForm()) return;
 
     try {
       const response = await fetch('/api/service-provider/register', {
@@ -32,12 +48,11 @@ const ServiceProviderRegister = () => {
 
       const data = await response.json();
       if (response.ok) {
-        setSuccess(data.message);
-        // Clear any existing provider data
+        setSuccess(data.message || 'Registration successful!');
         localStorage.removeItem('provider');
         localStorage.setItem('providerId', data.providerId);
         localStorage.setItem('providerType', data.providerType);
-        console.log('Registered providerId:', data.providerId); // Add log
+        console.log('Registered providerId:', data.providerId);
         if (data.providerType === 'HotelProvider') {
           navigate('/service-provider/register/hotel');
         } else if (data.providerType === 'TourGuide') {
@@ -46,10 +61,10 @@ const ServiceProviderRegister = () => {
           navigate('/service-provider/register/vehicle');
         }
       } else {
-        setError(data.message);
+        setErrors({ submit: data.message || 'Registration failed' });
       }
     } catch {
-      setError('Failed to connect to the server');
+      setErrors({ submit: 'Failed to connect to the server' });
     }
   };
 
@@ -60,7 +75,7 @@ const ServiceProviderRegister = () => {
         <div className="w-full flex justify-center items-center p-6">
           <div className="bg-white shadow-lg rounded-lg p-8 w-full max-w-md mt-6 lg:mt-8">
             <h2 className="text-2xl font-semibold text-center mb-6">Service Provider Registration</h2>
-            {error && <p className="text-red-500 text-center mb-4">{error}</p>}
+            {errors.submit && <p className="text-red-500 text-center mb-4">{errors.submit}</p>}
             {success && <p className="text-green-500 text-center mb-4">{success}</p>}
             <form onSubmit={handleSubmit}>
               <div className="mb-4">
@@ -70,9 +85,12 @@ const ServiceProviderRegister = () => {
                   value={formData.name}
                   onChange={handleChange}
                   placeholder="Full Name"
-                  className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className={`w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue- SPACE500 ${
+                    errors.name ? 'border-red-500' : 'border-gray-300'
+                  }`}
                   required
                 />
+                {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
               </div>
               <div className="mb-4">
                 <input
@@ -81,9 +99,12 @@ const ServiceProviderRegister = () => {
                   value={formData.email}
                   onChange={handleChange}
                   placeholder="Email"
-                  className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className={`w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                    errors.email ? 'border-red-500' : 'border-gray-300'
+                  }`}
                   required
                 />
+                {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
               </div>
               <div className="mb-4">
                 <input
@@ -92,16 +113,21 @@ const ServiceProviderRegister = () => {
                   value={formData.password}
                   onChange={handleChange}
                   placeholder="Password"
-                  className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className={`w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                    errors.password ? 'border-red-500' : 'border-gray-300'
+                  }`}
                   required
                 />
+                {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password}</p>}
               </div>
               <div className="mb-6">
                 <select
                   name="providerType"
                   value={formData.providerType}
                   onChange={handleChange}
-                  className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className={`w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                    errors.providerType ? 'border-red-500' : 'border-gray-300'
+                  }`}
                   required
                 >
                   <option value="">Select Provider Type</option>
@@ -109,6 +135,7 @@ const ServiceProviderRegister = () => {
                   <option value="TourGuide">Tour Guide</option>
                   <option value="VehicleProvider">Vehicle Provider</option>
                 </select>
+                {errors.providerType && <p className="text-red-500 text-sm mt-1">{errors.providerType}</p>}
               </div>
               <button
                 type="submit"
