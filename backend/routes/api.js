@@ -3,6 +3,7 @@ const router = express.Router();
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken'); // Add jsonwebtoken
 const User = require('../models/user');
+const Admin = require('../models/Admin');
 const ServiceProvider = require('../models/ServiceProvider');
 const HotelOwner = require('../models/HotelOwner');
 const TourGuide = require('../models/TourGuide');
@@ -14,6 +15,7 @@ const multer = require('multer');
 const path = require('path');
 const TourGuideBooking = require('../models/TourBookings');
 const ContactMessage = require('../models/ContactMessage');
+
 
 // Load environment variables
 require('dotenv').config();
@@ -112,6 +114,55 @@ router.post('/login', async (req, res) => {
     res.status(200).json({ message: 'Login successful', user: userResponse, token });
   } catch (error) {
     console.error('Login error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Update user profile
+router.put('/user/update-profile', async (req, res) => {
+  try {
+    const { userId, email, phoneNumber, country, address } = req.body;
+
+    // Validate required fields
+    if (!userId) {
+      return res.status(400).json({ message: 'User ID is required' });
+    }
+
+    // Find the user
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Check if the new email is already in use by another user
+    if (email && email !== user.email) {
+      const existingUser = await User.findOne({ email });
+      if (existingUser) {
+        return res.status(400).json({ message: 'Email is already in use' });
+      }
+    }
+
+    // Update fields
+    user.email = email || user.email;
+    user.phoneNumber = phoneNumber || user.phoneNumber;
+    user.country = country || user.country;
+    user.address = address || user.address;
+
+    await user.save();
+
+    const userResponse = {
+      _id: user._id,
+      username: user.username,
+      email: user.email,
+      phoneNumber: user.phoneNumber,
+      country: user.country,
+      address: user.address,
+      profilePicture: user.profilePicture,
+    };
+
+    res.status(200).json({ message: 'Profile updated successfully', user: userResponse });
+  } catch (error) {
+    console.error('Update user profile error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });
@@ -593,6 +644,108 @@ router.get('/tour-guides', async (req, res) => {
   } catch (error) {
     console.error('Error fetching tour guides:', error);
     res.status(500).json({ message: 'Error fetching tour guides', error });
+  }
+});
+
+
+// Admin Registration Route
+router.post('/admin/register', async (req, res) => {
+  const { username, email, password } = req.body;
+
+  if (!username || !email || !password) {
+    return res.status(400).json({ message: 'All fields are required' });
+  }
+
+  try {
+    const existingAdmin = await Admin.findOne({ $or: [{ username }, { email }] });
+    if (existingAdmin) {
+      return res.status(400).json({ message: 'Username or email already exists' });
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    const newAdmin = new Admin({
+      username,
+      email,
+      password: hashedPassword,
+    });
+
+    await newAdmin.save();
+    res.status(201).json({ message: 'Admin registered successfully' });
+  } catch (error) {
+    console.error('Admin registration error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Admin Login Route
+router.post('/admin/login', async (req, res) => {
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    return res.status(400).json({ message: 'Email and password are required' });
+  }
+
+  try {
+    const admin = await Admin.findOne({ email });
+    if (!admin) {
+      return res.status(400).json({ message: 'Invalid email or password' });
+    }
+
+    const isMatch = await bcrypt.compare(password, admin.password);
+    if (!isMatch) {
+      return res.status(400).json({ message: 'Invalid email or password' });
+    }
+
+    const token = jwt.sign(
+      { id: admin._id, email: admin.email, role: 'admin' },
+      JWT_SECRET,
+      { expiresIn: '1h' }
+    );
+
+    const adminResponse = {
+      _id: admin._id,
+      username: admin.username,
+      email: admin.email,
+    };
+
+    res.status(200).json({ message: 'Admin login successful', admin: adminResponse, token });
+  } catch (error) {
+    console.error('Admin login error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Verify Admin Token
+router.get('/verify-admin-token', async (req, res) => {
+  const token = req.headers['authorization']?.split(' ')[1]; // Expecting "Bearer <token>"
+  if (!token) {
+    return res.status(401).json({ message: 'No token provided' });
+  }
+
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    if (decoded.role !== 'admin') {
+      return res.status(403).json({ message: 'Access denied: Admins only' });
+    }
+
+    const admin = await Admin.findById(decoded.id);
+    if (!admin) {
+      return res.status(404).json({ message: 'Admin not found' });
+    }
+
+    res.status(200).json({
+      message: 'Token is valid',
+      admin: {
+        _id: admin._id,
+        username: admin.username,
+        email: admin.email,
+      },
+    });
+  } catch (error) {
+    console.error('Admin token verification error:', error);
+    res.status(403).json({ message: 'Invalid or expired token' });
   }
 });
 

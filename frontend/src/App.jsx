@@ -23,10 +23,20 @@ import Login from './pages/Login';
 import HotelProviderRegister from './pages/HotelProviderRegister';
 import TourGuideRegister from './pages/TourGuideRegister';
 import ProviderReg from './pages/ServiceProviderRegister';
+import AdminLogin from './pages/Admin/AdminLogin';
+import AdminRegister from './pages/Admin/AdminRegister';
+import AdminDashboard from './pages/admin/AdminDashboard';
+import HotelListing from './pages/admin/HotelListing';
+import Reports from './pages/admin/Reports';
+import TourGuide from './pages/admin/TourGuide';
+import UIManager from './pages/Admin/UIManage';
+import Users from './pages/admin/Users';
+import VehicleListing from './pages/admin/VehicleListing';
+import AdminSideBar from './components/SidebarAdmin';
 
 
 
-// Protected Route Component
+// Protected Route Component users
 const ProtectedRoute = ({ children }) => {
   const token = localStorage.getItem('token');
   const [isAuthenticated, setIsAuthenticated] = useState(null);
@@ -59,10 +69,44 @@ const ProtectedRoute = ({ children }) => {
   return children;
 };
 
+// Protected Route Component for Admins
+const ProtectedAdminRoute = ({ children }) => {
+  const token = localStorage.getItem('adminToken');
+  const [isAuthenticated, setIsAuthenticated] = useState(null);
+
+  useEffect(() => {
+    const verifyToken = async () => {
+      try {
+        const response = await fetch('/api/verify-admin-token', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (response.ok) {
+          setIsAuthenticated(true);
+        } else {
+          setIsAuthenticated(false);
+          localStorage.removeItem('admin');
+          localStorage.removeItem('adminToken');
+        }
+      } catch {
+        setIsAuthenticated(false);
+        localStorage.removeItem('admin');
+        localStorage.removeItem('adminToken');
+      }
+    };
+    if (token) verifyToken();
+    else setIsAuthenticated(false);
+  }, [token]);
+
+  if (isAuthenticated === null) return <div>Loading...</div>;
+  if (!isAuthenticated) return <Navigate to="/admin/login" replace />;
+  return children;
+};
+
 function App() {
   return (
     <Router>
       <Routes>
+      <Route path="/admin/register" element={<AdminRegister />} />
         <Route path="/" element={<Home />} />
         <Route path="/signin" element={<SignIn />} />
         <Route path="/login" element={<Login />} />
@@ -138,6 +182,65 @@ function App() {
             </ProtectedRoute>
           }
         />
+        {/* Admin Routes */}
+          
+          <Route path="/admin/login" element={<AdminLogin />} />
+          <Route
+            path="/admin/dashboard"
+            element={
+              <ProtectedAdminRoute>
+                <AdminDashboard />
+              </ProtectedAdminRoute>
+            }
+          />
+          <Route
+            path="/admin/hotel-listing"
+            element={
+              <ProtectedAdminRoute>
+                <HotelListing />
+              </ProtectedAdminRoute>
+            }
+          />
+          <Route
+            path="/admin/reports"
+            element={
+              <ProtectedAdminRoute>
+                <Reports />
+              </ProtectedAdminRoute>
+            }
+          />
+          <Route
+            path="/admin/tour-guides"
+            element={
+              <ProtectedAdminRoute>
+                <TourGuide />
+              </ProtectedAdminRoute>
+            }
+          />
+          <Route
+            path="/admin/ui-manager"
+            element={
+              <ProtectedAdminRoute>
+                <UIManager />
+              </ProtectedAdminRoute>
+            }
+          />
+          <Route
+            path="/admin/users"
+            element={
+              <ProtectedAdminRoute>
+                <Users />
+              </ProtectedAdminRoute>
+            }
+          />
+          <Route
+            path="/admin/vehicle-listing"
+            element={
+              <ProtectedAdminRoute>
+                <VehicleListing />
+              </ProtectedAdminRoute>
+            }
+          />
         <Route path="/about" element={<AboutUs />} />
         <Route path="/contact" element={<ContactUs />} />
         <Route path="/service-provider/register" element={<ProviderReg />} />
