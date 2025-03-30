@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken'); // Add jsonwebtoken
+const jwt = require('jsonwebtoken');
 const User = require('../models/user');
 const Admin = require('../models/Admin');
 const ServiceProvider = require('../models/ServiceProvider');
@@ -16,7 +16,6 @@ const path = require('path');
 const TourGuideBooking = require('../models/TourBookings');
 const ContactMessage = require('../models/ContactMessage');
 
-
 // Load environment variables
 require('dotenv').config();
 const JWT_SECRET = process.env.JWT_SECRET;
@@ -26,6 +25,25 @@ if (!JWT_SECRET) {
   process.exit(1);
 }
 
+// Middleware to verify admin (moved up)
+const isAdmin = async (req, res, next) => {
+  const token = req.headers['authorization']?.split(' ')[1];
+  if (!token) {
+    return res.status(401).json({ message: 'No token provided in Authorization header' });
+  }
+
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    if (decoded.role !== 'admin') {
+      return res.status(403).json({ message: 'Access denied: Admins only' });
+    }
+    req.adminId = decoded.id;
+    next();
+  } catch (error) {
+    console.error('isAdmin token verification error:', error.message);
+    return res.status(403).json({ message: `Invalid or expired token in Authorization header: ${error.message}` });
+  }
+};
 // Test route
 router.get('/test', (req, res) => {
   res.json({ message: 'Backend is working!' });
@@ -46,13 +64,11 @@ const upload = multer({ storage });
 router.post('/register', async (req, res) => {
   const { username, password, email, phoneNumber, country } = req.body;
 
-  // Basic validation
   if (!username || !password || !email || !phoneNumber || !country) {
     return res.status(400).json({ message: 'All fields are required' });
   }
 
   try {
-    // Check if user already exists
     const existingUser = await User.findOne({ $or: [{ username }, { email }] });
     if (existingUser) {
       return res.status(400).json({ message: 'Username or email already exists' });
@@ -96,7 +112,6 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ message: 'Invalid username or password' });
     }
 
-    // Generate JWT token for user
     const token = jwt.sign(
       { id: existingUser._id, username: existingUser.username },
       JWT_SECRET,
@@ -123,18 +138,15 @@ router.put('/user/update-profile', async (req, res) => {
   try {
     const { userId, email, phoneNumber, country, address } = req.body;
 
-    // Validate required fields
     if (!userId) {
       return res.status(400).json({ message: 'User ID is required' });
     }
 
-    // Find the user
     const user = await User.findById(userId);
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    // Check if the new email is already in use by another user
     if (email && email !== user.email) {
       const existingUser = await User.findOne({ email });
       if (existingUser) {
@@ -142,7 +154,6 @@ router.put('/user/update-profile', async (req, res) => {
       }
     }
 
-    // Update fields
     user.email = email || user.email;
     user.phoneNumber = phoneNumber || user.phoneNumber;
     user.country = country || user.country;
@@ -169,7 +180,7 @@ router.put('/user/update-profile', async (req, res) => {
 
 // Verify User Token
 router.get('/verify-token', async (req, res) => {
-  const token = req.headers['authorization']?.split(' ')[1]; // Expecting "Bearer <token>"
+  const token = req.headers['authorization']?.split(' ')[1];
   if (!token) {
     return res.status(401).json({ message: 'No token provided' });
   }
@@ -374,7 +385,6 @@ router.post('/service-provider/login', async (req, res) => {
       return res.status(400).json({ message: 'Invalid email or password' });
     }
 
-    // Generate JWT token for service provider
     const token = jwt.sign(
       { id: existingProvider._id, email: existingProvider.email, providerType: existingProvider.providerType },
       JWT_SECRET,
@@ -398,7 +408,7 @@ router.post('/service-provider/login', async (req, res) => {
 
 // Verify Service Provider Token
 router.get('/verify-provider-token', async (req, res) => {
-  const token = req.headers['authorization']?.split(' ')[1]; // Expecting "Bearer <token>"
+  const token = req.headers['authorization']?.split(' ')[1];
   if (!token) {
     return res.status(401).json({ message: 'No token provided' });
   }
@@ -489,12 +499,10 @@ router.get('/tour-guide/:tourGuideId/tour-packages', async (req, res) => {
   try {
     const { tourGuideId } = req.params;
 
-    // Validate tourGuideId
     if (!mongoose.Types.ObjectId.isValid(tourGuideId)) {
       return res.status(400).json({ message: 'Invalid tour guide ID' });
     }
 
-    // Check if tour guide exists
     const tourGuide = await TourGuide.findById(tourGuideId);
     if (!tourGuide) {
       return res.status(404).json({ message: 'Tour guide not found' });
@@ -530,12 +538,10 @@ router.get('/tour-guide/:tourGuideId/reviews', async (req, res) => {
   try {
     const { tourGuideId } = req.params;
 
-    // Validate tourGuideId
     if (!mongoose.Types.ObjectId.isValid(tourGuideId)) {
       return res.status(400).json({ message: 'Invalid tour guide ID' });
     }
 
-    // Check if tour guide exists
     const tourGuide = await TourGuide.findById(tourGuideId);
     if (!tourGuide) {
       return res.status(404).json({ message: 'Tour guide not found' });
@@ -635,10 +641,10 @@ router.put('/tour-guide/update-banner', upload.single('banner'), async (req, res
   }
 });
 
-//get tour guides to the list
+// Get tour guides to the list
 router.get('/tour-guides', async (req, res) => {
   try {
-    const tourGuides = await TourGuide.find(); // Fetch all tour guides directly
+    const tourGuides = await TourGuide.find();
     console.log('Fetched tour guides (direct):', tourGuides);
     res.json(tourGuides);
   } catch (error) {
@@ -647,10 +653,9 @@ router.get('/tour-guides', async (req, res) => {
   }
 });
 
-
 // Admin Registration Route
-router.post('/admin/register', verifyAdminToken, async (req, res) => {
-  const { username, email, password, adminToken } = req.body;
+router.post('/admin/register', isAdmin, async (req, res) => {
+  const { username, email, password } = req.body;
 
   if (!username || !email || !password) {
     return res.status(400).json({ message: 'All fields are required' });
@@ -674,8 +679,8 @@ router.post('/admin/register', verifyAdminToken, async (req, res) => {
     await newAdmin.save();
     res.status(201).json({ message: 'Admin registered successfully' });
   } catch (error) {
-    console.error('Admin registration error:', error);
-    res.status(500).json({ message: 'Server error' });
+    console.error('Admin registration error:', error.message);
+    return res.status(500).json({ message: `Server error: ${error.message}` });
   }
 });
 
@@ -719,17 +724,13 @@ router.post('/admin/login', async (req, res) => {
 
 // Verify Admin Token
 router.get('/verify-admin-token', async (req, res) => {
-  const token = req.headers['authorization']?.split(' ')[1]; // Expecting "Bearer <token>"
+  const token = req.headers['authorization']?.split(' ')[1];
   if (!token) {
     return res.status(401).json({ message: 'No token provided' });
   }
 
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
-    if (decoded.role !== 'admin') {
-      return res.status(403).json({ message: 'Access denied: Admins only' });
-    }
-
     const admin = await Admin.findById(decoded.id);
     if (!admin) {
       return res.status(404).json({ message: 'Admin not found' });
@@ -749,31 +750,12 @@ router.get('/verify-admin-token', async (req, res) => {
   }
 });
 
-
-const isAdmin = async (req, res, next) => {
-  const token = req.headers['authorization']?.split(' ')[1];
-  if (!token) {
-    return res.status(401).json({ message: 'No token provided' });
-  }
-
-  try {
-    const decoded = jwt.verify(token, JWT_SECRET);
-    if (decoded.role !== 'admin') {
-      return res.status(403).json({ message: 'Access denied: Admins only' });
-    }
-    req.adminId = decoded.id;
-    next();
-  } catch (error) {
-    res.status(403).json({ message: 'Invalid or expired token' });
-  }
-};
-
-// Get all tour guides
+// Get all tour guides (admin only)
 router.get('/tourguides', isAdmin, async (req, res) => {
   try {
     const tourGuides = await TourGuide.find()
-      .select('-__v') // Exclude version key
-      .lean(); // Convert to plain JavaScript object
+      .select('-__v')
+      .lean();
     res.json(tourGuides);
   } catch (error) {
     console.error('Error fetching tour guides:', error);
@@ -861,7 +843,7 @@ router.post('/api/admin/generate-registration-token', isAdmin, async (req, res) 
     const registrationToken = jwt.sign(
       { issuer: req.adminId, purpose: 'admin-registration' },
       JWT_SECRET,
-      { expiresIn: '1h' } // Token expires in 1 hour
+      { expiresIn: '1h' }
     );
     res.status(200).json({ token: registrationToken });
   } catch (error) {
@@ -869,7 +851,5 @@ router.post('/api/admin/generate-registration-token', isAdmin, async (req, res) 
     res.status(500).json({ message: 'Server error' });
   }
 });
-
-
 
 module.exports = router;
