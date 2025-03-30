@@ -1,13 +1,14 @@
 import { useNavigate } from 'react-router-dom';
 
-function HeaderUser() {
+function AdminHeader() {
   const navigate = useNavigate();
-  const user = JSON.parse(localStorage.getItem('user')) || {};
-  const username = user.username || 'Guest';
+  const admin = JSON.parse(localStorage.getItem('admin')) || {};
+  const username = admin.username || 'Admin';
 
   const handleSignOut = () => {
-    localStorage.removeItem('user');
-    navigate('/login');
+    localStorage.removeItem('admin');
+    localStorage.removeItem('adminToken');
+    navigate('/admin/login');
   };
 
   const handleBackToHome = () => {
@@ -36,4 +37,4 @@ function HeaderUser() {
   );
 }
 
-export default HeaderUser;
+export default AdminHeader;

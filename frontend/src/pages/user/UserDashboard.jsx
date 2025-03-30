@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import SidebarUser from "../../components/SidebarUser";
 import HeaderUser from "../../components/HeaderUser";
 
-// Backend base URL (adjust this based on your backend URL)
 const BACKEND_URL = 'http://localhost:5000';
 
 function UserDashboard() {
@@ -17,23 +16,19 @@ function UserDashboard() {
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        // Get the user data from localStorage (set during login)
         const storedUser = JSON.parse(localStorage.getItem('user'));
         if (!storedUser || !storedUser._id) {
           throw new Error('User not found in local storage');
         }
 
-        // Fetch user data from the backend
         const response = await fetch(`/api/user/${storedUser._id}`);
         const data = await response.json();
 
         if (response.ok) {
-          // Prepend the backend URL to the profile picture
           if (data.profilePicture && !data.profilePicture.startsWith('http')) {
             data.profilePicture = `${BACKEND_URL}${data.profilePicture}`;
           }
           setUser(data);
-          // Update localStorage with the full profile picture URL
           storedUser.profilePicture = data.profilePicture;
           localStorage.setItem('user', JSON.stringify(storedUser));
         } else {
@@ -68,18 +63,14 @@ function UserDashboard() {
 
       const data = await response.json();
       if (response.ok) {
-        // Prepend the backend URL to the new profile picture
         if (data.user.profilePicture && !data.user.profilePicture.startsWith('http')) {
           data.user.profilePicture = `${BACKEND_URL}${data.user.profilePicture}`;
         }
-        // Update the user state with the new profile picture
         setUser(data.user);
-        // Update localStorage to reflect the new profile picture
         const storedUser = JSON.parse(localStorage.getItem('user'));
         storedUser.profilePicture = data.user.profilePicture;
         localStorage.setItem('user', JSON.stringify(storedUser));
-        // Force a re-fetch to ensure consistency
-        window.location.reload(); // Temporary solution to force re-render of SidebarUser
+        window.location.reload();
       } else {
         throw new Error(data.message || 'Failed to upload profile picture');
       }
@@ -100,7 +91,7 @@ function UserDashboard() {
         <SidebarUser />
         <div className="flex-1">
           <HeaderUser />
-          <div className="p-6 bg-gray-100 min-h-screen flex items-center justify-center">
+          <div className="p-6 md:p-10 bg-gradient-to-b from-gray-50 to-gray-100 min-h-screen flex items-center justify-center">
             <p className="text-gray-600">Loading...</p>
           </div>
         </div>
@@ -114,7 +105,7 @@ function UserDashboard() {
         <SidebarUser />
         <div className="flex-1">
           <HeaderUser />
-          <div className="p-6 bg-gray-100 min-h-screen flex items-center justify-center">
+          <div className="p-6 md:p-10 bg-gradient-to-b from-gray-50 to-gray-100 min-h-screen flex items-center justify-center">
             <p className="text-red-500">{error}</p>
           </div>
         </div>
@@ -127,19 +118,19 @@ function UserDashboard() {
       <SidebarUser />
       <div className="flex-1">
         <HeaderUser />
-        <div className="p-6 bg-gray-100 min-h-screen">
+        <div className="p-6 md:p-10 bg-gradient-to-b from-gray-50 to-gray-100 min-h-screen">
           {/* Header Section */}
-          <div className="mb-6">
-            <h1 className="text-3xl font-bold text-gray-800">User Dashboard</h1>
+          <div className="mb-10">
+            <h1 className="text-4xl font-bold text-gray-800">User Dashboard</h1>
           </div>
 
           {/* Main Content */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Left Column: Profile and Quick Actions */}
             <div className="space-y-6">
               {/* Profile Card */}
-              <div className="bg-white p-6 rounded-xl shadow-md">
-                <h2 className="text-xl font-semibold text-gray-800 mb-4">
+              <div className="bg-white p-6 rounded-2xl shadow-lg">
+                <h2 className="text-2xl font-semibold text-gray-800 mb-4">
                   Welcome back, {user.username}
                 </h2>
                 <div className="flex items-center space-x-4 mb-4">
@@ -147,11 +138,11 @@ function UserDashboard() {
                     <img
                       src={user.profilePicture}
                       alt="Profile"
-                      className="w-16 h-16 rounded-full object-cover"
+                      className="w-16 h-16 rounded-full object-cover border-2 border-blue-600"
                     />
                     <label
                       htmlFor="profile-picture-upload"
-                      className="absolute bottom-0 right-0 bg-blue-500 text-white p-1 rounded-full cursor-pointer hover:bg-blue-600"
+                      className="absolute bottom-0 right-0 bg-blue-600 text-white p-1 rounded-full cursor-pointer hover:bg-blue-700 transition-all"
                     >
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -192,25 +183,25 @@ function UserDashboard() {
                 {uploadError && <p className="text-red-500">{uploadError}</p>}
                 <button
                   onClick={handleEditProfile}
-                  className="w-full bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600"
+                  className="w-full bg-gradient-to-r from-blue-600 to-blue-800 text-white py-2 rounded-lg hover:from-blue-700 hover:to-blue-900 transition-all shadow-md"
                 >
                   Edit Profile
                 </button>
               </div>
 
               {/* Quick Actions Card */}
-              <div className="bg-white p-6 rounded-xl shadow-md">
-                <h2 className="text-xl font-semibold text-gray-800 mb-4">
+              <div className="bg-white p-6 rounded-2xl shadow-lg">
+                <h2 className="text-2xl font-semibold text-gray-800 mb-4">
                   Quick Actions
                 </h2>
                 <div className="space-y-3">
-                  <button className="w-full bg-pink-500 text-white py-3 rounded-lg hover:bg-pink-600">
+                  <button className="w-full bg-gradient-to-r from-blue-600 to-blue-800 text-white py-3 rounded-lg hover:from-blue-700 hover:to-blue-900 transition-all shadow-md">
                     Book a Hotel
                   </button>
-                  <button className="w-full bg-orange-500 text-white py-3 rounded-lg hover:bg-orange-600">
+                  <button className="w-full bg-gradient-to-r from-blue-600 to-blue-800 text-white py-3 rounded-lg hover:from-blue-700 hover:to-blue-900 transition-all shadow-md">
                     Rent a Car
                   </button>
-                  <button className="w-full bg-teal-500 text-white py-3 rounded-lg hover:bg-teal-600">
+                  <button className="w-full bg-gradient-to-r from-blue-600 to-blue-800 text-white py-3 rounded-lg hover:from-blue-700 hover:to-blue-900 transition-all shadow-md">
                     Plan a Tour
                   </button>
                 </div>
@@ -219,8 +210,8 @@ function UserDashboard() {
 
             {/* Right Column: Placeholder for Future Features */}
             <div className="lg:col-span-2 space-y-6">
-              <div className="bg-white p-6 rounded-xl shadow-md">
-                <h2 className="text-xl font-semibold text-gray-800 mb-4">
+              <div className="bg-white p-6 rounded-2xl shadow-lg">
+                <h2 className="text-2xl font-semibold text-gray-800 mb-4">
                   Travel Statistics
                 </h2>
                 <p className="text-gray-600">
@@ -228,8 +219,8 @@ function UserDashboard() {
                 </p>
               </div>
 
-              <div className="bg-white p-6 rounded-xl shadow-md">
-                <h2 className="text-xl font-semibold text-gray-800 mb-4">
+              <div className="bg-white p-6 rounded-2xl shadow-lg">
+                <h2 className="text-2xl font-semibold text-gray-800 mb-4">
                   Upcoming Trips
                 </h2>
                 <p className="text-gray-600">

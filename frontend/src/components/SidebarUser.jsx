@@ -10,18 +10,15 @@ import {
   FaCar,
   FaUserFriends,
   FaSuitcase,
-  FaInfoCircle,
   FaSignOutAlt,
 } from 'react-icons/fa';
 
-// Backend base URL (adjust this based on your backend URL)
 const BACKEND_URL = 'http://localhost:5000';
 
 const SidebarUser = () => {
   const navigate = useNavigate();
   const [userData, setUserData] = useState(JSON.parse(localStorage.getItem('user')) || {});
 
-  // Listen for changes in localStorage to update the profile picture
   useEffect(() => {
     const handleStorageChange = () => {
       const updatedUser = JSON.parse(localStorage.getItem('user')) || {};
@@ -29,7 +26,6 @@ const SidebarUser = () => {
     };
 
     window.addEventListener('storage', handleStorageChange);
-    // Also check for changes in the same tab
     const interval = setInterval(() => {
       const updatedUser = JSON.parse(localStorage.getItem('user')) || {};
       if (JSON.stringify(updatedUser) !== JSON.stringify(userData)) {
@@ -48,13 +44,11 @@ const SidebarUser = () => {
     ? userData.profilePicture.startsWith('http')
       ? userData.profilePicture
       : `${BACKEND_URL}${userData.profilePicture}`
-    : 'https://via.placeholder.com/150'; // Fallback to placeholder
+    : 'https://via.placeholder.com/150';
 
   const handleSignOut = () => {
-    // Clear localStorage
     localStorage.removeItem('user');
-    localStorage.removeItem('token'); // Clear the token
-    // Redirect to login page
+    localStorage.removeItem('token');
     navigate('/login');
   };
 
@@ -67,11 +61,11 @@ const SidebarUser = () => {
             <img
               src={profilePicture}
               alt="Profile"
-              className="w-full h-full rounded-full object-cover"
+              className="w-full h-full rounded-full object-cover border-2 border-blue-600"
             />
           </div>
           <div>
-            <p className="text-sm font-semibold group-hover:text-blue-300 transition-colors">{username}</p>
+            <p className="text-sm font-semibold group-hover:text-blue-400 transition-colors">{username}</p>
             <p className="text-xs text-gray-400">Traveler</p>
           </div>
         </div>
@@ -84,7 +78,7 @@ const SidebarUser = () => {
             <NavLink
               to="/user/dashboard"
               className={({ isActive }) =>
-                `flex items-center p-3 rounded-lg text-gray-300 hover:bg-gray-700/50 hover:text-white transition-all duration-300 ${
+                `flex items-center p-3 rounded-lg text-gray-300 hover:bg-blue-700/50 hover:text-white transition-all duration-300 ${
                   isActive ? 'bg-gradient-to-r from-blue-600 to-blue-800 text-white' : ''
                 }`
               }
@@ -96,7 +90,7 @@ const SidebarUser = () => {
             <NavLink
               to="/user/explore"
               className={({ isActive }) =>
-                `flex items-center p-3 rounded-lg text-gray-300 hover:bg-gray-700/50 hover:text-white transition-all duration-300 ${
+                `flex items-center p-3 rounded-lg text-gray-300 hover:bg-blue-700/50 hover:text-white transition-all duration-300 ${
                   isActive ? 'bg-gradient-to-r from-blue-600 to-blue-800 text-white' : ''
                 }`
               }
@@ -108,7 +102,7 @@ const SidebarUser = () => {
             <NavLink
               to="/user/my-booking"
               className={({ isActive }) =>
-                `flex items-center p-3 rounded-lg text-gray-300 hover:bg-gray-700/50 hover:text-white transition-all duration-300 ${
+                `flex items-center p-3 rounded-lg text-gray-300 hover:bg-blue-700/50 hover:text-white transition-all duration-300 ${
                   isActive ? 'bg-gradient-to-r from-blue-600 to-blue-800 text-white' : ''
                 }`
               }
@@ -120,7 +114,7 @@ const SidebarUser = () => {
             <NavLink
               to="/user/edit-profile"
               className={({ isActive }) =>
-                `flex items-center p-3 rounded-lg text-gray-300 hover:bg-gray-700/50 hover:text-white transition-all duration-300 ${
+                `flex items-center p-3 rounded-lg text-gray-300 hover:bg-blue-700/50 hover:text-white transition-all duration-300 ${
                   isActive ? 'bg-gradient-to-r from-blue-600 to-blue-800 text-white' : ''
                 }`
               }
@@ -132,7 +126,7 @@ const SidebarUser = () => {
             <NavLink
               to="/user/account-settings"
               className={({ isActive }) =>
-                `flex items-center p-3 rounded-lg text-gray-300 hover:bg-gray-700/50 hover:text-white transition-all duration-300 ${
+                `flex items-center p-3 rounded-lg text-gray-300 hover:bg-blue-700/50 hover:text-white transition-all duration-300 ${
                   isActive ? 'bg-gradient-to-r from-blue-600 to-blue-800 text-white' : ''
                 }`
               }
@@ -144,7 +138,7 @@ const SidebarUser = () => {
             <NavLink
               to="/user/hotels"
               className={({ isActive }) =>
-                `flex items-center p-3 rounded-lg text-gray-300 hover:bg-gray-700/50 hover:text-white transition-all duration-300 ${
+                `flex items-center p-3 rounded-lg text-gray-300 hover:bg-blue-700/50 hover:text-white transition-all duration-300 ${
                   isActive ? 'bg-gradient-to-r from-blue-600 to-blue-800 text-white' : ''
                 }`
               }
@@ -156,7 +150,7 @@ const SidebarUser = () => {
             <NavLink
               to="/user/vehicles"
               className={({ isActive }) =>
-                `flex items-center p-3 rounded-lg text-gray-300 hover:bg-gray-700/50 hover:text-white transition-all duration-300 ${
+                `flex items-center p-3 rounded-lg text-gray-300 hover:bg-blue-700/50 hover:text-white transition-all duration-300 ${
                   isActive ? 'bg-gradient-to-r from-blue-600 to-blue-800 text-white' : ''
                 }`
               }
@@ -168,36 +162,22 @@ const SidebarUser = () => {
             <NavLink
               to="/user/guides"
               className={({ isActive }) =>
-                `flex items-center p-3 rounded-lg text-gray-300 hover:bg-gray-700/50 hover:text-white transition-all duration-300 ${
+                `flex items-center p-3 rounded-lg text-gray-300 hover:bg-blue-700/50 hover:text-white transition-all duration-300 ${
                   isActive ? 'bg-gradient-to-r from-blue-600 to-blue-800 text-white' : ''
                 }`
               }
             >
               <FaUserFriends className="mr-3" /> Tour Guides
             </NavLink>
-          </li>
-          <li className="mb-2">
             <NavLink
               to="/user/packages"
               className={({ isActive }) =>
-                `flex items-center p-3 rounded-lg text-gray-300 hover:bg-gray-700/50 hover:text-white transition-all duration-300 ${
-                  isActive ? 'bg-gradient-to-r from-blue-600 to-blue-800 text-white' : ''
+                `flex items-center p-3 pl-8 rounded-lg text-gray-400 hover:bg-blue-700/50 hover:text-white transition-all duration-300 ${
+                  isActive ? 'bg-gradient-to-r from-blue-500 to-blue-700 text-white' : ''
                 }`
               }
             >
               <FaSuitcase className="mr-3" /> Travel Packages
-            </NavLink>
-          </li>
-          <li className="mb-2">
-            <NavLink
-              to="/about"
-              className={({ isActive }) =>
-                `flex items-center p-3 rounded-lg text-gray-300 hover:bg-gray-700/50 hover:text-white transition-all duration-300 ${
-                  isActive ? 'bg-gradient-to-r from-blue-600 to-blue-800 text-white' : ''
-                }`
-              }
-            >
-              <FaInfoCircle className="mr-3" /> About Us
             </NavLink>
           </li>
         </ul>
