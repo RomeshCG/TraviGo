@@ -33,6 +33,9 @@ import UIManager from './pages/Admin/UIManage';
 import Users from './pages/admin/Users';
 import VehicleListing from './pages/admin/VehicleListing';
 import AdminSideBar from './components/SidebarAdmin';
+import HotelListingsService from './pages/HotelListingsService'; 
+import TourGuidesService from './pages/TourGuidesService';
+import VehicleListingsService from './pages/VehicleListingsService';
 
 
 
@@ -110,6 +113,9 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/signin" element={<SignIn />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/services/hotel-listings" element={<HotelListingsService />} />
+        <Route path="/services/tour-guides" element={<TourGuidesService />} />
+        <Route path="/services/vehicle-listings" element={<VehicleListingsService />} />
         <Route
           path="/user/dashboard"
           element={
