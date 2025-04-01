@@ -51,11 +51,16 @@ const TourGuideDashboard = () => {
         const providerData = await providerResponse.json();
         const provider = providerData.provider;
 
-        let response = await fetch(`${BASE_URL}/api/tour-guide/provider/${provider._id}`);
+        let response = await fetch(`${BASE_URL}/api/tour-guide/provider/${provider._id}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
         if (response.status === 404) {
           const createResponse = await fetch(`${BASE_URL}/api/tour-guide/create`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`,
+            },
             body: JSON.stringify({
               providerId: provider._id,
               name: provider.email.split('@')[0],
@@ -72,7 +77,9 @@ const TourGuideDashboard = () => {
             throw new Error(errorData.message || 'Failed to create tour guide');
           }
 
-          response = await fetch(`${BASE_URL}/api/tour-guide/provider/${provider._id}`);
+          response = await fetch(`${BASE_URL}/api/tour-guide/provider/${provider._id}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
         }
 
         if (!response.ok) {
@@ -95,7 +102,9 @@ const TourGuideDashboard = () => {
         }
 
         if (data._id) {
-          const packagesResponse = await fetch(`${BASE_URL}/api/tour-guide/${data._id}/tour-packages`);
+          const packagesResponse = await fetch(`${BASE_URL}/api/tour-guide/${data._id}/tour-packages`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
           if (packagesResponse.ok) {
             const packagesData = await packagesResponse.json();
             setTourPackages(packagesData);
@@ -103,7 +112,9 @@ const TourGuideDashboard = () => {
             setTourPackages([]);
           }
 
-          const reviewsResponse = await fetch(`${BASE_URL}/api/tour-guide/${data._id}/reviews`);
+          const reviewsResponse = await fetch(`${BASE_URL}/api/tour-guide/${data._id}/reviews`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
           if (reviewsResponse.ok) {
             const reviewsData = await reviewsResponse.json();
             setReviews(reviewsData.reviews || []);
@@ -113,7 +124,9 @@ const TourGuideDashboard = () => {
             setAverageRating(0);
           }
 
-          const bookingsResponse = await fetch(`${BASE_URL}/api/tour-guide/${data._id}/tour-guide-bookings`);
+          const bookingsResponse = await fetch(`${BASE_URL}/api/tour-guide/${data._id}/tour-guide-bookings`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
           if (bookingsResponse.ok) {
             const bookingsData = await bookingsResponse.json();
             setTourGuideBookings(bookingsData);
@@ -136,9 +149,19 @@ const TourGuideDashboard = () => {
   const handlePublish = async (packageId) => {
     setError('');
     try {
+      const token = localStorage.getItem('providerToken');
+      if (!token) {
+        setError('No token found. Please log in again.');
+        setTimeout(() => navigate('/service-provider/login'), 2000);
+        return;
+      }
+
       const response = await fetch(`${BASE_URL}/api/tour-guide/tour-package/${packageId}/publish`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
       });
       const data = await response.json();
       if (response.ok) {
@@ -158,9 +181,19 @@ const TourGuideDashboard = () => {
   const handleDelete = async (packageId) => {
     setError('');
     try {
+      const token = localStorage.getItem('providerToken');
+      if (!token) {
+        setError('No token found. Please log in again.');
+        setTimeout(() => navigate('/service-provider/login'), 2000);
+        return;
+      }
+
       const response = await fetch(`${BASE_URL}/api/tour-guide/tour-package/${packageId}`, {
         method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
       });
       const data = await response.json();
       if (response.ok) {
@@ -182,11 +215,19 @@ const TourGuideDashboard = () => {
     }
     setError('');
     try {
+      const token = localStorage.getItem('providerToken');
+      if (!token) {
+        setError('No token found. Please log in again.');
+        setTimeout(() => navigate('/service-provider/login'), 2000);
+        return;
+      }
+
       const formData = new FormData();
       formData.append('tourGuideId', tourGuide._id);
       formData.append('profilePicture', profilePictureFile);
       const response = await fetch(`${BASE_URL}/api/tour-guide/update-profile-picture`, {
         method: 'PUT',
+        headers: { Authorization: `Bearer ${token}` },
         body: formData,
       });
       const data = await response.json();
@@ -209,11 +250,19 @@ const TourGuideDashboard = () => {
     }
     setError('');
     try {
+      const token = localStorage.getItem('providerToken');
+      if (!token) {
+        setError('No token found. Please log in again.');
+        setTimeout(() => navigate('/service-provider/login'), 2000);
+        return;
+      }
+
       const formData = new FormData();
       formData.append('tourGuideId', tourGuide._id);
       formData.append('banner', bannerFile);
       const response = await fetch(`${BASE_URL}/api/tour-guide/update-banner`, {
         method: 'PUT',
+        headers: { Authorization: `Bearer ${token}` },
         body: formData,
       });
       const data = await response.json();
@@ -244,9 +293,19 @@ const TourGuideDashboard = () => {
     e.preventDefault();
     setError('');
     try {
+      const token = localStorage.getItem('providerToken');
+      if (!token) {
+        setError('No token found. Please log in again.');
+        setTimeout(() => navigate('/service-provider/login'), 2000);
+        return;
+      }
+
       const response = await fetch(`${BASE_URL}/api/tour-guide/update-profile`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify({
           tourGuideId: tourGuide._id,
           ...formData,
@@ -267,6 +326,7 @@ const TourGuideDashboard = () => {
 
   const handleLogout = () => {
     localStorage.removeItem('providerToken');
+    localStorage.removeItem('provider'); // Remove provider too for consistency
     toast.success('Logged out successfully!');
     setTimeout(() => navigate('/service-provider/login', { replace: true }), 2000);
   };

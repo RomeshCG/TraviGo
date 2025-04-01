@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import SimpleHeader from '../components/SimpleHeader';
-import Footer from '../components/Footer';
-import backgroundImage from '../assets/login_page_img.jpg';
+import SimpleHeader from '../../components/SimpleHeader';
+import Footer from '../../components/Footer';
+import backgroundImage from '../../assets/login_page_img.jpg';
 
 const TourGuideCreatePackage = () => {
   const [formData, setFormData] = useState({
@@ -12,13 +12,14 @@ const TourGuideCreatePackage = () => {
     price: '',
     location: '',
     images: [],
-    itinerary: [{ day: 1, activities: '' }],
+    itinerary: '',
     maxParticipants: '',
   });
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const BASE_URL = 'http://localhost:5000'; // Match TourGuideDashboard
 
   const handleChange = (e) => {
     const { name, value, files } = e.target;
@@ -29,19 +30,6 @@ const TourGuideCreatePackage = () => {
     }
   };
 
-  const handleItineraryChange = (index, field, value) => {
-    const newItinerary = [...formData.itinerary];
-    newItinerary[index][field] = value;
-    setFormData({ ...formData, itinerary: newItinerary });
-  };
-
-  const addItineraryDay = () => {
-    setFormData({
-      ...formData,
-      itinerary: [...formData.itinerary, { day: formData.itinerary.length + 1, activities: '' }],
-    });
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
@@ -50,23 +38,34 @@ const TourGuideCreatePackage = () => {
 
     try {
       const provider = JSON.parse(localStorage.getItem('provider'));
-      if (!provider || !provider._id) {
-        throw new Error('Provider not found in local storage');
+      const token = localStorage.getItem('providerToken');
+      if (!provider || !provider._id || !token) {
+        setError('Tour guide not authenticated. Please log in.');
+        navigate('/service-provider/login');
+        return;
       }
 
-      const tourGuide = await fetch(`/api/tour-guide/provider/${provider._id}`).then(res => res.json());
-      if (!tourGuide) {
-        throw new Error('Tour guide not found');
+      const tourGuideResponse = await fetch(`${BASE_URL}/api/tour-guide/provider/${provider._id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const tourGuide = await tourGuideResponse.json();
+      if (!tourGuideResponse.ok) {
+        throw new Error(tourGuide.message || 'Tour guide not found');
       }
 
-      // Upload images
+      if (tourGuide.verificationStatus !== 'verified') {
+        setError('You must be verified to create tour packages.');
+        return;
+      }
+
       const formDataToSend = new FormData();
       formData.images.forEach((file) => {
         formDataToSend.append('images', file);
       });
 
-      const uploadResponse = await fetch('/api/upload-tour-package-images', {
+      const uploadResponse = await fetch(`${BASE_URL}/api/upload-tour-package-images`, {
         method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
         body: formDataToSend,
       });
 
@@ -87,10 +86,11 @@ const TourGuideCreatePackage = () => {
         maxParticipants: formData.maxParticipants,
       };
 
-      const response = await fetch('/api/tour-guide/tour-package', {
+      const response = await fetch(`${BASE_URL}/api/tour-guide/tour-package`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(tourPackageData),
       });
@@ -99,14 +99,14 @@ const TourGuideCreatePackage = () => {
       if (response.ok) {
         setSuccess(data.message);
         setError('');
-        navigate('/pages/tourguide/dashboard');
+        navigate('/tour-guide/dashboard');
       } else {
         setError(data.message);
         setSuccess('');
       }
     } catch (err) {
       console.error('Tour package creation error:', err);
-      setError('Failed to create tour package');
+      setError(err.message || 'Failed to create tour package');
       setSuccess('');
     } finally {
       setIsLoading(false);
@@ -199,34 +199,14 @@ const TourGuideCreatePackage = () => {
                 />
               </div>
               <div className="mb-4">
-                <label className="block text-gray-700 mb-2">Itinerary</label>
-                {formData.itinerary.map((day, index) => (
-                  <div key={index} className="mb-2">
-                    <input
-                      type="number"
-                      value={day.day}
-                      onChange={(e) => handleItineraryChange(index, 'day', e.target.value)}
-                      placeholder="Day"
-                      className="w-1/4 p-2 border rounded-lg mr-2"
-                      disabled
-                    />
-                    <input
-                      type="text"
-                      value={day.activities}
-                      onChange={(e) => handleItineraryChange(index, 'activities', e.target.value)}
-                      placeholder="Activities"
-                      className="w-3/4 p-2 border rounded-lg"
-                      required
-                    />
-                  </div>
-                ))}
-                <button
-                  type="button"
-                  onClick={addItineraryDay}
-                  className="text-blue-600 hover:underline"
-                >
-                  Add Day
-                </button>
+                <textarea
+                  name="itinerary"
+                  value={formData.itinerary}
+                  onChange={handleChange}
+                  placeholder="Itinerary (e.g., Day 1: Visit temple, Day 2: Hiking)"
+                  className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                />
               </div>
               <div className="mb-6">
                 <input

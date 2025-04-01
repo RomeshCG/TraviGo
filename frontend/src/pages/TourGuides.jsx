@@ -107,7 +107,7 @@ const TourGuides = () => {
                     to={`/tour-guide/${guide.providerId}`}
                     className="mt-4 inline-block w-full text-center bg-gradient-to-r from-green-500 to-teal-500 text-white px-4 py-2 rounded-lg font-medium hover:from-green-600 hover:to-teal-600 transition shadow-md"
                   >
-                    Book Now
+                    View Profile
                   </Link>
                 </div>
               </div>
