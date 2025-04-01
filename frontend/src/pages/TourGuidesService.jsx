@@ -1,5 +1,6 @@
 import SimpleHeader from '../components/SimpleHeader'; 
 import Footer from '../components/Footer'; 
+import { Link } from 'react-router-dom'; // Import Link for navigation
 import backgroundImage from "../assets/Herosec2.jpg";
 import TourGuide1 from "../assets/TourGuide1.png";
 import TourGuide2 from "../assets/TourGuide2.jpg";
@@ -27,9 +28,11 @@ const TourGuidesService = () => {
           <p className="text-lg text-white mb-6">
             Connect with experienced tour guides to make your travel unforgettable. Enjoy personalized tours and gain local insights for a truly immersive experience.
           </p>
-          <button className="bg-white text-teal-500 px-6 py-3 rounded-full hover:bg-gray-100">
-            Let’s Talk
-          </button>
+          <Link to="/tour-guides">
+            <button className="bg-white text-teal-500 px-6 py-3 rounded-full hover:bg-gray-100">
+              Let’s Talk
+            </button>
+          </Link>
         </div>
       </section>
 
@@ -107,7 +110,7 @@ const TourGuidesService = () => {
           />
         </div>
       </section>
-      <Footer /> {/* Footer added here */}
+      <Footer />
     </div>
   );
 };

@@ -13,7 +13,6 @@ const ServiceProviderLogin = () => {
   const [success, setSuccess] = useState('');
   const navigate = useNavigate();
 
-  // Redirect if already authenticated
   useEffect(() => {
     const token = localStorage.getItem("providerToken");
     if (token) {
@@ -65,7 +64,9 @@ const ServiceProviderLogin = () => {
       if (response.ok) {
         console.log('Login response:', data); // Debug
         setSuccess('Login successful! Redirecting...');
+        // Store both token and provider in localStorage
         localStorage.setItem('providerToken', data.token);
+        localStorage.setItem('provider', JSON.stringify(data.provider));
 
         const { providerType } = data.provider;
         let redirectPath = '';

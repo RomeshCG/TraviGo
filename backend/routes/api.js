@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const { body, validationResult } = require('express-validator'); // Added for validation
 const User = require('../models/user');
 const Admin = require('../models/Admin');
 const ServiceProvider = require('../models/ServiceProvider');
@@ -13,6 +14,7 @@ const Review = require('../models/Review');
 const mongoose = require('mongoose');
 const multer = require('multer');
 const path = require('path');
+const fs = require('fs'); // Added for directory creation
 const TourGuideBooking = require('../models/TourBookings');
 const ContactMessage = require('../models/ContactMessage');
 
@@ -25,13 +27,40 @@ if (!JWT_SECRET) {
   process.exit(1);
 }
 
-// Middleware to verify admin (moved up)
+// Ensure uploads directory exists
+if (!fs.existsSync('uploads')) {
+  fs.mkdirSync('uploads');
+}
+
+// Multer configuration with file filter
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, 'uploads/');
+  },
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + path.extname(file.originalname));
+  },
+});
+const upload = multer({
+  storage,
+  fileFilter: (req, file, cb) => {
+    const filetypes = /jpeg|jpg|png/;
+    const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
+    const mimetype = filetypes.test(file.mimetype);
+    if (extname && mimetype) {
+      return cb(null, true);
+    }
+    cb(new Error('Only images (JPEG, JPG, PNG) are allowed'));
+  },
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+});
+
+// Middleware to verify admin
 const isAdmin = async (req, res, next) => {
   const token = req.headers['authorization']?.split(' ')[1];
   if (!token) {
     return res.status(401).json({ message: 'No token provided in Authorization header' });
   }
-
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
     if (decoded.role !== 'admin') {
@@ -40,84 +69,95 @@ const isAdmin = async (req, res, next) => {
     req.adminId = decoded.id;
     next();
   } catch (error) {
-    console.error('isAdmin token verification error:', error.message);
-    return res.status(403).json({ message: `Invalid or expired token in Authorization header: ${error.message}` });
+    console.error('isAdmin token verification error:', error.stack);
+    if (error instanceof jwt.TokenExpiredError) {
+      return res.status(401).json({ message: 'Token expired, please log in again' });
+    }
+    return res.status(403).json({ message: 'Invalid token' });
   }
 };
+
+// Middleware to verify provider
+const isProvider = async (req, res, next) => {
+  const token = req.headers['authorization']?.split(' ')[1];
+  if (!token) {
+    return res.status(401).json({ message: 'No token provided' });
+  }
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    const provider = await ServiceProvider.findById(decoded.id);
+    if (!provider) {
+      return res.status(404).json({ message: 'Provider not found' });
+    }
+    req.providerId = decoded.id;
+    next();
+  } catch (error) {
+    console.error('Provider token verification error:', error.stack);
+    if (error instanceof jwt.TokenExpiredError) {
+      return res.status(401).json({ message: 'Token expired, please log in again' });
+    }
+    return res.status(403).json({ message: 'Invalid token' });
+  }
+};
+
 // Test route
 router.get('/test', (req, res) => {
   res.json({ message: 'Backend is working!' });
 });
 
-// Config multer storage
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, 'uploads/'); // Ensure this directory exists
-  },
-  filename: (req, file, cb) => {
-    cb(null, Date.now() + path.extname(file.originalname)); // Unique filename
-  },
-});
-const upload = multer({ storage });
-
 // Register route for users (Tourists)
-router.post('/register', async (req, res) => {
-  const { username, password, email, phoneNumber, country } = req.body;
-
-  if (!username || !password || !email || !phoneNumber || !country) {
-    return res.status(400).json({ message: 'All fields are required' });
-  }
-
-  try {
-    const existingUser = await User.findOne({ $or: [{ username }, { email }] });
-    if (existingUser) {
-      return res.status(400).json({ message: 'Username or email already exists' });
+router.post(
+  '/register',
+  [
+    body('username').notEmpty().withMessage('Username is required'),
+    body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
+    body('email').isEmail().withMessage('Valid email is required'),
+    body('phoneNumber').notEmpty().withMessage('Phone number is required'),
+    body('country').notEmpty().withMessage('Country is required'),
+  ],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
     }
-
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
-
-    const newUser = new User({
-      username,
-      password: hashedPassword,
-      email,
-      phoneNumber,
-      country,
-    });
-
-    await newUser.save();
-    res.status(201).json({ message: 'User registered successfully' });
-  } catch (error) {
-    console.error('Registration error:', error);
-    res.status(500).json({ message: 'Server error' });
+    const { username, password, email, phoneNumber, country } = req.body;
+    try {
+      const existingUser = await User.findOne({ $or: [{ username }, { email }] });
+      if (existingUser) {
+        return res.status(400).json({ message: 'Username or email already exists' });
+      }
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash(password, salt);
+      const newUser = new User({ username, password: hashedPassword, email, phoneNumber, country });
+      await newUser.save();
+      res.status(201).json({ message: 'User registered successfully' });
+    } catch (error) {
+      console.error('Registration error:', error.stack);
+      res.status(500).json({ message: 'Server error' });
+    }
   }
-});
+);
 
 // Login Route for users (Tourists)
 router.post('/login', async (req, res) => {
   const { username, password } = req.body;
-
   if (!username || !password) {
     return res.status(400).json({ message: 'Username and password are required' });
   }
-
   try {
     const existingUser = await User.findOne({ username });
     if (!existingUser) {
       return res.status(400).json({ message: 'Invalid username or password' });
     }
-
     const isMatch = await bcrypt.compare(password, existingUser.password);
     if (!isMatch) {
       return res.status(400).json({ message: 'Invalid username or password' });
     }
-
     const token = jwt.sign(
       { id: existingUser._id, username: existingUser.username },
       JWT_SECRET,
       { expiresIn: '1h' }
     );
-
     const userResponse = {
       _id: existingUser._id,
       username: existingUser.username,
@@ -125,10 +165,9 @@ router.post('/login', async (req, res) => {
       phoneNumber: existingUser.phoneNumber,
       country: existingUser.country,
     };
-
     res.status(200).json({ message: 'Login successful', user: userResponse, token });
   } catch (error) {
-    console.error('Login error:', error);
+    console.error('Login error:', error.stack);
     res.status(500).json({ message: 'Server error' });
   }
 });
@@ -137,30 +176,24 @@ router.post('/login', async (req, res) => {
 router.put('/user/update-profile', async (req, res) => {
   try {
     const { userId, email, phoneNumber, country, address } = req.body;
-
     if (!userId) {
       return res.status(400).json({ message: 'User ID is required' });
     }
-
     const user = await User.findById(userId);
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
-
     if (email && email !== user.email) {
       const existingUser = await User.findOne({ email });
       if (existingUser) {
         return res.status(400).json({ message: 'Email is already in use' });
       }
     }
-
     user.email = email || user.email;
     user.phoneNumber = phoneNumber || user.phoneNumber;
     user.country = country || user.country;
     user.address = address || user.address;
-
     await user.save();
-
     const userResponse = {
       _id: user._id,
       username: user.username,
@@ -170,10 +203,9 @@ router.put('/user/update-profile', async (req, res) => {
       address: user.address,
       profilePicture: user.profilePicture,
     };
-
     res.status(200).json({ message: 'Profile updated successfully', user: userResponse });
   } catch (error) {
-    console.error('Update user profile error:', error);
+    console.error('Update user profile error:', error.stack);
     res.status(500).json({ message: 'Server error' });
   }
 });
@@ -184,7 +216,6 @@ router.get('/verify-token', async (req, res) => {
   if (!token) {
     return res.status(401).json({ message: 'No token provided' });
   }
-
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
     const user = await User.findById(decoded.id);
@@ -202,8 +233,11 @@ router.get('/verify-token', async (req, res) => {
       },
     });
   } catch (error) {
-    console.error('User token verification error:', error);
-    res.status(403).json({ message: 'Invalid or expired token' });
+    console.error('User token verification error:', error.stack);
+    if (error instanceof jwt.TokenExpiredError) {
+      return res.status(401).json({ message: 'Token expired, please log in again' });
+    }
+    return res.status(403).json({ message: 'Invalid token' });
   }
 });
 
@@ -225,7 +259,7 @@ router.get('/user/:id', async (req, res) => {
     };
     res.status(200).json(userResponse);
   } catch (error) {
-    console.error('Fetch user error:', error);
+    console.error('Fetch user error:', error.stack);
     res.status(500).json({ message: 'Server error' });
   }
 });
@@ -245,7 +279,7 @@ router.put('/user/update-profile-picture', upload.single('profilePicture'), asyn
     await user.save();
     res.status(200).json({ message: 'Profile picture updated successfully', user });
   } catch (error) {
-    console.error('Update user profile picture error:', error);
+    console.error('Update user profile picture error:', error.stack);
     res.status(500).json({ message: 'Server error' });
   }
 });
@@ -254,24 +288,14 @@ router.put('/user/update-profile-picture', upload.single('profilePicture'), asyn
 router.post('/contact', async (req, res) => {
   try {
     const { firstName, lastName, email, phone, message } = req.body;
-
     if (!firstName || !lastName || !email || !phone || !message) {
       return res.status(400).json({ message: 'All fields are required' });
     }
-
-    const newMessage = new ContactMessage({
-      firstName,
-      lastName,
-      email,
-      phone,
-      message,
-    });
-
+    const newMessage = new ContactMessage({ firstName, lastName, email, phone, message });
     await newMessage.save();
-
     res.status(201).json({ message: 'Message sent successfully! We will get back to you soon.' });
   } catch (error) {
-    console.error('Contact form submission error:', error);
+    console.error('Contact form submission error:', error.stack);
     res.status(500).json({ message: 'Server error. Please try again later.' });
   }
 });
@@ -288,17 +312,9 @@ router.post('/service-provider/register', async (req, res) => {
   try {
     const existingProvider = await ServiceProvider.findOne({ email });
     if (existingProvider) return res.status(400).json({ message: 'Email already exists' });
-
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
-
-    const newProvider = new ServiceProvider({
-      name,
-      email,
-      password: hashedPassword,
-      providerType,
-    });
-
+    const newProvider = new ServiceProvider({ name, email, password: hashedPassword, providerType });
     await newProvider.save();
     res.status(201).json({
       message: 'Basic details registered successfully',
@@ -306,7 +322,7 @@ router.post('/service-provider/register', async (req, res) => {
       providerType: newProvider.providerType,
     });
   } catch (error) {
-    console.error('Service provider registration error:', error);
+    console.error('Service provider registration error:', error.stack);
     res.status(500).json({ message: 'Server error' });
   }
 });
@@ -323,7 +339,6 @@ router.post('/service-provider/register-advanced', async (req, res) => {
     if (provider.providerType !== providerType) {
       return res.status(400).json({ message: 'Provider type mismatch' });
     }
-
     if (providerType === 'TourGuide') {
       const { yearsOfExperience, languages, certification, bio, location } = advancedDetails;
       if (!yearsOfExperience || !languages || !languages.length || !certification || !bio || !location) {
@@ -340,12 +355,11 @@ router.post('/service-provider/register-advanced', async (req, res) => {
       });
       await tourGuide.save();
     } // Add other provider types as needed
-
     provider.isAdvancedRegistrationComplete = true;
     await provider.save();
     res.status(201).json({ message: 'Advanced details registered successfully' });
   } catch (error) {
-    console.error('Advanced registration error:', error);
+    console.error('Advanced registration error:', error.stack);
     res.status(500).json({ message: 'Server error' });
   }
 });
@@ -365,7 +379,7 @@ router.put('/tour-guide/update-profile-picture', upload.single('profilePicture')
     await tourGuide.save();
     res.status(200).json({ message: 'Profile picture updated successfully', tourGuide });
   } catch (error) {
-    console.error('Update profile picture error:', error);
+    console.error('Update profile picture error:', error.stack);
     res.status(500).json({ message: 'Server error' });
   }
 });
@@ -379,18 +393,15 @@ router.post('/service-provider/login', async (req, res) => {
     if (!existingProvider) {
       return res.status(400).json({ message: 'Invalid email or password' });
     }
-
     const isMatch = await bcrypt.compare(password, existingProvider.password);
     if (!isMatch) {
       return res.status(400).json({ message: 'Invalid email or password' });
     }
-
     const token = jwt.sign(
       { id: existingProvider._id, email: existingProvider.email, providerType: existingProvider.providerType },
       JWT_SECRET,
       { expiresIn: '1h' }
     );
-
     const providerResponse = {
       _id: existingProvider._id,
       name: existingProvider.name,
@@ -398,10 +409,9 @@ router.post('/service-provider/login', async (req, res) => {
       providerType: existingProvider.providerType,
       isAdvancedRegistrationComplete: existingProvider.isAdvancedRegistrationComplete,
     };
-
     res.status(200).json({ message: 'Login successful', provider: providerResponse, token });
   } catch (error) {
-    console.error('Service provider login error:', error);
+    console.error('Service provider login error:', error.stack);
     res.status(500).json({ message: 'Server error' });
   }
 });
@@ -412,7 +422,6 @@ router.get('/verify-provider-token', async (req, res) => {
   if (!token) {
     return res.status(401).json({ message: 'No token provided' });
   }
-
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
     const provider = await ServiceProvider.findById(decoded.id);
@@ -430,8 +439,11 @@ router.get('/verify-provider-token', async (req, res) => {
       },
     });
   } catch (error) {
-    console.error('Provider token verification error:', error);
-    res.status(403).json({ message: 'Invalid or expired token' });
+    console.error('Provider token verification error:', error.stack);
+    if (error instanceof jwt.TokenExpiredError) {
+      return res.status(401).json({ message: 'Token expired, please log in again' });
+    }
+    return res.status(403).json({ message: 'Invalid token' });
   }
 });
 
@@ -455,7 +467,7 @@ router.put('/tour-guide/update-profile', async (req, res) => {
     await tourGuide.save();
     res.status(200).json({ message: 'Profile updated successfully', tourGuide });
   } catch (error) {
-    console.error('Update profile error:', error);
+    console.error('Update profile error:', error.stack);
     res.status(500).json({ message: 'Server error' });
   }
 });
@@ -478,7 +490,7 @@ router.post('/tour-guide/create', async (req, res) => {
     await tourGuide.save();
     res.status(201).json(tourGuide);
   } catch (error) {
-    console.error('Tour guide creation error:', error);
+    console.error('Tour guide creation error:', error.stack);
     res.status(500).json({ message: 'Server error' });
   }
 });
@@ -489,7 +501,7 @@ router.get('/tour-guide/provider/:providerId', async (req, res) => {
     if (!tourGuide) return res.status(404).json({ message: 'Tour guide not found' });
     res.status(200).json(tourGuide);
   } catch (error) {
-    console.error('Error fetching tour guide:', error);
+    console.error('Error fetching tour guide:', error.stack);
     res.status(500).json({ message: 'Server error' });
   }
 });
@@ -498,16 +510,13 @@ router.get('/tour-guide/provider/:providerId', async (req, res) => {
 router.get('/tour-guide/:tourGuideId/tour-packages', async (req, res) => {
   try {
     const { tourGuideId } = req.params;
-
     if (!mongoose.Types.ObjectId.isValid(tourGuideId)) {
       return res.status(400).json({ message: 'Invalid tour guide ID' });
     }
-
     const tourGuide = await TourGuide.findById(tourGuideId);
     if (!tourGuide) {
       return res.status(404).json({ message: 'Tour guide not found' });
     }
-
     const tourPackages = await TourPackage.find({ tourGuideId });
     res.status(200).json(tourPackages);
   } catch (error) {
@@ -528,7 +537,7 @@ router.get('/tour-guide/:tourGuideId/tour-guide-bookings', async (req, res) => {
     }
     res.status(200).json(tourGuideBookings);
   } catch (error) {
-    console.error('Fetch tour guide bookings error:', error);
+    console.error('Fetch tour guide bookings error:', error.stack);
     res.status(500).json({ message: 'Server error' });
   }
 });
@@ -537,16 +546,13 @@ router.get('/tour-guide/:tourGuideId/tour-guide-bookings', async (req, res) => {
 router.get('/tour-guide/:tourGuideId/reviews', async (req, res) => {
   try {
     const { tourGuideId } = req.params;
-
     if (!mongoose.Types.ObjectId.isValid(tourGuideId)) {
       return res.status(400).json({ message: 'Invalid tour guide ID' });
     }
-
     const tourGuide = await TourGuide.findById(tourGuideId);
     if (!tourGuide) {
       return res.status(404).json({ message: 'Tour guide not found' });
     }
-
     const reviews = await Review.find({ tourGuideId }).populate('touristId', 'username');
     const averageRating = reviews.length
       ? reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length
@@ -558,40 +564,75 @@ router.get('/tour-guide/:tourGuideId/reviews', async (req, res) => {
   }
 });
 
-// New tour packages
-router.post('/tour-guide/tour-package', async (req, res) => {
-  const { tourGuideId, title, description, duration, price, location, images, itinerary, maxParticipants } = req.body;
+// Image upload endpoint
+router.post('/upload-tour-package-images', isProvider, upload.array('images', 10), async (req, res) => {
   try {
-    const tourGuide = await TourGuide.findById(tourGuideId);
-    if (!tourGuide) return res.status(404).json({ message: 'Tour guide not found' });
-    if (tourGuide.verificationStatus !== 'verified') {
-      return res.status(403).json({ message: 'You must be verified to create tour packages' });
-    }
-    const tourPackage = new TourPackage({
-      tourGuideId,
-      title,
-      description,
-      duration,
-      price,
-      location,
-      images: images || [],
-      itinerary,
-      maxParticipants,
-    });
-    await tourPackage.save();
-    res.status(201).json({ message: 'Tour package created successfully', tourPackage });
+    const imagePaths = req.files.map((file) => `/uploads/${file.filename}`);
+    res.status(200).json({ images: imagePaths });
   } catch (error) {
-    console.error('Tour package creation error:', error);
+    console.error('Image upload error:', error.stack);
     res.status(500).json({ message: 'Server error' });
   }
 });
 
-// Make tour package
-router.put('/tour-guide/tour-package/:id/publish', async (req, res) => {
+// New tour packages
+router.post(
+  '/tour-guide/tour-package',
+  isProvider,
+  [
+    body('tourGuideId').notEmpty().withMessage('Tour guide ID is required'),
+    body('title').notEmpty().withMessage('Title is required'),
+    body('description').notEmpty().withMessage('Description is required'),
+    body('duration').notEmpty().withMessage('Duration is required'),
+    body('price').isFloat({ min: 0 }).withMessage('Price must be a positive number'),
+    body('location').notEmpty().withMessage('Location is required'),
+    body('itinerary').notEmpty().withMessage('Itinerary is required'),
+    body('maxParticipants').isInt({ min: 1 }).withMessage('Max participants must be a positive integer'),
+  ],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+    const { tourGuideId, title, description, duration, price, location, images, itinerary, maxParticipants } = req.body;
+    try {
+      const tourGuide = await TourGuide.findById(tourGuideId);
+      if (!tourGuide) return res.status(404).json({ message: 'Tour guide not found' });
+      if (tourGuide.providerId.toString() !== req.providerId) {
+        return res.status(403).json({ message: 'Unauthorized: You can only create packages for yourself' });
+      }
+      if (tourGuide.verificationStatus !== 'verified') {
+        return res.status(403).json({ message: 'You must be verified to create tour packages' });
+      }
+      const tourPackage = new TourPackage({
+        tourGuideId,
+        title,
+        description,
+        duration,
+        price,
+        location,
+        images: images || [],
+        itinerary,
+        maxParticipants,
+      });
+      await tourPackage.save();
+      res.status(201).json({ message: 'Tour package created successfully', tourPackage });
+    } catch (error) {
+      console.error('Tour package creation error:', error.stack);
+      res.status(500).json({ message: 'Server error' });
+    }
+  }
+);
+
+// Publish tour package
+router.put('/tour-guide/tour-package/:id/publish', isProvider, async (req, res) => {
   try {
     const tourPackage = await TourPackage.findById(req.params.id);
     if (!tourPackage) return res.status(404).json({ message: 'Tour package not found' });
     const tourGuide = await TourGuide.findById(tourPackage.tourGuideId);
+    if (tourGuide.providerId.toString() !== req.providerId) {
+      return res.status(403).json({ message: 'Unauthorized: You can only publish your own packages' });
+    }
     if (tourGuide.verificationStatus !== 'verified') {
       return res.status(403).json({ message: 'You must be verified to publish tour packages' });
     }
@@ -599,24 +640,27 @@ router.put('/tour-guide/tour-package/:id/publish', async (req, res) => {
     await tourPackage.save();
     res.status(200).json({ message: 'Tour package published successfully', tourPackage });
   } catch (error) {
-    console.error('Tour package publish error:', error);
+    console.error('Tour package publish error:', error.stack);
     res.status(500).json({ message: 'Server error' });
   }
 });
 
 // Tour package delete
-router.delete('/tour-guide/tour-package/:id', async (req, res) => {
+router.delete('/tour-guide/tour-package/:id', isProvider, async (req, res) => {
   try {
     const tourPackage = await TourPackage.findById(req.params.id);
     if (!tourPackage) return res.status(404).json({ message: 'Tour package not found' });
     const tourGuide = await TourGuide.findById(tourPackage.tourGuideId);
+    if (tourGuide.providerId.toString() !== req.providerId) {
+      return res.status(403).json({ message: 'Unauthorized: You can only delete your own packages' });
+    }
     if (tourGuide.verificationStatus !== 'verified') {
       return res.status(403).json({ message: 'You must be verified to delete tour packages' });
     }
     await tourPackage.deleteOne();
     res.status(200).json({ message: 'Tour package deleted successfully' });
   } catch (error) {
-    console.error('Tour package delete error:', error);
+    console.error('Tour package delete error:', error.stack);
     res.status(500).json({ message: 'Server error' });
   }
 });
@@ -636,7 +680,7 @@ router.put('/tour-guide/update-banner', upload.single('banner'), async (req, res
     await tourGuide.save();
     res.status(200).json({ message: 'Banner updated successfully', tourGuide });
   } catch (error) {
-    console.error('Update banner error:', error);
+    console.error('Update banner error:', error.stack);
     res.status(500).json({ message: 'Server error' });
   }
 });
@@ -645,10 +689,9 @@ router.put('/tour-guide/update-banner', upload.single('banner'), async (req, res
 router.get('/tour-guides', async (req, res) => {
   try {
     const tourGuides = await TourGuide.find();
-    console.log('Fetched tour guides (direct):', tourGuides);
     res.json(tourGuides);
   } catch (error) {
-    console.error('Error fetching tour guides:', error);
+    console.error('Error fetching tour guides:', error.stack);
     res.status(500).json({ message: 'Error fetching tour guides', error });
   }
 });
@@ -656,30 +699,21 @@ router.get('/tour-guides', async (req, res) => {
 // Admin Registration Route
 router.post('/admin/register', isAdmin, async (req, res) => {
   const { username, email, password } = req.body;
-
   if (!username || !email || !password) {
     return res.status(400).json({ message: 'All fields are required' });
   }
-
   try {
     const existingAdmin = await Admin.findOne({ $or: [{ username }, { email }] });
     if (existingAdmin) {
       return res.status(400).json({ message: 'Username or email already exists' });
     }
-
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
-
-    const newAdmin = new Admin({
-      username,
-      email,
-      password: hashedPassword,
-    });
-
+    const newAdmin = new Admin({ username, email, password: hashedPassword });
     await newAdmin.save();
     res.status(201).json({ message: 'Admin registered successfully' });
   } catch (error) {
-    console.error('Admin registration error:', error.message);
+    console.error('Admin registration error:', error.stack);
     return res.status(500).json({ message: `Server error: ${error.message}` });
   }
 });
@@ -687,37 +721,31 @@ router.post('/admin/register', isAdmin, async (req, res) => {
 // Admin Login Route
 router.post('/admin/login', async (req, res) => {
   const { email, password } = req.body;
-
   if (!email || !password) {
     return res.status(400).json({ message: 'Email and password are required' });
   }
-
   try {
     const admin = await Admin.findOne({ email });
     if (!admin) {
       return res.status(400).json({ message: 'Invalid email or password' });
     }
-
     const isMatch = await bcrypt.compare(password, admin.password);
     if (!isMatch) {
       return res.status(400).json({ message: 'Invalid email or password' });
     }
-
     const token = jwt.sign(
       { id: admin._id, email: admin.email, role: 'admin' },
       JWT_SECRET,
       { expiresIn: '1h' }
     );
-
     const adminResponse = {
       _id: admin._id,
       username: admin.username,
       email: admin.email,
     };
-
     res.status(200).json({ message: 'Admin login successful', admin: adminResponse, token });
   } catch (error) {
-    console.error('Admin login error:', error);
+    console.error('Admin login error:', error.stack);
     res.status(500).json({ message: 'Server error' });
   }
 });
@@ -728,14 +756,12 @@ router.get('/verify-admin-token', async (req, res) => {
   if (!token) {
     return res.status(401).json({ message: 'No token provided' });
   }
-
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
     const admin = await Admin.findById(decoded.id);
     if (!admin) {
       return res.status(404).json({ message: 'Admin not found' });
     }
-
     res.status(200).json({
       message: 'Token is valid',
       admin: {
@@ -745,20 +771,21 @@ router.get('/verify-admin-token', async (req, res) => {
       },
     });
   } catch (error) {
-    console.error('Admin token verification error:', error);
-    res.status(403).json({ message: 'Invalid or expired token' });
+    console.error('Admin token verification error:', error.stack);
+    if (error instanceof jwt.TokenExpiredError) {
+      return res.status(401).json({ message: 'Token expired, please log in again' });
+    }
+    return res.status(403).json({ message: 'Invalid token' });
   }
 });
 
 // Get all tour guides (admin only)
 router.get('/tourguides', isAdmin, async (req, res) => {
   try {
-    const tourGuides = await TourGuide.find()
-      .select('-__v')
-      .lean();
+    const tourGuides = await TourGuide.find().select('-__v').lean();
     res.json(tourGuides);
   } catch (error) {
-    console.error('Error fetching tour guides:', error);
+    console.error('Error fetching tour guides:', error.stack);
     res.status(500).json({ message: 'Server error' });
   }
 });
@@ -768,13 +795,12 @@ router.put('/tourguides/verify/:id', isAdmin, async (req, res) => {
   try {
     const tourGuide = await TourGuide.findById(req.params.id);
     if (!tourGuide) return res.status(404).json({ message: 'Tour guide not found' });
-
     tourGuide.verificationStatus = 'verified';
     tourGuide.verifiedBadge = true;
     await tourGuide.save();
     res.json(tourGuide);
   } catch (error) {
-    console.error('Error verifying tour guide:', error);
+    console.error('Error verifying tour guide:', error.stack);
     res.status(500).json({ message: 'Server error' });
   }
 });
@@ -784,13 +810,12 @@ router.put('/tourguides/unverify/:id', isAdmin, async (req, res) => {
   try {
     const tourGuide = await TourGuide.findById(req.params.id);
     if (!tourGuide) return res.status(404).json({ message: 'Tour guide not found' });
-
     tourGuide.verificationStatus = 'pending';
     tourGuide.verifiedBadge = false;
     await tourGuide.save();
     res.json(tourGuide);
   } catch (error) {
-    console.error('Error unverifying tour guide:', error);
+    console.error('Error unverifying tour guide:', error.stack);
     res.status(500).json({ message: 'Server error' });
   }
 });
@@ -800,12 +825,11 @@ router.put('/tourguides/ban/:id', isAdmin, async (req, res) => {
   try {
     const tourGuide = await TourGuide.findById(req.params.id);
     if (!tourGuide) return res.status(404).json({ message: 'Tour guide not found' });
-
     tourGuide.isBanned = true;
     await tourGuide.save();
     res.json(tourGuide);
   } catch (error) {
-    console.error('Error banning tour guide:', error);
+    console.error('Error banning tour guide:', error.stack);
     res.status(500).json({ message: 'Server error' });
   }
 });
@@ -815,12 +839,11 @@ router.put('/tourguides/unban/:id', isAdmin, async (req, res) => {
   try {
     const tourGuide = await TourGuide.findById(req.params.id);
     if (!tourGuide) return res.status(404).json({ message: 'Tour guide not found' });
-
     tourGuide.isBanned = false;
     await tourGuide.save();
     res.json(tourGuide);
   } catch (error) {
-    console.error('Error unbanning tour guide:', error);
+    console.error('Error unbanning tour guide:', error.stack);
     res.status(500).json({ message: 'Server error' });
   }
 });
@@ -832,7 +855,7 @@ router.delete('/tourguides/:id', isAdmin, async (req, res) => {
     if (!tourGuide) return res.status(404).json({ message: 'Tour guide not found' });
     res.json({ message: 'Tour guide deleted successfully' });
   } catch (error) {
-    console.error('Error deleting tour guide:', error);
+    console.error('Error deleting tour guide:', error.stack);
     res.status(500).json({ message: 'Server error' });
   }
 });
@@ -847,7 +870,7 @@ router.post('/api/admin/generate-registration-token', isAdmin, async (req, res) 
     );
     res.status(200).json({ token: registrationToken });
   } catch (error) {
-    console.error('Token generation error:', error);
+    console.error('Token generation error:', error.stack);
     res.status(500).json({ message: 'Server error' });
   }
 });

@@ -144,8 +144,8 @@ function Home() {
         </div>
       </div>
 
-      {/* Our Services Section */}
-      <div className="py-12 bg-gray-100">
+            {/* Our Services Section */}
+            <div className="py-12 bg-gray-100">
         <div className="container mx-auto px-4">
           <h2 className="text-5xl font-bold text-center bg-gradient-to-r from-blue-600 to-purple-500 bg-clip-text text-transparent mb-12">
             Our Services
@@ -156,16 +156,19 @@ function Home() {
                 title: "Luxury Stays",
                 img: HotelsImg,
                 desc: "Discover the perfect stay with TraviGo. From luxury resorts to cozy boutique hotels, we offer a wide range of accommodations to suit every traveler's needs.",
+                link: "/services/hotel-listings", // Link to Hotel Listings
               },
               {
                 title: "Tour Packages",
                 img: TourGuide,
                 desc: "Explore Sri Lanka with ease. Rent reliable vehicles, from compact cars to spacious SUVs, and enjoy seamless travel experiences tailored to your preferences.",
+                link: "/services/tour-guides", // Link to Tour Guides
               },
               {
                 title: "Vehicle Rentals",
                 img: CarRental,
                 desc: "Experience Sri Lanka like a local. Hire expert tour guides who will take you on unforgettable journeys through the island's rich culture and stunning landscapes.",
+                link: "/services/vehicle-listings", // Link to Vehicle Listings
               },
             ].map((service, index) => (
               <div
@@ -181,9 +184,11 @@ function Home() {
                   {service.title}
                 </h3>
                 <p className="text-gray-700 mt-4">{service.desc}</p>
-                <button className="mt-6 bg-blue-600 text-white px-5 py-2 rounded-lg flex items-center gap-2 mx-auto hover:bg-blue-700 transition">
-                  Read More <FaArrowRight className="ml-2 inline" />
-                </button>
+                <Link to={service.link}>
+                  <button className="mt-6 bg-blue-600 text-white px-5 py-2 rounded-lg flex items-center gap-2 mx-auto hover:bg-blue-700 transition">
+                    Read More <FaArrowRight className="ml-2 inline" />
+                  </button>
+                </Link>
               </div>
             ))}
           </div>
