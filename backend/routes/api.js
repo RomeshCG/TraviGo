@@ -32,6 +32,11 @@ if (!fs.existsSync('uploads')) {
   fs.mkdirSync('uploads');
 }
 
+// Test route
+router.get('/test', (req, res) => {
+  res.json({ message: 'Backend is working!' });
+});
+
 // Multer configuration with file filter
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -100,10 +105,6 @@ const isProvider = async (req, res, next) => {
   }
 };
 
-// Test route
-router.get('/test', (req, res) => {
-  res.json({ message: 'Backend is working!' });
-});
 
 // Register route for users (Tourists)
 router.post(
