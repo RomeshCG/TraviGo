@@ -1,58 +1,86 @@
-import React, { useRef } from "react";
-import { Link } from "react-router-dom"; // Import Link for navigation
+import React, { useRef, useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import Header from "../components/Header";
 import ContactUs from "../components/ContactUsSmall";
 import Footer from "../components/Footer";
 import { FaArrowRight } from "react-icons/fa";
-import backgroundImage from "../assets/TraviGoHero.jpg";
 import HotelsImg from "../assets/Hotels.jpg";
 import TourGuide from "../assets/Tour_Guide.jpg";
 import CarRental from "../assets/Car_Rentals.jpg";
 import poolImg from "../assets/Beach.jpg";
 import beachImg from "../assets/Sigiriya.jpg";
+import Heroimg1 from "../assets/heroimg1.png";
+import Heroimg2 from "../assets/TraviGoHero.jpg";
+import Heroimg3 from "../assets/heroimg3.png";
+
+
+// Define your slider images here
+const sliderImages = [
+  Heroimg1,
+  Heroimg2,
+  Heroimg3,
+ 
+ 
+];
 
 function Home() {
-  // Refs for different sections
   const hotelsRef = useRef(null);
   const vehiclesRef = useRef(null);
   const guidesRef = useRef(null);
+  const [currentSlide, setCurrentSlide] = useState(0);
 
-  // Function to handle smooth scrolling
   const scrollToSection = (ref) => {
     if (ref && ref.current) {
       ref.current.scrollIntoView({ behavior: "smooth", block: "start" });
     }
   };
 
+  // Auto-slide functionality
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % sliderImages.length);
+    }, 5000); // Change slide every 5 seconds
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <div className="bg-gray-100">
-      {/* Hero Section with Background Image */}
+      {/* Hero Section with Image Slider */}
       <div className="relative min-h-screen bg-cover bg-center flex flex-col">
         {/* Fixed Header for Proper Alignment */}
         <div className="absolute top-0 left-0 w-full z-50 bg-opacity-90">
           <Header />
         </div>
 
-        {/* Hero Background */}
-        <div
-          className="relative flex flex-col items-center justify-center flex-grow text-white text-center px-4"
-          style={{
-            backgroundImage: `url(${backgroundImage})`,
-            backgroundSize: "cover",
-            backgroundPosition: "center",
-            backgroundRepeat: "no-repeat",
-          }}
-        >
-          <h1 className="text-6xl font-extrabold text-white animate-pulse">
-            Discover Your Perfect Stay
-          </h1>
-          <p className="text-xl mt-6 max-w-2xl leading-relaxed animate-fade-in">
-            Where Your Dream Vacation Becomes a Reality. Customize your travel
-            experience with our exclusive packages.
-          </p>
-          <button className="mt-8 bg-blue-600 px-6 py-3 rounded-lg shadow-md hover:bg-blue-700 transition">
-            More About <FaArrowRight className="ml-2 inline" />
-          </button>
+        {/* Hero Slider */}
+        <div className="relative flex flex-col items-center justify-center flex-grow text-white text-center px-4">
+          {/* Slider Images */}
+          <div className="absolute inset-0 w-full h-full">
+            {sliderImages.map((img, index) => (
+              <img
+                key={index}
+                src={img}
+                alt={`Slide ${index}`}
+                className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ${
+                  index === currentSlide ? "opacity-100" : "opacity-0"
+                }`}
+              />
+            ))}
+          </div>
+
+          {/* Hero Content */}
+          <div className="relative z-10">
+            <h1 className="text-6xl font-extrabold text-white animate-pulse">
+              Discover Your Perfect Stay
+            </h1>
+            <p className="text-xl mt-6 max-w-2xl leading-relaxed animate-fade-in">
+              Where Your Dream Vacation Becomes a Reality. Customize your travel
+              experience with our exclusive packages.
+            </p>
+            <button className="mt-8 bg-blue-600 px-6 py-3 rounded-lg shadow-md hover:bg-blue-700 transition">
+              More About <FaArrowRight className="ml-2 inline" />
+            </button>
+          </div>
         </div>
 
         {/* Services Section with Clickable Cards */}
@@ -72,7 +100,7 @@ function Home() {
               title: "Guides",
               ref: guidesRef,
               desc: "Hire experienced tour guides.",
-              link: "/tour-guides", // Add link for navigation
+              link: "/tour-guides",
             },
           ].map((service, index) => (
             <div key={index} className="p-4 text-center rounded-lg">
@@ -144,8 +172,8 @@ function Home() {
         </div>
       </div>
 
-            {/* Our Services Section */}
-            <div className="py-12 bg-gray-100">
+      {/* Our Services Section */}
+      <div className="py-12 bg-gray-100">
         <div className="container mx-auto px-4">
           <h2 className="text-5xl font-bold text-center bg-gradient-to-r from-blue-600 to-purple-500 bg-clip-text text-transparent mb-12">
             Our Services
@@ -156,19 +184,19 @@ function Home() {
                 title: "Luxury Stays",
                 img: HotelsImg,
                 desc: "Discover the perfect stay with TraviGo. From luxury resorts to cozy boutique hotels, we offer a wide range of accommodations to suit every traveler's needs.",
-                link: "/services/hotel-listings", // Link to Hotel Listings
+                link: "/services/hotel-listings",
               },
               {
                 title: "Tour Packages",
                 img: TourGuide,
                 desc: "Explore Sri Lanka with ease. Rent reliable vehicles, from compact cars to spacious SUVs, and enjoy seamless travel experiences tailored to your preferences.",
-                link: "/services/tour-guides", // Link to Tour Guides
+                link: "/services/tour-guides",
               },
               {
                 title: "Vehicle Rentals",
                 img: CarRental,
-                desc: "Experience Sri Lanka like a local. Hire expert tour guides who will take you on unforgettable journeys through the island's rich culture and stunning landscapes.",
-                link: "/services/vehicle-listings", // Link to Vehicle Listings
+                desc: "Experience Sri Lanka like a local. Hire expertคำต่อไป tour guides who will take you on unforgettable journeys through the island's rich culture and stunning landscapes.",
+                link: "/services/vehicle-listings",
               },
             ].map((service, index) => (
               <div

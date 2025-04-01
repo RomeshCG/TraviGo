@@ -1,0 +1,38 @@
+line 21 to 33  - environment variables checks
+
+line 40 to 60 - multer configuration for images with filters
+
+line 63 to 83 - Middleware to verify admin login
+
+line 85 to 106 - Middleware to verify service provider 
+
+line 109 to 174 - Tourist register route and login route
+line 176 to 212 - Tourist details update route
+line 214 to 243 - Tourist token verify 
+line 246 to 266 - Get user profile using id
+line 268 to 286 - add profile picture user route 
+
+line 288 to 302 - contact form submission handel route 
+
+line 305 to 329 - Service provider registration 
+
+line 331 to 366 - Tour guide advanced register form route
+line 369 to 386 - Tour guide profile picture route 
+line 388 to 449 - Tour guide login and token verify route 
+line 451 to 474 - Tour guide update his profile
+line 476 to 508 - Tour guide profile data show and register new 
+line 510 to 527 - Tour guide tour packages show
+line 529 to 566 - Tour guide booking and reviews route (not set yet)
+line 569 to 626 - Tour guide create tour package
+line 628 to 667 - Publish and delete tour package
+line 669 to 687 - Tour guide banner upload route
+line 690 to 698 - Tour guide data list user view route 
+
+line 700 to 752 - Admin register and login routes
+line 754 to 781 - Admin token verify route
+line 783 to 862 - Tour guide managment route
+line 864 to 877 - Admin registration route token (check duplicate)
+line 879 to 902 - Admin user managmnet routes
+
+
+

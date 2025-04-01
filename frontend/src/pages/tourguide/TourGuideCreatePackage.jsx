@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import SimpleHeader from '../../components/SimpleHeader';
+import TourGuideHeader from '../../components/TourGuideHeader';
 import Footer from '../../components/Footer';
 import backgroundImage from '../../assets/login_page_img.jpg';
 
@@ -19,7 +19,7 @@ const TourGuideCreatePackage = () => {
   const [success, setSuccess] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  const BASE_URL = 'http://localhost:5000'; // Match TourGuideDashboard
+  const BASE_URL = 'http://localhost:5000';
 
   const handleChange = (e) => {
     const { name, value, files } = e.target;
@@ -115,9 +115,9 @@ const TourGuideCreatePackage = () => {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <SimpleHeader />
+      <TourGuideHeader />
       <div
-        className="flex-grow flex items-center justify-center bg-cover bg-center mt-20 lg:mt-24"
+        className="flex-grow flex items-center justify-center bg-cover bg-center" // Removed mt-20 lg:mt-24
         style={{
           backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url(${backgroundImage})`,
         }}

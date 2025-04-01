@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import SimpleHeader from '../../components/SimpleHeader';
+import TourGuideHeader from '../../components/TourGuideHeader'; // Import the new header
 import Footer from '../../components/Footer';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -326,14 +326,14 @@ const TourGuideDashboard = () => {
 
   const handleLogout = () => {
     localStorage.removeItem('providerToken');
-    localStorage.removeItem('provider'); // Remove provider too for consistency
+    localStorage.removeItem('provider');
     toast.success('Logged out successfully!');
     setTimeout(() => navigate('/service-provider/login', { replace: true }), 2000);
   };
 
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-b from-gray-100 to-gray-200">
-      <SimpleHeader />
+      <TourGuideHeader /> {/* Replaced SimpleHeader */}
       <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} newestOnTop={false} closeOnClick pauseOnHover />
       <div className="flex-grow container mx-auto p-6 md:p-10 mt-20 mb-12">
         {error && <p className="text-red-600 text-center mb-6 font-medium bg-red-100 py-3 rounded-lg">{error}</p>}
