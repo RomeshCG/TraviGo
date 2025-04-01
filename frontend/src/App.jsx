@@ -36,6 +36,7 @@ import VehicleListing from './pages/admin/VehicleListing';
 import HotelListingsService from './pages/HotelListingsService';
 import TourGuidesService from './pages/TourGuidesService';
 import VehicleListingsService from './pages/VehicleListingsService';
+import TourGuideProfile from './pages/TourGuideProfile';
 
 // Protected Route Component for Users
 const ProtectedRoute = ({ children }) => {
@@ -146,6 +147,7 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/services/hotel-listings" element={<HotelListingsService />} />
         <Route path="/services/tour-guides" element={<TourGuidesService />} />
+        <Route path="/tour-guide/:providerId" element={<TourGuideProfile />} />
         <Route path="/services/vehicle-listings" element={<VehicleListingsService />} />
         <Route
           path="/user/dashboard"
