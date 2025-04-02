@@ -115,7 +115,7 @@ const TourGuide = () => {
       <AdminHeader />
       <div className="flex flex-1">
         <AdminSidebar />
-        <div className="flex-1 ml-0 md:ml-64 p-6 bg-gray-100">
+        <div className="flex-1 p-6 bg-gray-100">
           <div className="max-w-4xl mx-auto">
             <h2 className="text-2xl font-bold mb-6">Manage Tour Guides</h2>
             {error && (
