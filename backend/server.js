@@ -5,7 +5,7 @@ require('dotenv').config();
 const adminRoutes = require('./routes/api');
 
 const app = express();
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 5000;
 
 // Middleware
 app.use(cors({
