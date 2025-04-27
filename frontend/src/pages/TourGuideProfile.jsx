@@ -54,8 +54,8 @@ const TourGuideProfile = () => {
   }, [providerId]);
 
   const handleBookNow = (packageId) => {
-    // Redirect to a booking page or handle booking logic here
-    navigate(`/book-tour-package/${packageId}`);
+    // Redirect to the booking page with guideId and packageId
+    navigate(`/book-tour-package/${providerId}/${packageId}`);
   };
 
   return (

@@ -43,6 +43,9 @@ import PaymentPage from './pages/PaymentPage';
 import VehiclesPage from './pages/VehiclesPage';
 import VehicleDetailPage from './pages/VehicleDetailPage';
 import VehicleRentPage from './pages/VehicleRentPage';
+import TourGuideBookingForm from './pages/tourguide/TourGuideBookingForm';
+import TourGuidePaymentPage from './pages/tourguide/TourGuidePaymentPage';
+import TourGuideBookingConfirmation from './pages/tourguide/TourGuideBookingConfirmation';
 
 // Protected Route Component for Users
 const ProtectedRoute = ({ children }) => {
@@ -340,6 +343,30 @@ function App() {
                 <Route path="/pages/hotel/dashboard" element={<HotelProviderDashboard />} />
                 <Route path="/pages/vehicle/dashboard" element={<VehicleProviderDashboard />} />
                 <Route path="/tour-guides" element={<TourGuidess />} />
+                <Route
+                    path="/book-tour-package/:guideId/:packageId"
+                    element={
+                        <ProtectedRoute>
+                            <TourGuideBookingForm />
+                        </ProtectedRoute>
+                    }
+                />
+                <Route
+                    path="/tour-guide/payment"
+                    element={
+                        <ProtectedRoute>
+                            <TourGuidePaymentPage />
+                        </ProtectedRoute>
+                    }
+                />
+                <Route
+                    path="/tour-guide/confirmation"
+                    element={
+                        <ProtectedRoute>
+                            <TourGuideBookingConfirmation />
+                        </ProtectedRoute>
+                    }
+                />
             </Routes>
         </Router>
     );
