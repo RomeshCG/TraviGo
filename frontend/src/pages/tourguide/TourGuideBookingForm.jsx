@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 
 const TourGuideBookingForm = () => {
@@ -11,6 +11,27 @@ const TourGuideBookingForm = () => {
     travelersCount: 1,
     travelDate: "",
   });
+  const [totalPrice, setTotalPrice] = useState(0);
+
+  useEffect(() => {
+    console.log("Fetching package price for packageId:", packageId); // Debugging
+    const fetchPackagePrice = async () => {
+      try {
+        const response = await fetch(`/api/tour-packages/${packageId}`);
+        const data = await response.json();
+        if (response.ok) {
+          const price = data.price;
+          setTotalPrice(price * formData.travelersCount);
+        } else {
+          console.error("Failed to fetch package price:", data.message);
+        }
+      } catch (error) {
+        console.error("Error fetching package price:", error);
+      }
+    };
+
+    fetchPackagePrice();
+  }, [packageId, formData.travelersCount]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -20,32 +41,34 @@ const TourGuideBookingForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-        const userId = localStorage.getItem("userId"); // Retrieve userId from localStorage or session
-        console.log("Submitting booking with guideId:", guideId, "and userId:", userId); // Log for debugging
+      const response = await fetch("/api/tour-guide/book", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: JSON.stringify({ ...formData, guideId, packageId }),
+      });
 
-        const response = await fetch("/api/tour-guide/book", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-            body: JSON.stringify({ ...formData, guideId, packageId, userId }),
+      const responseData = await response.json();
+
+      if (response.ok) {
+        console.log("Booking successful:", responseData);
+        navigate("/tour-guide/payment", {
+          state: {
+            bookingId: responseData.booking._id,
+            totalPrice: responseData.booking.totalPrice,
+          },
         });
-
-        const responseData = await response.json();
-
-        if (response.ok) {
-            console.log("Booking successful:", responseData);
-            navigate("/tour-guide/payment");
-        } else {
-            console.error("Booking failed:", responseData);
-            alert(responseData.message || "Booking failed. Please try again.");
-        }
+      } else {
+        console.error("Booking failed:", responseData);
+        alert(responseData.message || "Booking failed. Please try again.");
+      }
     } catch (error) {
-        console.error("Error submitting booking:", error);
-        alert("An error occurred. Please try again later.");
+      console.error("Error submitting booking:", error);
+      alert("An error occurred. Please try again later.");
     }
-};
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
@@ -109,6 +132,9 @@ const TourGuideBookingForm = () => {
             required
             className="w-full p-2 border rounded"
           />
+        </div>
+        <div className="mb-4">
+          <p className="text-gray-700 font-bold">Total Price: ${totalPrice.toFixed(2)}</p>
         </div>
         <button
           type="submit"

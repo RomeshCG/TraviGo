@@ -924,64 +924,103 @@ router.post('/tour-guide/book', async (req, res) => {
     let userId;
     try {
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      userId = decoded.id; // Assuming the token contains the user's ID as `id`
+      userId = decoded.id;
     } catch (error) {
       console.error('Invalid token:', error);
       return res.status(401).json({ message: 'Invalid token' });
     }
 
-    // Log the received data for debugging
-    console.log('Received booking data:', {
-      guideId,
-      packageId,
-      email,
-      phone,
-      country,
-      travelersCount,
-      travelDate,
-      userId,
-    });
-
     // Validate required fields
     if (!guideId || !packageId || !email || !phone || !country || !travelersCount || !travelDate) {
-      console.error('Validation failed: Missing required fields');
       return res.status(400).json({ message: 'All fields are required' });
     }
 
     // Check if the guide exists
     const guideExists = await TourGuide.findById(guideId);
     if (!guideExists) {
-      console.error('Tour guide not found:', guideId);
       return res.status(404).json({ message: 'Tour guide not found' });
     }
 
-    // Check if the package exists
+    // Check if the package exists and fetch its price
     const packageExists = await TourPackage.findById(packageId);
     if (!packageExists) {
-      console.error('Tour package not found:', packageId);
       return res.status(404).json({ message: 'Tour package not found' });
     }
+
+    const packagePrice = packageExists.price;
+
+    // Calculate total price
+    const totalPrice = packagePrice * travelersCount;
 
     // Create a new booking
     const newBooking = new TourGuideBooking({
       guideId,
       packageId,
-      userId, // Include userId from the token
+      userId,
       email,
       phone,
       country,
       travelersCount,
       travelDate,
+      totalPrice,
     });
 
     // Save the booking to the database
     await newBooking.save();
 
-    console.log('Booking saved successfully:', newBooking);
-    res.status(201).json({ message: 'Tour guide booking successful!', booking: newBooking });
+    res.status(201).json({
+      message: 'Tour guide booking successful!',
+      booking: { _id: newBooking._id, totalPrice },
+    });
   } catch (error) {
     console.error('Error processing tour guide booking:', error);
     res.status(500).json({ message: 'Error processing tour guide booking' });
+  }
+});
+
+// Add a route to create a Stripe payment intent
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+
+router.post('/payments/create-payment-intent', async (req, res) => {
+  try {
+    const { amount } = req.body;
+
+    if (!amount || amount <= 0) {
+      return res.status(400).json({ success: false, error: 'Invalid payment amount' });
+    }
+
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount,
+      currency: 'usd',
+      payment_method_types: ['card'],
+    });
+
+    res.status(200).json({ success: true, clientSecret: paymentIntent.client_secret });
+  } catch (error) {
+    console.error('Error creating payment intent:', error);
+    res.status(500).json({ success: false, error: 'Failed to create payment intent' });
+  }
+});
+
+router.get('/tour-packages/:packageId', async (req, res) => {
+  try {
+    const { packageId } = req.params;
+
+    // Validate the packageId
+    if (!mongoose.Types.ObjectId.isValid(packageId)) {
+      return res.status(400).json({ message: 'Invalid package ID' });
+    }
+
+    // Fetch the package details
+    const tourPackage = await TourPackage.findById(packageId);
+    if (!tourPackage) {
+      return res.status(404).json({ message: 'Tour package not found' });
+    }
+
+    res.status(200).json(tourPackage);
+  } catch (error) {
+    console.error('Error fetching tour package:', error);
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
