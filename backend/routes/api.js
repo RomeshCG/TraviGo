@@ -498,11 +498,20 @@ router.post('/tour-guide/create', async (req, res) => {
 
 router.get('/tour-guide/provider/:providerId', async (req, res) => {
   try {
-    const tourGuide = await TourGuide.findOne({ providerId: req.params.providerId });
-    if (!tourGuide) return res.status(404).json({ message: 'Tour guide not found' });
+    const { providerId } = req.params;
+
+    // Log the providerId for debugging
+    console.log('Fetching tour guide with providerId:', providerId);
+
+    const tourGuide = await TourGuide.findOne({ providerId });
+    if (!tourGuide) {
+      console.error('Tour guide not found for providerId:', providerId);
+      return res.status(404).json({ message: 'Tour guide not found' });
+    }
+
     res.status(200).json(tourGuide);
   } catch (error) {
-    console.error('Error fetching tour guide:', error.stack);
+    console.error('Error fetching tour guide:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });
@@ -898,6 +907,81 @@ router.delete('/users/:id', isAdmin, async (req, res) => {
   } catch (error) {
     console.error('Error deleting user:', error);
     res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Add this route for booking a tour guide
+router.post('/tour-guide/book', async (req, res) => {
+  try {
+    const { guideId, packageId, email, phone, country, travelersCount, travelDate } = req.body;
+
+    // Extract userId from the token
+    const token = req.headers.authorization?.split(' ')[1];
+    if (!token) {
+      return res.status(401).json({ message: 'Authorization token is missing' });
+    }
+
+    let userId;
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      userId = decoded.id; // Assuming the token contains the user's ID as `id`
+    } catch (error) {
+      console.error('Invalid token:', error);
+      return res.status(401).json({ message: 'Invalid token' });
+    }
+
+    // Log the received data for debugging
+    console.log('Received booking data:', {
+      guideId,
+      packageId,
+      email,
+      phone,
+      country,
+      travelersCount,
+      travelDate,
+      userId,
+    });
+
+    // Validate required fields
+    if (!guideId || !packageId || !email || !phone || !country || !travelersCount || !travelDate) {
+      console.error('Validation failed: Missing required fields');
+      return res.status(400).json({ message: 'All fields are required' });
+    }
+
+    // Check if the guide exists
+    const guideExists = await TourGuide.findById(guideId);
+    if (!guideExists) {
+      console.error('Tour guide not found:', guideId);
+      return res.status(404).json({ message: 'Tour guide not found' });
+    }
+
+    // Check if the package exists
+    const packageExists = await TourPackage.findById(packageId);
+    if (!packageExists) {
+      console.error('Tour package not found:', packageId);
+      return res.status(404).json({ message: 'Tour package not found' });
+    }
+
+    // Create a new booking
+    const newBooking = new TourGuideBooking({
+      guideId,
+      packageId,
+      userId, // Include userId from the token
+      email,
+      phone,
+      country,
+      travelersCount,
+      travelDate,
+    });
+
+    // Save the booking to the database
+    await newBooking.save();
+
+    console.log('Booking saved successfully:', newBooking);
+    res.status(201).json({ message: 'Tour guide booking successful!', booking: newBooking });
+  } catch (error) {
+    console.error('Error processing tour guide booking:', error);
+    res.status(500).json({ message: 'Error processing tour guide booking' });
   }
 });
 

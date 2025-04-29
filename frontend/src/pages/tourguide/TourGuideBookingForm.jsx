@@ -1,8 +1,8 @@
 import React, { useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 
 const TourGuideBookingForm = () => {
-  const { guideId, packageId } = useParams();
+  const { guideId, packageId } = useParams(); // Get guideId and packageId from URL
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     email: "",
@@ -20,24 +20,32 @@ const TourGuideBookingForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch("/api/tour-guide/book", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-        body: JSON.stringify({ ...formData, guideId, packageId }),
-      });
+        const userId = localStorage.getItem("userId"); // Retrieve userId from localStorage or session
+        console.log("Submitting booking with guideId:", guideId, "and userId:", userId); // Log for debugging
 
-      if (response.ok) {
-        navigate("/tour-guide/payment");
-      } else {
-        console.error("Booking failed");
-      }
+        const response = await fetch("/api/tour-guide/book", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+            body: JSON.stringify({ ...formData, guideId, packageId, userId }),
+        });
+
+        const responseData = await response.json();
+
+        if (response.ok) {
+            console.log("Booking successful:", responseData);
+            navigate("/tour-guide/payment");
+        } else {
+            console.error("Booking failed:", responseData);
+            alert(responseData.message || "Booking failed. Please try again.");
+        }
     } catch (error) {
-      console.error("Error submitting booking:", error);
+        console.error("Error submitting booking:", error);
+        alert("An error occurred. Please try again later.");
     }
-  };
+};
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">

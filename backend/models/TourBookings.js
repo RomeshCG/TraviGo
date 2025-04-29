@@ -1,34 +1,46 @@
 const mongoose = require('mongoose');
 
-const tourGuideBookingSchema = new mongoose.Schema({
-  tourGuideId: {
+const TourBookingSchema = new mongoose.Schema({
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true,
+  },
+  guideId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'TourGuide',
     required: true,
   },
-  touristId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Tourist',
-    required: true,
-  },
-  tourPackageId: {
+  packageId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'TourPackage',
     required: true,
   },
-  bookingDate: {
+  email: {
+    type: String,
+    required: true,
+  },
+  phone: {
+    type: String,
+    required: true,
+  },
+  country: {
+    type: String,
+    required: true,
+  },
+  travelersCount: {
+    type: Number,
+    required: true,
+  },
+  travelDate: {
     type: Date,
     required: true,
   },
   status: {
     type: String,
-    enum: ['pending', 'confirmed', 'completed', 'cancelled'],
+    enum: ['pending', 'confirmed', 'cancelled'],
     default: 'pending',
   },
-  createdAt: {
-    type: Date,
-    default: Date.now,
-  },
-});
+}, { timestamps: true });
 
-module.exports = mongoose.model('TourGuideBooking', tourGuideBookingSchema);
+module.exports = mongoose.model('TourBooking', TourBookingSchema);
