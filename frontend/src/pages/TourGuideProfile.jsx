@@ -16,6 +16,8 @@ const TourGuideProfile = () => {
   const BASE_URL = 'http://localhost:5000';
 
   useEffect(() => {
+console.log('Provider ID from URL:', providerId); // Log the providerId for debugging
+
     const fetchTourGuideData = async () => {
       try {
         // Fetch tour guide details
@@ -54,8 +56,8 @@ const TourGuideProfile = () => {
   }, [providerId]);
 
   const handleBookNow = (packageId) => {
-    // Redirect to a booking page or handle booking logic here
-    navigate(`/book-tour-package/${packageId}`);
+    // Pass the TourGuide model's _id instead of providerId
+    navigate(`/book-tour-package/${tourGuide._id}/${packageId}`);
   };
 
   return (
