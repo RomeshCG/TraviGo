@@ -48,6 +48,8 @@ import TourGuidePaymentPage from './pages/tourguide/TourGuidePaymentPage';
 import TourGuideBookingConfirmation from './pages/tourguide/TourGuideBookingConfirmation';
 import TourGuidePayments from './pages/Admin/TourGuidePayments';
 import TourGuideReports from './pages/Admin/TourGuideReports';
+import UserTopBar from './components/UserTopBar';
+import TourGuideBookings from './pages/user/TourGuideBookings';
 
 // Protected Route Component for Users
 const ProtectedRoute = ({ children }) => {
@@ -149,8 +151,32 @@ const ProtectedProviderRoute = ({ children }) => {
 };
 
 function App() {
+    // Get user info from localStorage
+    const user = localStorage.getItem('user');
+    let username = '';
+    if (user) {
+        try {
+            const parsed = JSON.parse(user);
+            username = parsed.username || parsed.name || parsed.email || '';
+        } catch {
+            username = '';
+        }
+    }
+
+    // Logout handler
+    const handleLogout = () => {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        window.location.href = '/login';
+    };
+
     return (
         <Router>
+            {/* Show UserTopBar only if user is logged in */}
+            {username && (
+                <UserTopBar username={username} onLogout={handleLogout} />
+            )}
+            {/* Main header would go here */}
             <Routes>
                 <Route path="/admin/register" element={<AdminRegister />} />
                 <Route path="/" element={<Home />} />
@@ -199,6 +225,14 @@ function App() {
                     element={
                         <ProtectedRoute>
                             <MyBooking />
+                        </ProtectedRoute>
+                    }
+                />
+                <Route
+                    path="/user/my-booking/tour-guides"
+                    element={
+                        <ProtectedRoute>
+                            <TourGuideBookings />
                         </ProtectedRoute>
                     }
                 />

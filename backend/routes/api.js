@@ -553,6 +553,32 @@ router.get('/tour-guide/:tourGuideId/tour-guide-bookings', async (req, res) => {
   }
 });
 
+// Get all tour guide bookings for the logged-in user (tourist)
+router.get('/user/tour-guide-bookings', async (req, res) => {
+  const token = req.headers['authorization']?.split(' ')[1];
+  if (!token) {
+    return res.status(401).json({ message: 'No token provided' });
+  }
+  let userId;
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    userId = decoded.id;
+  } catch (error) {
+    return res.status(401).json({ message: 'Invalid token' });
+  }
+  try {
+    // Use the correct model variable name and add robust error logging
+    const TourBooking = require('../models/TourBookings');
+    const bookings = await TourBooking.find({ userId })
+      .populate('guideId', 'name')
+      .populate('packageId', 'title');
+    res.status(200).json(bookings);
+  } catch (error) {
+    console.error('Error fetching user tour guide bookings:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
 // Update booking status for a tour booking (extended for approved/rejected)
 router.put('/tour-bookings/:id/status', async (req, res) => {
   try {
