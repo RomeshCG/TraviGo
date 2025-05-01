@@ -539,15 +539,38 @@ router.get('/tour-guide/:tourGuideId/tour-packages', async (req, res) => {
 router.get('/tour-guide/:tourGuideId/tour-guide-bookings', async (req, res) => {
   try {
     const { tourGuideId } = req.params;
-    const tourGuideBookings = await TourGuideBooking.find({ tourGuideId })
-      .populate('touristId', 'username')
-      .populate('tourPackageId', 'title');
-    if (!tourGuideBookings || tourGuideBookings.length === 0) {
+    // Use guideId field for TourBookings model
+    const tourBookings = await require('../models/TourBookings').find({ guideId: tourGuideId })
+      .populate('userId', 'username')
+      .populate('packageId', 'title');
+    if (!tourBookings || tourBookings.length === 0) {
       return res.status(404).json({ message: 'No tour guide bookings found' });
     }
-    res.status(200).json(tourGuideBookings);
+    res.status(200).json(tourBookings);
   } catch (error) {
     console.error('Fetch tour guide bookings error:', error.stack);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Update booking status for a tour booking
+router.put('/tour-bookings/:id/status', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+    const allowedStatuses = ['pending', 'confirmed', 'cancelled'];
+    if (!allowedStatuses.includes(status)) {
+      return res.status(400).json({ message: 'Invalid status value' });
+    }
+    const booking = await require('../models/TourBookings').findById(id);
+    if (!booking) {
+      return res.status(404).json({ message: 'Booking not found' });
+    }
+    booking.status = status;
+    await booking.save();
+    res.status(200).json({ message: 'Booking status updated successfully', booking });
+  } catch (error) {
+    console.error('Update booking status error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });

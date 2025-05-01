@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import TourGuideHeader from '../../components/TourGuideHeader'; // Import the new header
+import TourGuideHeader from '../../components/TourGuideHeader';
 import Footer from '../../components/Footer';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -9,13 +9,13 @@ const TourGuideDashboard = () => {
   const [tourGuide, setTourGuide] = useState(null);
   const [tourPackages, setTourPackages] = useState([]);
   const [reviews, setReviews] = useState([]);
-  const [tourGuideBookings, setTourGuideBookings] = useState([]);
+  const [tourBookings, setTourBookings] = useState([]);
   const [averageRating, setAverageRating] = useState(0);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState('overview');
   const [profilePictureFile, setProfilePictureFile] = useState(null);
   const [bannerFile, setBannerFile] = useState(null);
-  const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     bio: '',
@@ -24,127 +24,130 @@ const TourGuideDashboard = () => {
     yearsOfExperience: 0,
     certification: '',
   });
-  const navigate = useNavigate();
 
+  const navigate = useNavigate();
   const BASE_URL = 'http://localhost:5000';
 
-  useEffect(() => {
-    const fetchTourGuideData = async () => {
-      setIsLoading(true);
-      setError('');
+  const fetchTourGuideData = useCallback(async () => {
+    setIsLoading(true);
+    setError('');
 
-      try {
-        const token = localStorage.getItem('providerToken');
-        if (!token) {
-          setError('You need to log in to access the dashboard.');
-          setTimeout(() => navigate('/service-provider/login'), 2000);
-          return;
-        }
-
-        const providerResponse = await fetch(`${BASE_URL}/api/verify-provider-token`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (!providerResponse.ok) {
-          const errorData = await providerResponse.json();
-          throw new Error(errorData.message || 'Failed to verify provider');
-        }
-        const providerData = await providerResponse.json();
-        const provider = providerData.provider;
-
-        let response = await fetch(`${BASE_URL}/api/tour-guide/provider/${provider._id}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (response.status === 404) {
-          const createResponse = await fetch(`${BASE_URL}/api/tour-guide/create`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify({
-              providerId: provider._id,
-              name: provider.email.split('@')[0],
-              bio: '',
-              location: '',
-              languages: [],
-              yearsOfExperience: 0,
-              certification: '',
-            }),
-          });
-
-          if (!createResponse.ok) {
-            const errorData = await createResponse.json();
-            throw new Error(errorData.message || 'Failed to create tour guide');
-          }
-
-          response = await fetch(`${BASE_URL}/api/tour-guide/provider/${provider._id}`, {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-        }
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.message || 'Failed to fetch tour guide data');
-        }
-
-        const data = await response.json();
-        setTourGuide(data);
-
-        if (data) {
-          setFormData({
-            name: data.name || '',
-            bio: data.bio || '',
-            location: data.location || '',
-            languages: data.languages || [],
-            yearsOfExperience: data.yearsOfExperience || 0,
-            certification: data.certification || '',
-          });
-        }
-
-        if (data._id) {
-          const packagesResponse = await fetch(`${BASE_URL}/api/tour-guide/${data._id}/tour-packages`, {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-          if (packagesResponse.ok) {
-            const packagesData = await packagesResponse.json();
-            setTourPackages(packagesData);
-          } else {
-            setTourPackages([]);
-          }
-
-          const reviewsResponse = await fetch(`${BASE_URL}/api/tour-guide/${data._id}/reviews`, {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-          if (reviewsResponse.ok) {
-            const reviewsData = await reviewsResponse.json();
-            setReviews(reviewsData.reviews || []);
-            setAverageRating(reviewsData.averageRating || 0);
-          } else {
-            setReviews([]);
-            setAverageRating(0);
-          }
-
-          const bookingsResponse = await fetch(`${BASE_URL}/api/tour-guide/${data._id}/tour-guide-bookings`, {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-          if (bookingsResponse.ok) {
-            const bookingsData = await bookingsResponse.json();
-            setTourGuideBookings(bookingsData);
-          } else {
-            setTourGuideBookings([]);
-          }
-        } else {
-          throw new Error('Invalid tour guide ID');
-        }
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setIsLoading(false);
+    try {
+      const token = localStorage.getItem('providerToken');
+      if (!token) {
+        setError('You need to log in to access the dashboard.');
+        setTimeout(() => navigate('/service-provider/login'), 2000);
+        return;
       }
-    };
 
+      const providerResponse = await fetch(`${BASE_URL}/api/verify-provider-token`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!providerResponse.ok) throw new Error('Failed to verify provider');
+      
+      const providerData = await providerResponse.json();
+      const provider = providerData.provider;
+
+      const response = await fetch(`${BASE_URL}/api/tour-guide/provider/${provider._id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (response.status === 404) {
+        // Create new tour guide if not exists
+        const createResponse = await fetch(`${BASE_URL}/api/tour-guide/create`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            providerId: provider._id,
+            name: provider.email.split('@')[0],
+            bio: '',
+            location: '',
+            languages: [],
+            yearsOfExperience: 0,
+            certification: '',
+          }),
+        });
+
+        if (!createResponse.ok) throw new Error('Failed to create tour guide');
+      }
+
+      const guideData = await fetch(`${BASE_URL}/api/tour-guide/provider/${provider._id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      }).then(res => res.json());
+
+      setTourGuide(guideData);
+
+      // Fetch tour packages
+      const packagesData = await fetch(`${BASE_URL}/api/tour-guide/${guideData._id}/tour-packages`, {
+        headers: { Authorization: `Bearer ${token}` },
+      }).then(res => res.json());
+      setTourPackages(packagesData);
+
+      // Fetch reviews
+      const reviewsData = await fetch(`${BASE_URL}/api/tour-guide/${guideData._id}/reviews`, {
+        headers: { Authorization: `Bearer ${token}` },
+      }).then(res => res.json());
+      setReviews(reviewsData.reviews || []);
+      setAverageRating(reviewsData.averageRating || 0);
+
+      // Fetch bookings using correct backend route
+      const bookingsResponse = await fetch(`${BASE_URL}/api/tour-guide/${guideData._id}/tour-guide-bookings`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      let bookingsData = [];
+      if (bookingsResponse.ok) {
+        bookingsData = await bookingsResponse.json();
+      }
+      setTourBookings(bookingsData || []);
+
+      setFormData({
+        name: guideData.name || '',
+        bio: guideData.bio || '',
+        location: guideData.location || '',
+        languages: guideData.languages || [],
+        yearsOfExperience: guideData.yearsOfExperience || 0,
+        certification: guideData.certification || '',
+      });
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [BASE_URL, navigate]);
+
+  useEffect(() => {
     fetchTourGuideData();
-  }, [navigate]);
+  }, [fetchTourGuideData]);
+
+  const handleBookingStatusUpdate = async (bookingId, newStatus) => {
+    try {
+      const token = localStorage.getItem('providerToken');
+      const response = await fetch(`${BASE_URL}/api/tour-bookings/${bookingId}/status`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ status: newStatus }),
+      });
+
+      if (response.ok) {
+        setTourBookings(prevBookings =>
+          prevBookings.map(booking =>
+            booking._id === bookingId ? { ...booking, status: newStatus } : booking
+          )
+        );
+        toast.success(`Booking ${newStatus} successfully!`);
+      } else {
+        throw new Error('Failed to update booking status');
+      }
+    } catch (err) {
+      toast.error(err.message);
+    }
+  };
 
   const handlePublish = async (packageId) => {
     setError('');
@@ -314,8 +317,7 @@ const TourGuideDashboard = () => {
       const data = await response.json();
       if (response.ok) {
         setTourGuide({ ...tourGuide, ...formData });
-        setIsEditing(false);
-        toast.success('Profile updated successfully!');
+                toast.success('Profile updated successfully!');
       } else {
         setError(data.message || 'Failed to update profile');
       }
@@ -333,310 +335,402 @@ const TourGuideDashboard = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-b from-gray-100 to-gray-200">
-      <TourGuideHeader /> {/* Replaced SimpleHeader */}
+      <TourGuideHeader />
       <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} newestOnTop={false} closeOnClick pauseOnHover />
+      
       <div className="flex-grow container mx-auto p-6 md:p-10 mt-20 mb-12">
-        {error && <p className="text-red-600 text-center mb-6 font-medium bg-red-100 py-3 rounded-lg">{error}</p>}
+        {error && (
+          <p className="text-red-600 text-center mb-6 font-medium bg-red-100 py-3 rounded-lg">{error}</p>
+        )}
+        
         {isLoading ? (
           <div className="text-center">
             <p className="text-gray-600 text-lg">Loading...</p>
             <div className="loader ease-linear rounded-full border-4 border-t-4 border-green-500 h-12 w-12 mx-auto mt-4 animate-spin"></div>
           </div>
         ) : tourGuide ? (
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-            {/* Profile Section */}
-            <div className="lg:col-span-1 bg-white rounded-2xl shadow-xl p-6 transform hover:shadow-2xl transition-shadow duration-300">
-              <div className="flex flex-col items-center mb-6">
-                {/* Banner Display */}
-                <div className="w-full mb-4">
-                  <img
-                    src={tourGuide.banner ? `${BASE_URL}${tourGuide.banner}` : 'https://via.placeholder.com/300x100?text=No+Banner'}
-                    alt="Banner"
-                    className="w-full h-32 object-cover rounded-lg border border-gray-200"
-                  />
-                </div>
-                <div className="relative">
-                  <img
-                    src={tourGuide.profilePicture ? `${BASE_URL}${tourGuide.profilePicture}` : 'https://via.placeholder.com/100'}
-                    alt="Profile"
-                    className="w-28 h-28 rounded-full border-4 border-gradient-to-r from-green-500 to-teal-500 shadow-lg"
-                  />
-                  <div className="absolute inset-0 rounded-full bg-gradient-to-r from-green-500 to-teal-500 opacity-20"></div>
-                </div>
-                <div className="text-center mt-4">
-                  <h2 className="text-2xl font-bold text-gray-800">{tourGuide.name}</h2>
-                  {tourGuide.verifiedBadge && (
-                    <span className="inline-flex items-center bg-green-500 text-white text-sm px-3 py-1 rounded-full mt-2 shadow-md">
-                      Verified <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
-                    </span>
-                  )}
-                </div>
-              </div>
-              <div className="mb-6">
-                <label className="block text-gray-700 mb-2 font-medium">Update Profile Picture</label>
-                <div className="flex items-center space-x-4">
-                  <label className="cursor-pointer bg-gradient-to-r from-green-500 to-teal-500 text-white px-4 py-2 rounded-lg hover:from-green-600 hover:to-teal-600 transition shadow-md">
-                    Choose File
-                    <input
-                      type="file"
-                      onChange={(e) => setProfilePictureFile(e.target.files[0])}
-                      className="hidden"
-                    />
-                  </label>
-                  <span className="text-gray-600 text-sm truncate">{profilePictureFile ? profilePictureFile.name : 'No file chosen'}</span>
-                </div>
-                <button
-                  onClick={handleUpdateProfilePicture}
-                  className="mt-4 w-full bg-gradient-to-r from-green-500 to-teal-500 text-white py-2 rounded-lg hover:from-green-600 hover:to-teal-600 transition shadow-md"
-                >
-                  Update Profile Picture
-                </button>
-              </div>
-
-              {/* Banner Upload Section */}
-              <div className="mb-6">
-                <label className="block text-gray-700 mb-2 font-medium">Update Banner</label>
-                <div className="flex items-center space-x-4">
-                  <label className="cursor-pointer bg-gradient-to-r from-green-500 to-teal-500 text-white px-4 py-2 rounded-lg hover:from-green-600 hover:to-teal-600 transition shadow-md">
-                    Choose File
-                    <input
-                      type="file"
-                      onChange={(e) => setBannerFile(e.target.files[0])}
-                      className="hidden"
-                    />
-                  </label>
-                  <span className="text-gray-600 text-sm truncate">{bannerFile ? bannerFile.name : 'No file chosen'}</span>
-                </div>
-                <button
-                  onClick={handleUpdateBanner}
-                  className="mt-4 w-full bg-gradient-to-r from-green-500 to-teal-500 text-white py-2 rounded-lg hover:from-green-600 hover:to-teal-600 transition shadow-md"
-                >
-                  Update Banner
-                </button>
-              </div>
-
-              {/* Edit Profile Button */}
-              <button
-                onClick={() => setIsEditing(!isEditing)}
-                className="w-full bg-gradient-to-r from-green-500 to-teal-500 text-white py-2 rounded-lg hover:from-green-600 hover:to-teal-600 transition shadow-md mb-6"
-              >
-                {isEditing ? 'Cancel Edit' : 'Edit Profile'}
-              </button>
-
-              {/* Logout Button */}
-              <button
-                onClick={handleLogout}
-                className="w-full bg-gradient-to-r from-red-500 to-pink-500 text-white py-2 rounded-lg hover:from-red-600 hover:to-pink-600 transition shadow-md mb-6"
-              >
-                Logout
-              </button>
-
-              {/* Profile Details or Edit Form */}
-              {isEditing ? (
-                <form onSubmit={handleUpdateProfile} className="space-y-4">
-                  <div>
-                    <label className="block text-gray-700 font-medium mb-1">Name</label>
-                    <input
-                      type="text"
-                      name="name"
-                      value={formData.name}
-                      onChange={handleInputChange}
-                      className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-gray-700 font-medium mb-1">Bio</label>
-                    <textarea
-                      name="bio"
-                      value={formData.bio}
-                      onChange={handleInputChange}
-                      className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                      rows="3"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-gray-700 font-medium mb-1">Location</label>
-                    <input
-                      type="text"
-                      name="location"
-                      value={formData.location}
-                      onChange={handleInputChange}
-                      className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-gray-700 font-medium mb-1">Languages (comma-separated)</label>
-                    <input
-                      type="text"
-                      name="languages"
-                      value={formData.languages.join(', ')}
-                      onChange={handleInputChange}
-                      className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                      placeholder="e.g., English, Spanish, French"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-gray-700 font-medium mb-1">Years of Experience</label>
-                    <input
-                      type="number"
-                      name="yearsOfExperience"
-                      value={formData.yearsOfExperience}
-                      onChange={handleInputChange}
-                      className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                      min="0"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-gray-700 font-medium mb-1">Certification</label>
-                    <input
-                      type="text"
-                      name="certification"
-                      value={formData.certification}
-                      onChange={handleInputChange}
-                      className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                    />
-                  </div>
+          <div className="grid grid-cols-12 gap-6">
+            {/* Sidebar */}
+            <div className="col-span-12 md:col-span-3 lg:col-span-2">
+              <div className="bg-white rounded-xl shadow-lg p-4">
+                <div className="flex flex-col space-y-2">
                   <button
-                    type="submit"
-                    className="w-full bg-gradient-to-r from-green-500 to-teal-500 text-white py-2 rounded-lg hover:from-green-600 hover:to-teal-600 transition shadow-md"
+                    onClick={() => setActiveTab('overview')}
+                    className={`px-4 py-2 rounded-lg text-left ${
+                      activeTab === 'overview'
+                        ? 'bg-gradient-to-r from-green-500 to-teal-500 text-white'
+                        : 'hover:bg-gray-100'
+                    }`}
                   >
-                    Save Changes
+                    Overview
                   </button>
-                </form>
-              ) : (
-                <div className="space-y-4 text-gray-700">
-                  <p><strong className="font-semibold">Bio:</strong> {tourGuide.bio || 'Not provided'}</p>
-                  <p><strong className="font-semibold">Location:</strong> {tourGuide.location || 'Not specified'}</p>
-                  <p><strong className="font-semibold">Languages:</strong> {tourGuide.languages?.join(', ') || 'Not specified'}</p>
-                  <p><strong className="font-semibold">Years of Experience:</strong> {tourGuide.yearsOfExperience || '0'}</p>
-                  <p><strong className="font-semibold">Certification:</strong> {tourGuide.certification || 'Not provided'}</p>
-                  <p><strong className="font-semibold">Verification Status:</strong> {tourGuide.verificationStatus || 'Pending'}</p>
-                  <p><strong className="font-semibold">Average Rating:</strong> {averageRating ? averageRating.toFixed(1) : '0'} / 5</p>
+                  <button
+                    onClick={() => setActiveTab('bookings')}
+                    className={`px-4 py-2 rounded-lg text-left ${
+                      activeTab === 'bookings'
+                        ? 'bg-gradient-to-r from-green-500 to-teal-500 text-white'
+                        : 'hover:bg-gray-100'
+                    }`}
+                  >
+                    Bookings
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('packages')}
+                    className={`px-4 py-2 rounded-lg text-left ${
+                      activeTab === 'packages'
+                        ? 'bg-gradient-to-r from-green-500 to-teal-500 text-white'
+                        : 'hover:bg-gray-100'
+                    }`}
+                  >
+                    Tour Packages
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('reviews')}
+                    className={`px-4 py-2 rounded-lg text-left ${
+                      activeTab === 'reviews'
+                        ? 'bg-gradient-to-r from-green-500 to-teal-500 text-white'
+                        : 'hover:bg-gray-100'
+                    }`}
+                  >
+                    Reviews
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('profile')}
+                    className={`px-4 py-2 rounded-lg text-left ${
+                      activeTab === 'profile'
+                        ? 'bg-gradient-to-r from-green-500 to-teal-500 text-white'
+                        : 'hover:bg-gray-100'
+                    }`}
+                  >
+                    Profile Settings
+                  </button>
+<button
+                    onClick={handleLogout}
+                    className="px-4 py-2 rounded-lg text-left text-red-600 hover:bg-red-50 mt-4"
+                  >
+                    Logout
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Main Content */}
+            <div className="col-span-12 md:col-span-9 lg:col-span-10 space-y-6">
+              {/* Overview Tab */}
+              {activeTab === 'overview' && (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="bg-white rounded-xl shadow-lg p-6">
+                    <h3 className="text-xl font-semibold mb-4">Recent Bookings</h3>
+                    <div className="text-3xl font-bold text-green-600">{tourBookings.length}</div>
+                    <p className="text-gray-600">Total Bookings</p>
+                  </div>
+                  <div className="bg-white rounded-xl shadow-lg p-6">
+                    <h3 className="text-xl font-semibold mb-4">Tour Packages</h3>
+                    <div className="text-3xl font-bold text-blue-600">{tourPackages.length}</div>
+                    <p className="text-gray-600">Active Packages</p>
+                  </div>
+                  <div className="bg-white rounded-xl shadow-lg p-6">
+                    <h3 className="text-xl font-semibold mb-4">Rating</h3>
+                    <div className="text-3xl font-bold text-yellow-600">{averageRating.toFixed(1)}/5.0</div>
+                    <p className="text-gray-600">{reviews.length} Reviews</p>
+                  </div>
                 </div>
               )}
 
-              <Link to="/tour-guide/chat" className="mt-6 inline-block w-full text-center bg-gradient-to-r from-green-500 to-teal-500 text-white py-3 rounded-lg hover:from-green-600 hover:to-teal-600 transition shadow-md">
-                Chat with Tourists
-              </Link>
-            </div>
-
-            {/* Main Content Section */}
-            <div className="lg:col-span-3 space-y-8">
-              {/* Tour Packages Section */}
-              <div className="bg-white rounded-2xl shadow-xl p-6 transform hover:shadow-2xl transition-shadow duration-300">
-                <div className="flex justify-between items-center mb-6">
-                  <h2 className="text-2xl md:text-3xl font-bold text-gray-800">Your Tour Packages</h2>
-                  {tourGuide.verificationStatus === 'verified' ? (
-                    <Link to="/tour-guide/create-package" className="bg-gradient-to-r from-green-500 to-teal-500 text-white px-4 py-2 rounded-lg hover:from-green-600 hover:to-teal-600 transition shadow-md">
-                      Create New Package
-                    </Link>
-                  ) : (
-                    <p className="text-red-600 text-sm font-medium bg-red-100 px-4 py-2 rounded-lg">You must be verified to create tour packages.</p>
-                  )}
-                </div>
-                {tourPackages.length === 0 ? (
-                  <p className="text-gray-600 text-lg">No tour packages created yet.</p>
-                ) : (
-                  <div className="space-y-6">
-                    {tourPackages.map((pkg) => (
-                      <div key={pkg._id} className="border border-gray-200 p-6 rounded-xl flex justify-between items-center hover:bg-gray-50 transition-all duration-300 shadow-sm">
-                        <div>
-                          <h3 className="text-xl font-semibold text-gray-800">{pkg.title}</h3>
-                          <p className="text-gray-600 mt-1">{pkg.description}</p>
-                          <p className="text-gray-600 mt-1">Status: <span className={`font-medium ${pkg.status === 'published' ? 'text-green-600' : 'text-yellow-600'}`}>{pkg.status}</span></p>
-                          <p className="text-gray-600 mt-1">Price: <span className="font-medium">${pkg.price}</span></p>
-                          <p className="text-gray-600 mt-1">Duration: <span className="font-medium">{pkg.duration}</span></p>
-                          <p className="text-gray-600 mt-1">Location: <span className="font-medium">{pkg.location}</span></p>
-                        </div>
-                        <div className="space-x-3">
-                          {pkg.status === 'draft' && (
-                            <button
-                              onClick={() => handlePublish(pkg._id)}
-                              className="bg-gradient-to-r from-green-500 to-teal-500 text-white px-4 py-2 rounded-lg hover:from-green-600 hover:to-teal-600 transition shadow-md"
-                            >
-                              Publish
-                            </button>
-                          )}
-                          <button
-                            onClick={() => handleDelete(pkg._id)}
-                            className="bg-gradient-to-r from-red-500 to-pink-500 text-white px-4 py-2 rounded-lg hover:from-red-600 hover:to-pink-600 transition shadow-md"
-                          >
-                            Delete
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Tour Guide Bookings Section */}
-              <div className="bg-white rounded-2xl shadow-xl p-6 transform hover:shadow-2xl transition-shadow duration-300">
-                <h2 className="text-2xl md:text-3xl font-bold text-gray-800 mb-6">Your Tour Guide Bookings</h2>
-                {tourGuideBookings.length === 0 ? (
-                  <p className="text-gray-600 text-lg">No tour guide bookings yet.</p>
-                ) : (
+              {/* Bookings Tab */}
+              {activeTab === 'bookings' && (
+                <div className="bg-white rounded-xl shadow-lg p-6">
+                  <h2 className="text-2xl font-bold mb-6">Tour Bookings</h2>
                   <div className="overflow-x-auto">
-                    <table className="min-w-full bg-white border border-gray-200 rounded-xl shadow-sm">
+                    <table className="min-w-full">
                       <thead>
-                        <tr className="bg-gradient-to-r from-gray-100 to-gray-200">
-                          <th className="py-4 px-6 text-left text-gray-700 font-semibold">Booking ID</th>
-                          <th className="py-4 px-6 text-left text-gray-700 font-semibold">Tourist</th>
-                          <th className="py-4 px-6 text-left text-gray-700 font-semibold">Tour Package</th>
-                          <th className="py-4 px-6 text-left text-gray-700 font-semibold">Booking Date</th>
-                          <th className="py-4 px-6 text-left text-gray-700 font-semibold">Status</th>
+                        <tr className="bg-gray-50">
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tourist</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Package</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Travel Date</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                         </tr>
                       </thead>
-                      <tbody>
-                        {tourGuideBookings.map((booking, index) => (
-                          <tr key={booking._id} className={`border-t ${index % 2 === 0 ? 'bg-gray-50' : 'bg-white'} hover:bg-gray-100 transition-all duration-200`}>
-                            <td className="py-4 px-6 text-gray-600">{booking._id}</td>
-                            <td className="py-4 px-6 text-gray-600">{booking.touristId?.username || 'Unknown'}</td>
-                            <td className="py-4 px-6 text-gray-600">{booking.tourPackageId?.title || 'N/A'}</td>
-                            <td className="py-4 px-6 text-gray-600">{new Date(booking.bookingDate).toLocaleDateString()}</td>
-                            <td className="py-4 px-6">
-                              <span
-                                className={`inline-block px-3 py-1 rounded-full text-sm font-medium shadow-sm ${
-                                  booking.status === 'pending'
-                                    ? 'bg-yellow-100 text-yellow-800'
-                                    : booking.status === 'confirmed'
-                                    ? 'bg-green-100 text-green-800'
-                                    : booking.status === 'completed'
-                                    ? 'bg-blue-100 text-blue-800'
-                                    : 'bg-red-100 text-red-800'
-                                }`}
-                              >
+                      <tbody className="bg-white divide-y divide-gray-200">
+                        {tourBookings.map((booking) => (
+                          <tr key={booking._id}>
+                            <td className="px-6 py-4">
+                              <div className="text-sm font-medium text-gray-900">{booking.email}</div>
+                              <div className="text-sm text-gray-500">{booking.phone}</div>
+                            </td>
+                            <td className="px-6 py-4">
+                              <div className="text-sm text-gray-900">{booking.packageId?.title || 'N/A'}</div>
+                              <div className="text-sm text-gray-500">{booking.travelersCount} travelers</div>
+                            </td>
+                            <td className="px-6 py-4">
+                              <div className="text-sm text-gray-900">
+                                {new Date(booking.travelDate).toLocaleDateString()}
+                              </div>
+                            </td>
+                            <td className="px-6 py-4">
+                              <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                ${booking.status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 
+                                  booking.status === 'confirmed' ? 'bg-green-100 text-green-800' : 
+                                  'bg-red-100 text-red-800'}`}>
                                 {booking.status}
                               </span>
+                            </td>
+                            <td className="px-6 py-4">
+                              {booking.status === 'pending' && (
+                                <div className="space-x-2">
+                                  <button
+                                    onClick={() => handleBookingStatusUpdate(booking._id, 'confirmed')}
+                                    className="bg-green-500 text-white px-3 py-1 rounded-lg text-sm hover:bg-green-600"
+                                  >
+                                    Confirm
+                                  </button>
+                                  <button
+                                    onClick={() => handleBookingStatusUpdate(booking._id, 'cancelled')}
+                                    className="bg-red-500 text-white px-3 py-1 rounded-lg text-sm hover:bg-red-600"
+                                  >
+                                    Cancel
+                                  </button>
+                                </div>
+                              )}
                             </td>
                           </tr>
                         ))}
                       </tbody>
                     </table>
                   </div>
-                )}
-              </div>
+                </div>
+              )}
 
-              {/* Reviews Section */}
-              <div className="bg-white rounded-2xl shadow-xl p-6 transform hover:shadow-2xl transition-shadow duration-300">
-                <h2 className="text-2xl md:text-3xl font-bold text-gray-800 mb-6">Your Reviews</h2>
-                {reviews.length === 0 ? (
-                  <p className="text-gray-600 text-lg">No reviews yet.</p>
-                ) : (
-                  <div className="space-y-6">
-                    {reviews.map((review) => (
-                      <div key={review._id} className="border border-gray-200 p-6 rounded-xl hover:bg-gray-50 transition-all duration-300 shadow-sm">
-                        <p className="text-gray-600">
-                          <strong className="font-semibold">{review.touristId?.username || 'Anonymous'}</strong> rated <span className="font-medium text-yellow-600">{review.rating}/5</span>
-                        </p>
-                        <p className="text-gray-600 mt-2">{review.comment}</p>
-                        <p className="text-gray-500 text-sm mt-2">{new Date(review.createdAt).toLocaleDateString()}</p>
+              {/* Packages Tab */}
+              {activeTab === 'packages' && (
+                <div className="bg-white rounded-xl shadow-lg p-6">
+                  <div className="flex justify-between items-center mb-6">
+                    <h2 className="text-2xl font-bold">Tour Packages</h2>
+                    {tourGuide.verificationStatus === 'verified' && (
+                      <Link
+                        to="/tour-guide/create-package"
+                        className="bg-gradient-to-r from-green-500 to-teal-500 text-white px-4 py-2 rounded-lg hover:from-green-600 hover:to-teal-600"
+                      >
+                        Create New Package
+                      </Link>
+                    )}
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {tourPackages.map((pkg) => (
+                      <div key={pkg._id} className="border rounded-xl p-4 hover:shadow-lg transition-shadow">
+                        <h3 className="text-xl font-semibold mb-2">{pkg.title}</h3>
+                        <p className="text-gray-600 mb-2">{pkg.description}</p>
+                        <div className="flex justify-between items-center text-sm text-gray-500 mb-4">
+                          <span>Price: ${pkg.price}</span>
+                          <span>Duration: {pkg.duration}</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium
+                            ${pkg.status === 'published' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
+                            {pkg.status}
+                          </span>
+                          <div className="space-x-2">
+                            {pkg.status === 'draft' && (
+                              <button
+                                onClick={() => handlePublish(pkg._id)}
+                                className="text-green-600 hover:text-green-800"
+                              >
+                                Publish
+                              </button>
+                            )}
+                            <button
+                              onClick={() => handleDelete(pkg._id)}
+                              className="text-red-600 hover:text-red-800"
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        </div>
                       </div>
                     ))}
                   </div>
-                )}
-              </div>
+                </div>
+              )}
+
+              {/* Reviews Tab */}
+              {activeTab === 'reviews' && (
+                <div className="bg-white rounded-xl shadow-lg p-6">
+                  <h2 className="text-2xl font-bold mb-6">Reviews</h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {reviews.map((review) => (
+                      <div key={review._id} className="border rounded-xl p-4 hover:shadow-lg transition-shadow">
+                        <div className="flex items-center mb-2">
+                          <div className="bg-gray-100 rounded-full w-10 h-10 flex items-center justify-center mr-3">
+                            {review.touristId?.username?.[0]?.toUpperCase() || 'A'}
+                          </div>
+                          <div>
+                            <h4 className="font-medium">{review.touristId?.username || 'Anonymous'}</h4>
+                            <div className="flex items-center">
+                              {[...Array(5)].map((_, i) => (
+                                <svg
+                                  key={i}
+                                  className={`w-4 h-4 ${i < review.rating ? 'text-yellow-400' : 'text-gray-300'}`}
+                                  fill="currentColor"
+                                  viewBox="0 0 20 20"
+                                >
+                                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                </svg>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                        <p className="text-gray-600">{review.comment}</p>
+                        <p className="text-sm text-gray-500 mt-2">
+                          {new Date(review.createdAt).toLocaleDateString()}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Profile Settings Tab */}
+              {activeTab === 'profile' && (
+                <div className="bg-white rounded-xl shadow-lg p-6">
+                  <h2 className="text-2xl font-bold mb-6">Profile Settings</h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <h3 className="text-lg font-semibold mb-4">Profile Picture</h3>
+                      <div className="mb-4">
+                        <img
+                          src={tourGuide.profilePicture ? `${BASE_URL}${tourGuide.profilePicture}` : 'https://via.placeholder.com/150'}
+                          alt="Profile"
+                          className="w-32 h-32 rounded-full object-cover"
+                        />
+                      </div>
+                      <input
+                        type="file"
+                        onChange={(e) => setProfilePictureFile(e.target.files[0])}
+                        className="hidden"
+                        id="profile-picture"
+                      />
+                      <label
+                        htmlFor="profile-picture"
+                        className="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg cursor-pointer hover:bg-gray-200"
+                      >
+                        Choose New Picture
+                      </label>
+                      {profilePictureFile && (
+                        <button
+                          onClick={handleUpdateProfilePicture}
+                          className="ml-4 bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600"
+                        >
+                          Upload
+                        </button>
+                      )}
+                    </div>
+                    
+                    <div>
+                      <h3 className="text-lg font-semibold mb-4">Banner Image</h3>
+                      <div className="mb-4">
+                        <img
+                          src={tourGuide.banner ? `${BASE_URL}${tourGuide.banner}` : 'https://via.placeholder.com/800x200'}
+                          alt="Banner"
+                          className="w-full h-32 object-cover rounded-lg"
+                        />
+                      </div>
+                      <input
+                        type="file"
+                        onChange={(e) => setBannerFile(e.target.files[0])}
+                        className="hidden"
+                        id="banner-image"
+                      />
+                      <label
+                        htmlFor="banner-image"
+                        className="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg cursor-pointer hover:bg-gray-200"
+                      >
+                        Choose New Banner
+                      </label>
+                      {bannerFile && (
+                        <button
+                          onClick={handleUpdateBanner}
+                          className="ml-4 bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600"
+                        >
+                          Upload
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  <form onSubmit={handleUpdateProfile} className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Name</label>
+                      <input
+                        type="text"
+                        name="name"
+                        value={formData.name}
+                        onChange={handleInputChange}
+                        className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-green-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Location</label>
+                      <input
+                        type="text"
+                        name="location"
+                        value={formData.location}
+                        onChange={handleInputChange}
+                        className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-green-500"
+                      />
+                    </div>
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Bio</label>
+                      <textarea
+                        name="bio"
+                        value={formData.bio}
+                        onChange={handleInputChange}
+                        rows="4"
+                        className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-green-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Languages</label>
+                      <input
+                        type="text"
+                        name="languages"
+                        value={formData.languages.join(', ')}
+                        onChange={handleInputChange}
+                        className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-green-500"
+                        placeholder="English, Spanish, etc."
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Years of Experience</label>
+                      <input
+                        type="number"
+                        name="yearsOfExperience"
+                        value={formData.yearsOfExperience}
+                        onChange={handleInputChange}
+                        className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-green-500"
+                      />
+                    </div>
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Certification</label>
+                      <input
+                        type="text"
+                        name="certification"
+                        value={formData.certification}
+                        onChange={handleInputChange}
+                        className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-green-500"
+                      />
+                    </div>
+                    <div className="md:col-span-2">
+                      <button
+                        type="submit"
+                        className="w-full bg-gradient-to-r from-green-500 to-teal-500 text-white py-2 rounded-lg hover:from-green-600 hover:to-teal-600"
+                      >
+                        Save Changes
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              )}
             </div>
           </div>
         ) : (
