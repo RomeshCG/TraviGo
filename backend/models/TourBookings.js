@@ -38,8 +38,20 @@ const TourBookingSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['pending', 'confirmed', 'cancelled'],
+    enum: ['pending', 'confirmed', 'cancelled', 'approved', 'rejected'],
     default: 'pending',
+  },
+  adminNotified: {
+    type: Boolean,
+    default: false,
+  },
+  refundRequested: {
+    type: Boolean,
+    default: false,
+  },
+  payoutReady: {
+    type: Boolean,
+    default: false,
   },
 }, { timestamps: true });
 

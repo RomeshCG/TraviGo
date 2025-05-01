@@ -46,6 +46,8 @@ import VehicleRentPage from './pages/VehicleRentPage';
 import TourGuideBookingForm from './pages/tourguide/TourGuideBookingForm';
 import TourGuidePaymentPage from './pages/tourguide/TourGuidePaymentPage';
 import TourGuideBookingConfirmation from './pages/tourguide/TourGuideBookingConfirmation';
+import TourGuidePayments from './pages/Admin/TourGuidePayments';
+import TourGuideReports from './pages/Admin/TourGuideReports';
 
 // Protected Route Component for Users
 const ProtectedRoute = ({ children }) => {
@@ -314,6 +316,22 @@ function App() {
                     element={
                         <ProtectedAdminRoute>
                             <VehicleListing />
+                        </ProtectedAdminRoute>
+                    }
+                />
+                <Route
+                    path="/admin/tour-guide-payments"
+                    element={
+                        <ProtectedAdminRoute>
+                            <TourGuidePayments />
+                        </ProtectedAdminRoute>
+                    }
+                />
+                <Route
+                    path="/admin/tour-guide-reports"
+                    element={
+                        <ProtectedAdminRoute>
+                            <TourGuideReports />
                         </ProtectedAdminRoute>
                     }
                 />

@@ -1,10 +1,11 @@
 import { useState, useEffect, useCallback } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
-import { FaHotel, FaCar, FaUserTie, FaUsers, FaChartBar, FaPaintBrush, FaSignOutAlt, FaTachometerAlt, FaUserPlus } from "react-icons/fa";
+import { FaHotel, FaCar, FaUserTie, FaUsers, FaChartBar, FaPaintBrush, FaSignOutAlt, FaTachometerAlt, FaUserPlus, FaMoneyCheckAlt, FaFileAlt, FaChevronDown, FaChevronUp } from "react-icons/fa";
 
 const SidebarAdmin = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [admin, setAdmin] = useState(null);
+  const [tourGuideMenuOpen, setTourGuideMenuOpen] = useState(false);
   const navigate = useNavigate();
 
   const handleLogout = useCallback(() => {
@@ -156,19 +157,57 @@ const SidebarAdmin = () => {
                 <span>Vehicle Listing</span>
               </NavLink>
             </li>
+            {/* Tour Guides Collapsible Section */}
             <li>
-              <NavLink
-                to="/admin/tour-guides"
-                className={({ isActive }) =>
-                  `flex items-center space-x-2 p-4 hover:bg-pink-100 hover:text-black ${
-                    isActive ? "bg-pink-100 text-black" : ""
-                  }`
-                }
-                onClick={() => setIsOpen(false)}
+              <button
+                className="flex items-center space-x-2 p-4 w-full hover:bg-pink-100 hover:text-black focus:outline-none"
+                onClick={() => setTourGuideMenuOpen((prev) => !prev)}
+                aria-expanded={tourGuideMenuOpen}
               >
                 <FaUserTie className="w-5 h-5" />
                 <span>Tour Guides</span>
-              </NavLink>
+                {tourGuideMenuOpen ? <FaChevronUp className="ml-auto" /> : <FaChevronDown className="ml-auto" />}
+              </button>
+              {tourGuideMenuOpen && (
+                <ul className="ml-8 space-y-1">
+                  <li>
+                    <NavLink
+                      to="/admin/tour-guides"
+                      className={({ isActive }) =>
+                        `flex items-center space-x-2 p-2 hover:bg-pink-100 hover:text-black rounded-md ${isActive ? "bg-pink-100 text-black" : ""}`
+                      }
+                      onClick={() => setIsOpen(false)}
+                    >
+                      <FaUserTie className="w-4 h-4" />
+                      <span>Manage Tour Guides</span>
+                    </NavLink>
+                  </li>
+                  <li>
+                    <NavLink
+                      to="/admin/tour-guide-payments"
+                      className={({ isActive }) =>
+                        `flex items-center space-x-2 p-2 hover:bg-pink-100 hover:text-black rounded-md ${isActive ? "bg-pink-100 text-black" : ""}`
+                      }
+                      onClick={() => setIsOpen(false)}
+                    >
+                      <FaMoneyCheckAlt className="w-4 h-4" />
+                      <span>Payment Manager</span>
+                    </NavLink>
+                  </li>
+                  <li>
+                    <NavLink
+                      to="/admin/tour-guide-reports"
+                      className={({ isActive }) =>
+                        `flex items-center space-x-2 p-2 hover:bg-pink-100 hover:text-black rounded-md ${isActive ? "bg-pink-100 text-black" : ""}`
+                      }
+                      onClick={() => setIsOpen(false)}
+                    >
+                      <FaFileAlt className="w-4 h-4" />
+                      <span>Tour Guide Reports</span>
+                    </NavLink>
+                  </li>
+                </ul>
+              )}
             </li>
             <li>
               <NavLink

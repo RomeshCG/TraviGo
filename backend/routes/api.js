@@ -553,12 +553,12 @@ router.get('/tour-guide/:tourGuideId/tour-guide-bookings', async (req, res) => {
   }
 });
 
-// Update booking status for a tour booking
+// Update booking status for a tour booking (extended for approved/rejected)
 router.put('/tour-bookings/:id/status', async (req, res) => {
   try {
     const { id } = req.params;
     const { status } = req.body;
-    const allowedStatuses = ['pending', 'confirmed', 'cancelled'];
+    const allowedStatuses = ['pending', 'confirmed', 'cancelled', 'approved', 'rejected'];
     if (!allowedStatuses.includes(status)) {
       return res.status(400).json({ message: 'Invalid status value' });
     }
@@ -567,10 +567,76 @@ router.put('/tour-bookings/:id/status', async (req, res) => {
       return res.status(404).json({ message: 'Booking not found' });
     }
     booking.status = status;
+    // Handle logic for new statuses
+    if (status === 'rejected') {
+      booking.adminNotified = true;
+      booking.refundRequested = true;
+      booking.payoutReady = false;
+    } else if (status === 'approved') {
+      booking.adminNotified = false;
+      booking.refundRequested = false;
+      booking.payoutReady = true; // Mark for payout after tour completion
+    } else {
+      // Reset flags for other statuses
+      booking.adminNotified = false;
+      booking.refundRequested = false;
+      booking.payoutReady = false;
+    }
     await booking.save();
     res.status(200).json({ message: 'Booking status updated successfully', booking });
   } catch (error) {
     console.error('Update booking status error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Admin: Get all tour guide bookings (with status/flags)
+router.get('/admin/tour-guide-bookings', isAdmin, async (req, res) => {
+  try {
+    const bookings = await require('../models/TourBookings').find()
+      .populate('userId', 'username')
+      .populate('guideId', 'name')
+      .populate('packageId', 'title');
+    res.status(200).json(bookings);
+  } catch (error) {
+    console.error('Admin fetch tour guide bookings error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Admin: Process refund for a booking
+router.post('/admin/tour-guide-bookings/:id/refund', isAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const booking = await require('../models/TourBookings').findById(id);
+    if (!booking) return res.status(404).json({ message: 'Booking not found' });
+    if (!booking.refundRequested) return res.status(400).json({ message: 'Refund not requested for this booking' });
+    // Here, trigger actual refund logic if needed
+    booking.refundRequested = false;
+    booking.adminNotified = false;
+    booking.status = 'cancelled';
+    await booking.save();
+    res.status(200).json({ message: 'Refund processed and booking cancelled', booking });
+  } catch (error) {
+    console.error('Admin refund error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Admin: Approve payout for a booking
+router.post('/admin/tour-guide-bookings/:id/payout', isAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const booking = await require('../models/TourBookings').findById(id);
+    if (!booking) return res.status(404).json({ message: 'Booking not found' });
+    if (!booking.payoutReady) return res.status(400).json({ message: 'Payout not ready for this booking' });
+    // Here, trigger actual payout logic if needed
+    booking.payoutReady = false;
+    booking.status = 'confirmed'; // Mark as paid out
+    await booking.save();
+    res.status(200).json({ message: 'Payout approved and booking marked as confirmed', booking });
+  } catch (error) {
+    console.error('Admin payout error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });

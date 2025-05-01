@@ -472,7 +472,10 @@ const TourGuideDashboard = () => {
                               <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
                                 ${booking.status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 
                                   booking.status === 'confirmed' ? 'bg-green-100 text-green-800' : 
-                                  'bg-red-100 text-red-800'}`}>
+                                  booking.status === 'cancelled' ? 'bg-gray-200 text-gray-600' :
+                                  booking.status === 'approved' ? 'bg-blue-100 text-blue-800' :
+                                  booking.status === 'rejected' ? 'bg-red-100 text-red-800' :
+                                  'bg-gray-100 text-gray-800'}`}>
                                 {booking.status}
                               </span>
                             </td>
@@ -480,16 +483,16 @@ const TourGuideDashboard = () => {
                               {booking.status === 'pending' && (
                                 <div className="space-x-2">
                                   <button
-                                    onClick={() => handleBookingStatusUpdate(booking._id, 'confirmed')}
-                                    className="bg-green-500 text-white px-3 py-1 rounded-lg text-sm hover:bg-green-600"
+                                    onClick={() => handleBookingStatusUpdate(booking._id, 'approved')}
+                                    className="bg-blue-500 text-white px-3 py-1 rounded-lg text-sm hover:bg-blue-600"
                                   >
-                                    Confirm
+                                    Approve
                                   </button>
                                   <button
-                                    onClick={() => handleBookingStatusUpdate(booking._id, 'cancelled')}
+                                    onClick={() => handleBookingStatusUpdate(booking._id, 'rejected')}
                                     className="bg-red-500 text-white px-3 py-1 rounded-lg text-sm hover:bg-red-600"
                                   >
-                                    Cancel
+                                    Reject
                                   </button>
                                 </div>
                               )}
