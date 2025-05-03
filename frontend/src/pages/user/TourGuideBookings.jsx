@@ -13,19 +13,34 @@ const TourGuideBookings = () => {
       setError('');
       try {
         const token = localStorage.getItem('token');
-        const response = await fetch('/api/user/tour-guide-bookings', {
+        const response = await fetch('/api/user/tour-bookings', {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         });
-        if (!response.ok) {
-          const data = await response.json();
-          throw new Error(data.message || 'Failed to fetch bookings');
+        let text = await response.text();
+        let data;
+        try {
+          data = JSON.parse(text);
+        } catch {
+          setError(`Invalid server response: ${text}`);
+          setBookings([]);
+          return;
         }
-        const data = await response.json();
+        if (!response.ok) {
+          setError((data && data.message ? data.message : 'Failed to fetch bookings') + (data && data.error ? ` (${data.error})` : ''));
+          setBookings([]);
+          return;
+        }
+        if (!Array.isArray(data)) {
+          setError('Unexpected data format from server: ' + JSON.stringify(data));
+          setBookings([]);
+          return;
+        }
         setBookings(data);
       } catch (err) {
-        setError(err.message);
+        setError(err.message || 'Unknown error occurred');
+        setBookings([]);
       } finally {
         setLoading(false);
       }
@@ -63,11 +78,11 @@ const TourGuideBookings = () => {
                 <tbody>
                   {bookings.map((booking) => (
                     <tr key={booking._id} className="border-b hover:bg-blue-50 transition">
-                      <td className="p-3">{booking.guideId?.name || '-'}</td>
-                      <td className="p-3">{booking.packageId?.title || '-'}</td>
+                      <td className="p-3">{booking.guideId && typeof booking.guideId === 'object' ? booking.guideId.name : String(booking.guideId)}</td>
+                      <td className="p-3">{booking.packageId && typeof booking.packageId === 'object' ? booking.packageId.title : String(booking.packageId)}</td>
                       <td className="p-3">{booking.travelDate ? new Date(booking.travelDate).toLocaleDateString() : '-'}</td>
-                      <td className="p-3">{booking.travelersCount}</td>
-                      <td className="p-3">{booking.country}</td>
+                      <td className="p-3">{booking.travelersCount ?? '-'}</td>
+                      <td className="p-3">{booking.country ?? '-'}</td>
                       <td className="p-3">
                         <span className={`px-2 py-1 rounded text-xs font-semibold ${
                           booking.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
@@ -80,7 +95,7 @@ const TourGuideBookings = () => {
                           {booking.status}
                         </span>
                       </td>
-                      <td className="p-3">${booking.totalPrice?.toFixed(2) || '-'}</td>
+                      <td className="p-3">{booking.totalPrice !== undefined ? `$${Number(booking.totalPrice).toFixed(2)}` : '-'}</td>
                     </tr>
                   ))}
                 </tbody>

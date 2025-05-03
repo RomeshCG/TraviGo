@@ -53,6 +53,10 @@ const TourBookingSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
+  totalPrice: {
+    type: Number,
+    required: true,
+  },
 }, { timestamps: true });
 
 module.exports = mongoose.model('TourBooking', TourBookingSchema);

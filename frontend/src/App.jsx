@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import VehicleProviderRegister from './pages/VehicleProviderRegister';
 import ServiceProviderLogin from './pages/ServiceProviderLogin';
@@ -150,30 +150,60 @@ const ProtectedProviderRoute = ({ children }) => {
     return children;
 };
 
-function App() {
-    // Get user info from localStorage
-    const user = localStorage.getItem('user');
-    let username = '';
-    if (user) {
-        try {
-            const parsed = JSON.parse(user);
-            username = parsed.username || parsed.name || parsed.email || '';
-        } catch {
-            username = '';
-        }
-    }
+function AppContent() {
+    const location = useLocation();
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [username, setUsername] = useState('');
 
-    // Logout handler
+    useEffect(() => {
+        const token = localStorage.getItem('token');
+        const user = localStorage.getItem('user');
+        if (token && user) {
+            fetch('/api/verify-token', {
+                headers: { Authorization: `Bearer ${token}` },
+            })
+                .then(res => {
+                    if (res.ok) {
+                        setIsAuthenticated(true);
+                        try {
+                            const parsed = JSON.parse(user);
+                            setUsername(parsed.username || parsed.name || parsed.email || '');
+                        } catch {
+                            setUsername('');
+                        }
+                    } else {
+                        setIsAuthenticated(false);
+                        setUsername('');
+                        localStorage.removeItem('token');
+                        localStorage.removeItem('user');
+                    }
+                })
+                .catch(() => {
+                    setIsAuthenticated(false);
+                    setUsername('');
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('user');
+                });
+        } else {
+            setIsAuthenticated(false);
+            setUsername('');
+        }
+    }, [location]);
+
     const handleLogout = () => {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
+        setIsAuthenticated(false);
+        setUsername('');
         window.location.href = '/login';
     };
 
+    const publicRoutes = ['/login', '/signin', '/service-provider/login', '/admin/login'];
+    const hideUserTopBar = publicRoutes.includes(location.pathname);
+
     return (
-        <Router>
-            {/* Show UserTopBar only if user is logged in */}
-            {username && (
+        <>
+            {isAuthenticated && username && !hideUserTopBar && (
                 <UserTopBar username={username} onLogout={handleLogout} />
             )}
             {/* Main header would go here */}
@@ -420,6 +450,14 @@ function App() {
                     }
                 />
             </Routes>
+        </>
+    );
+}
+
+function App() {
+    return (
+        <Router>
+            <AppContent />
         </Router>
     );
 }
