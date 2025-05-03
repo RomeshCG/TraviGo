@@ -5,6 +5,90 @@ import Footer from '../../components/Footer';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
+function TourGuideEarnings({ tourGuide }) {
+  const [summary, setSummary] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const BASE_URL = 'http://localhost:5000';
+
+  useEffect(() => {
+    if (!tourGuide?._id) return;
+    setLoading(true);
+    fetch(`${BASE_URL}/api/tour-guide/${tourGuide._id}/earnings-summary`)
+      .then(res => res.json())
+      .then(data => {
+        setSummary(data);
+        setLoading(false);
+      })
+      .catch(() => {
+        setError('Failed to load earnings summary');
+        setLoading(false);
+      });
+  }, [tourGuide]);
+
+  if (loading) return <div className="text-center py-10">Loading earnings...</div>;
+  if (error) return <div className="text-center text-red-600">{error}</div>;
+  if (!summary) return null;
+
+  return (
+    <div className="bg-white rounded-xl shadow-lg p-6">
+      <h2 className="text-2xl font-bold mb-6">Earnings Overview</h2>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="bg-green-50 rounded-lg p-5 text-center">
+          <div className="text-lg text-gray-600 mb-2">Total Earnings</div>
+          <div className="text-3xl font-bold text-green-700">${summary.totalEarnings.toFixed(2)}</div>
+        </div>
+        <div className="bg-yellow-50 rounded-lg p-5 text-center">
+          <div className="text-lg text-gray-600 mb-2">Pending Payout</div>
+          <div className="text-3xl font-bold text-yellow-700">${summary.pendingEarnings.toFixed(2)}</div>
+        </div>
+        <div className="bg-red-50 rounded-lg p-5 text-center">
+          <div className="text-lg text-gray-600 mb-2">Refunded/Cancelled</div>
+          <div className="text-3xl font-bold text-red-700">${summary.refunded.toFixed(2)}</div>
+        </div>
+      </div>
+      <h3 className="text-xl font-semibold mb-4">Recent Transactions</h3>
+      <div className="overflow-x-auto">
+        <table className="min-w-full bg-white rounded-lg">
+          <thead>
+            <tr>
+              <th className="p-2 text-left">Date</th>
+              <th className="p-2 text-left">Package</th>
+              <th className="p-2 text-left">Amount</th>
+              <th className="p-2 text-left">Status</th>
+              <th className="p-2 text-left">Payout</th>
+              <th className="p-2 text-left">Refund</th>
+            </tr>
+          </thead>
+          <tbody>
+            {summary.recent.map(tx => (
+              <tr key={tx._id} className="border-b hover:bg-gray-50">
+                <td className="p-2">{tx.createdAt ? new Date(tx.createdAt).toLocaleDateString() : '-'}</td>
+                <td className="p-2">{tx.packageId?.title || String(tx.packageId)}</td>
+                <td className="p-2">${tx.totalPrice?.toFixed(2) ?? '-'}</td>
+                <td className="p-2">
+                  <span className={`px-2 py-1 rounded text-xs font-semibold ${
+                    tx.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                    tx.status === 'confirmed' ? 'bg-green-100 text-green-800' :
+                    tx.status === 'cancelled' ? 'bg-gray-200 text-gray-600' :
+                    tx.status === 'approved' ? 'bg-blue-100 text-blue-800' :
+                    tx.status === 'rejected' ? 'bg-red-100 text-red-800' :
+                    'bg-gray-100 text-gray-800'
+                  }`}>
+                    {tx.status}
+                  </span>
+                </td>
+                <td className="p-2">{tx.payoutReady ? <span className="text-yellow-700 font-bold">Pending</span> : tx.status === 'confirmed' ? <span className="text-green-700 font-bold">Paid</span> : '-'}</td>
+                <td className="p-2">{tx.refundRequested || tx.status === 'cancelled' ? <span className="text-red-600 font-bold">Refunded</span> : '-'}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
 const TourGuideDashboard = () => {
   const [tourGuide, setTourGuide] = useState(null);
   const [tourPackages, setTourPackages] = useState([]);
@@ -404,7 +488,17 @@ const TourGuideDashboard = () => {
                   >
                     Profile Settings
                   </button>
-<button
+                  <button
+                    onClick={() => setActiveTab('payments')}
+                    className={`px-4 py-2 rounded-lg text-left ${
+                      activeTab === 'payments'
+                        ? 'bg-gradient-to-r from-green-500 to-teal-500 text-white'
+                        : 'hover:bg-gray-100'
+                    }`}
+                  >
+                    Earnings
+                  </button>
+                  <button
                     onClick={handleLogout}
                     className="px-4 py-2 rounded-lg text-left text-red-600 hover:bg-red-50 mt-4"
                   >
@@ -733,6 +827,11 @@ const TourGuideDashboard = () => {
                     </div>
                   </form>
                 </div>
+              )}
+
+              {/* Payments/Earnings Tab */}
+              {activeTab === 'payments' && (
+                <TourGuideEarnings tourGuide={tourGuide} />
               )}
             </div>
           </div>

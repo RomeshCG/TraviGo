@@ -530,6 +530,61 @@ router.get('/tour-guide/:tourGuideId/tour-guide-bookings', async (req, res) => {
   }
 });
 
+// Earnings summary for a tour guide
+router.get('/tour-guide/:tourGuideId/earnings-summary', async (req, res) => {
+  try {
+    const { tourGuideId } = req.params;
+    // Populate packageId with title for recent transactions
+    const bookings = await require('../models/TourBookings')
+      .find({ guideId: tourGuideId })
+      .populate('packageId', 'title');
+    if (!bookings || bookings.length === 0) {
+      return res.status(200).json({
+        totalEarnings: 0,
+        pendingEarnings: 0,
+        refunded: 0,
+        recent: [],
+      });
+    }
+    let totalEarnings = 0;
+    let pendingEarnings = 0;
+    let refunded = 0;
+    bookings.forEach(b => {
+      if (b.status === 'confirmed' && !b.payoutReady) {
+        totalEarnings += b.totalPrice || 0;
+      } else if (b.payoutReady) {
+        pendingEarnings += b.totalPrice || 0;
+      } else if (b.status === 'cancelled' || b.refundRequested) {
+        refunded += b.totalPrice || 0;
+      }
+    });
+    // Sort by most recent
+    const recent = bookings
+      .sort((a, b) => b.createdAt - a.createdAt)
+      .slice(0, 5)
+      .map(b => ({
+        _id: b._id,
+        status: b.status,
+        totalPrice: b.totalPrice,
+        payoutReady: b.payoutReady,
+        refundRequested: b.refundRequested,
+        createdAt: b.createdAt,
+        travelDate: b.travelDate,
+        packageId: b.packageId, // Now populated with { _id, title }
+        userId: b.userId,
+      }));
+    res.status(200).json({
+      totalEarnings,
+      pendingEarnings,
+      refunded,
+      recent,
+    });
+  } catch (error) {
+    console.error('Earnings summary error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 // Get all tour guide bookings for the logged-in user (tourist)
 router.get('/user/tour-guide-bookings', async (req, res) => {
   const token = req.headers['authorization']?.split(' ')[1];
