@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import VehicleProviderRegister from './pages/VehicleProviderRegister';
 import ServiceProviderLogin from './pages/ServiceProviderLogin';
@@ -46,6 +46,10 @@ import VehicleRentPage from './pages/VehicleRentPage';
 import TourGuideBookingForm from './pages/tourguide/TourGuideBookingForm';
 import TourGuidePaymentPage from './pages/tourguide/TourGuidePaymentPage';
 import TourGuideBookingConfirmation from './pages/tourguide/TourGuideBookingConfirmation';
+import TourGuidePayments from './pages/Admin/TourGuidePayments';
+import TourGuideReports from './pages/Admin/TourGuideReports';
+import UserTopBar from './components/UserTopBar';
+import TourGuideBookings from './pages/user/TourGuideBookings';
 
 // Protected Route Component for Users
 const ProtectedRoute = ({ children }) => {
@@ -146,9 +150,63 @@ const ProtectedProviderRoute = ({ children }) => {
     return children;
 };
 
-function App() {
+function AppContent() {
+    const location = useLocation();
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [username, setUsername] = useState('');
+
+    useEffect(() => {
+        const token = localStorage.getItem('token');
+        const user = localStorage.getItem('user');
+        if (token && user) {
+            fetch('/api/verify-token', {
+                headers: { Authorization: `Bearer ${token}` },
+            })
+                .then(res => {
+                    if (res.ok) {
+                        setIsAuthenticated(true);
+                        try {
+                            const parsed = JSON.parse(user);
+                            setUsername(parsed.username || parsed.name || parsed.email || '');
+                        } catch {
+                            setUsername('');
+                        }
+                    } else {
+                        setIsAuthenticated(false);
+                        setUsername('');
+                        localStorage.removeItem('token');
+                        localStorage.removeItem('user');
+                    }
+                })
+                .catch(() => {
+                    setIsAuthenticated(false);
+                    setUsername('');
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('user');
+                });
+        } else {
+            setIsAuthenticated(false);
+            setUsername('');
+        }
+    }, [location]);
+
+    const handleLogout = () => {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        setIsAuthenticated(false);
+        setUsername('');
+        window.location.href = '/login';
+    };
+
+    const publicRoutes = ['/login', '/signin', '/service-provider/login', '/admin/login'];
+    const hideUserTopBar = publicRoutes.includes(location.pathname);
+
     return (
-        <Router>
+        <>
+            {isAuthenticated && username && !hideUserTopBar && (
+                <UserTopBar username={username} onLogout={handleLogout} />
+            )}
+            {/* Main header would go here */}
             <Routes>
                 <Route path="/admin/register" element={<AdminRegister />} />
                 <Route path="/" element={<Home />} />
@@ -197,6 +255,14 @@ function App() {
                     element={
                         <ProtectedRoute>
                             <MyBooking />
+                        </ProtectedRoute>
+                    }
+                />
+                <Route
+                    path="/user/my-booking/tour-guides"
+                    element={
+                        <ProtectedRoute>
+                            <TourGuideBookings />
                         </ProtectedRoute>
                     }
                 />
@@ -317,6 +383,22 @@ function App() {
                         </ProtectedAdminRoute>
                     }
                 />
+                <Route
+                    path="/admin/tour-guide-payments"
+                    element={
+                        <ProtectedAdminRoute>
+                            <TourGuidePayments />
+                        </ProtectedAdminRoute>
+                    }
+                />
+                <Route
+                    path="/admin/tour-guide-reports"
+                    element={
+                        <ProtectedAdminRoute>
+                            <TourGuideReports />
+                        </ProtectedAdminRoute>
+                    }
+                />
                 <Route path="/about" element={<AboutUs />} />
                 <Route path="/contact" element={<ContactUs />} />
                 <Route path="/service-provider/register" element={<ProviderReg />} />
@@ -368,6 +450,14 @@ function App() {
                     }
                 />
             </Routes>
+        </>
+    );
+}
+
+function App() {
+    return (
+        <Router>
+            <AppContent />
         </Router>
     );
 }

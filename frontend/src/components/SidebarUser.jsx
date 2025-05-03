@@ -9,8 +9,7 @@ import {
   FaHotel,
   FaCar,
   FaUserFriends,
-  FaSuitcase,
-  FaSignOutAlt,
+    FaSignOutAlt,
 } from 'react-icons/fa';
 
 const BACKEND_URL = 'http://localhost:5000';
@@ -98,18 +97,51 @@ const SidebarUser = () => {
               <FaGlobe className="mr-3" /> Explore Destinations
             </NavLink>
           </li>
+{/* My Booking Section with Sub-Items */}
           <li className="mb-2">
+<div className="flex items-center p-3 rounded-lg text-gray-300 bg-blue-900/60 font-semibold">
+              <FaBook className="mr-3" /> My Booking
+            </div>
+            <ul className="ml-8 mt-1 space-y-1">
+              <li>
+                <NavLink
+                  to="/user/my-booking/hotels"
+                  className={({ isActive }) =>
+                    `flex items-center p-2 rounded-lg text-gray-300 hover:bg-blue-700/50 hover:text-white transition-all duration-300 ${
+                      isActive ? 'bg-gradient-to-r from-blue-500 to-blue-700 text-white' : ''
+                    }`
+                  }
+                >
+                  <FaHotel className="mr-2" /> Hotel Bookings
+                </NavLink>
+              </li>
+              <li>
+                <NavLink
+                  to="/user/my-booking/tour-guides"
+                  className={({ isActive }) =>
+                    `flex items-center p-2 rounded-lg text-gray-300 hover:bg-blue-700/50 hover:text-white transition-all duration-300 ${
+                      isActive ? 'bg-gradient-to-r from-blue-500 to-blue-700 text-white' : ''
+                    }`
+                  }
+                >
+                  <FaUserFriends className="mr-2" /> Tour Guide Bookings
+                </NavLink>
+              </li>
+              <li>
             <NavLink
-              to="/user/my-booking"
+              to="/user/my-booking/vehicles"
               className={({ isActive }) =>
-                `flex items-center p-3 rounded-lg text-gray-300 hover:bg-blue-700/50 hover:text-white transition-all duration-300 ${
-                  isActive ? 'bg-gradient-to-r from-blue-600 to-blue-800 text-white' : ''
+                `flex items-center p-2 rounded-lg text-gray-300 hover:bg-blue-700/50 hover:text-white transition-all duration-300 ${
+                  isActive ? 'bg-gradient-to-r from-blue-500 to-blue-700 text-white' : ''
                 }`
               }
             >
-              <FaBook className="mr-3" /> My Booking
+              <FaCar className="mr-2" /> Vehicle Bookings
             </NavLink>
           </li>
+</ul>
+          </li>
+          {/* Profile and Settings */}
           <li className="mb-2">
             <NavLink
               to="/user/edit-profile"
@@ -134,53 +166,7 @@ const SidebarUser = () => {
               <FaCog className="mr-3" /> Account Settings
             </NavLink>
           </li>
-          <li className="mb-2">
-            <NavLink
-              to="/user/hotels"
-              className={({ isActive }) =>
-                `flex items-center p-3 rounded-lg text-gray-300 hover:bg-blue-700/50 hover:text-white transition-all duration-300 ${
-                  isActive ? 'bg-gradient-to-r from-blue-600 to-blue-800 text-white' : ''
-                }`
-              }
-            >
-              <FaHotel className="mr-3" /> Hotel Booking
-            </NavLink>
-          </li>
-          <li className="mb-2">
-            <NavLink
-              to="/user/vehicles"
-              className={({ isActive }) =>
-                `flex items-center p-3 rounded-lg text-gray-300 hover:bg-blue-700/50 hover:text-white transition-all duration-300 ${
-                  isActive ? 'bg-gradient-to-r from-blue-600 to-blue-800 text-white' : ''
-                }`
-              }
-            >
-              <FaCar className="mr-3" /> Vehicle Rental
-            </NavLink>
-          </li>
-          <li className="mb-2">
-            <NavLink
-              to="/user/guides"
-              className={({ isActive }) =>
-                `flex items-center p-3 rounded-lg text-gray-300 hover:bg-blue-700/50 hover:text-white transition-all duration-300 ${
-                  isActive ? 'bg-gradient-to-r from-blue-600 to-blue-800 text-white' : ''
-                }`
-              }
-            >
-              <FaUserFriends className="mr-3" /> Tour Guides
-            </NavLink>
-            <NavLink
-              to="/user/packages"
-              className={({ isActive }) =>
-                `flex items-center p-3 pl-8 rounded-lg text-gray-400 hover:bg-blue-700/50 hover:text-white transition-all duration-300 ${
-                  isActive ? 'bg-gradient-to-r from-blue-500 to-blue-700 text-white' : ''
-                }`
-              }
-            >
-              <FaSuitcase className="mr-3" /> Travel Packages
-            </NavLink>
-          </li>
-        </ul>
+                  </ul>
       </nav>
 
       {/* Sign Out Button */}

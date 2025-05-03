@@ -242,29 +242,6 @@ router.get('/verify-token', async (req, res) => {
   }
 });
 
-// Get user by ID
-router.get('/user/:id', async (req, res) => {
-  try {
-    const user = await User.findById(req.params.id);
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
-    }
-    const userResponse = {
-      _id: user._id,
-      username: user.username,
-      email: user.email,
-      phoneNumber: user.phoneNumber,
-      country: user.country,
-      createdAt: user.createdAt,
-      profilePicture: user.profilePicture || 'https://via.placeholder.com/150',
-    };
-    res.status(200).json(userResponse);
-  } catch (error) {
-    console.error('Fetch user error:', error.stack);
-    res.status(500).json({ message: 'Server error' });
-  }
-});
-
 // Add profile picture user
 router.put('/user/update-profile-picture', upload.single('profilePicture'), async (req, res) => {
   try {
@@ -539,15 +516,232 @@ router.get('/tour-guide/:tourGuideId/tour-packages', async (req, res) => {
 router.get('/tour-guide/:tourGuideId/tour-guide-bookings', async (req, res) => {
   try {
     const { tourGuideId } = req.params;
-    const tourGuideBookings = await TourGuideBooking.find({ tourGuideId })
-      .populate('touristId', 'username')
-      .populate('tourPackageId', 'title');
-    if (!tourGuideBookings || tourGuideBookings.length === 0) {
+    // Use guideId field for TourBookings model
+    const tourBookings = await require('../models/TourBookings').find({ guideId: tourGuideId })
+      .populate('userId', 'username')
+      .populate('packageId', 'title');
+    if (!tourBookings || tourBookings.length === 0) {
       return res.status(404).json({ message: 'No tour guide bookings found' });
     }
-    res.status(200).json(tourGuideBookings);
+    res.status(200).json(tourBookings);
   } catch (error) {
     console.error('Fetch tour guide bookings error:', error.stack);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Earnings summary for a tour guide
+router.get('/tour-guide/:tourGuideId/earnings-summary', async (req, res) => {
+  try {
+    const { tourGuideId } = req.params;
+    // Populate packageId with title for recent transactions
+    const bookings = await require('../models/TourBookings')
+      .find({ guideId: tourGuideId })
+      .populate('packageId', 'title');
+    if (!bookings || bookings.length === 0) {
+      return res.status(200).json({
+        totalEarnings: 0,
+        pendingEarnings: 0,
+        refunded: 0,
+        recent: [],
+      });
+    }
+    let totalEarnings = 0;
+    let pendingEarnings = 0;
+    let refunded = 0;
+    bookings.forEach(b => {
+      if (b.status === 'confirmed' && !b.payoutReady) {
+        totalEarnings += b.totalPrice || 0;
+      } else if (b.payoutReady) {
+        pendingEarnings += b.totalPrice || 0;
+      } else if (b.status === 'cancelled' || b.refundRequested) {
+        refunded += b.totalPrice || 0;
+      }
+    });
+    // Sort by most recent
+    const recent = bookings
+      .sort((a, b) => b.createdAt - a.createdAt)
+      .slice(0, 5)
+      .map(b => ({
+        _id: b._id,
+        status: b.status,
+        totalPrice: b.totalPrice,
+        payoutReady: b.payoutReady,
+        refundRequested: b.refundRequested,
+        createdAt: b.createdAt,
+        travelDate: b.travelDate,
+        packageId: b.packageId, // Now populated with { _id, title }
+        userId: b.userId,
+      }));
+    res.status(200).json({
+      totalEarnings,
+      pendingEarnings,
+      refunded,
+      recent,
+    });
+  } catch (error) {
+    console.error('Earnings summary error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Get all tour guide bookings for the logged-in user (tourist)
+router.get('/user/tour-guide-bookings', async (req, res) => {
+  const token = req.headers['authorization']?.split(' ')[1];
+  if (!token) {
+    return res.status(401).json({ message: 'No token provided' });
+  }
+  let userId;
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    userId = decoded.id;
+  } catch (error) {
+    return res.status(401).json({ message: 'Invalid token' });
+  }
+  try {
+    const TourBooking = require('../models/TourBookings');
+    const bookings = await TourBooking.find({ userId })
+      .populate('guideId', 'name')
+      .populate('packageId', 'title');
+    res.status(200).json(bookings);
+  } catch (error) {
+    console.error('Error fetching user tour guide bookings:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// Get all tour bookings for the logged-in user (tourist)
+router.get('/user/tour-bookings', async (req, res) => {
+  const token = req.headers['authorization']?.split(' ')[1];
+  if (!token) {
+    return res.status(401).json({ message: 'No token provided' });
+  }
+  let userId;
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    userId = decoded.id;
+  } catch (error) {
+    return res.status(401).json({ message: 'Invalid token' });
+  }
+  try {
+    const TourBooking = require('../models/TourBookings');
+    const bookings = await TourBooking.find({ userId })
+      .populate('guideId', 'name')
+      .populate('packageId', 'title');
+    res.status(200).json(bookings);
+  } catch (error) {
+    console.error('Error fetching user tour bookings:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// Get user by ID
+router.get('/user/:id', async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    const userResponse = {
+      _id: user._id,
+      username: user.username,
+      email: user.email,
+      phoneNumber: user.phoneNumber,
+      country: user.country,
+      createdAt: user.createdAt,
+      profilePicture: user.profilePicture || 'https://via.placeholder.com/150',
+    };
+    res.status(200).json(userResponse);
+  } catch (error) {
+    console.error('Fetch user error:', error.stack);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Update booking status for a tour booking (extended for approved/rejected)
+router.put('/tour-bookings/:id/status', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+    const allowedStatuses = ['pending', 'confirmed', 'cancelled', 'approved', 'rejected'];
+    if (!allowedStatuses.includes(status)) {
+      return res.status(400).json({ message: 'Invalid status value' });
+    }
+    const booking = await require('../models/TourBookings').findById(id);
+    if (!booking) {
+      return res.status(404).json({ message: 'Booking not found' });
+    }
+    booking.status = status;
+    // Handle logic for new statuses
+    if (status === 'rejected') {
+      booking.adminNotified = true;
+      booking.refundRequested = true;
+      booking.payoutReady = false;
+    } else if (status === 'approved') {
+      booking.adminNotified = false;
+      booking.refundRequested = false;
+      booking.payoutReady = true; // Mark for payout after tour completion
+    } else {
+      // Reset flags for other statuses
+      booking.adminNotified = false;
+      booking.refundRequested = false;
+      booking.payoutReady = false;
+    }
+    await booking.save();
+    res.status(200).json({ message: 'Booking status updated successfully', booking });
+  } catch (error) {
+    console.error('Update booking status error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Admin: Get all tour guide bookings (with status/flags)
+router.get('/admin/tour-guide-bookings', isAdmin, async (req, res) => {
+  try {
+    const bookings = await require('../models/TourBookings').find()
+      .populate('userId', 'username')
+      .populate('guideId', 'name')
+      .populate('packageId', 'title');
+    res.status(200).json(bookings);
+  } catch (error) {
+    console.error('Admin fetch tour guide bookings error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Admin: Process refund for a booking
+router.post('/admin/tour-guide-bookings/:id/refund', isAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const booking = await require('../models/TourBookings').findById(id);
+    if (!booking) return res.status(404).json({ message: 'Booking not found' });
+    if (!booking.refundRequested) return res.status(400).json({ message: 'Refund not requested for this booking' });
+    // Here, trigger actual refund logic if needed
+    booking.refundRequested = false;
+    booking.adminNotified = false;
+    booking.status = 'cancelled';
+    await booking.save();
+    res.status(200).json({ message: 'Refund processed and booking cancelled', booking });
+  } catch (error) {
+    console.error('Admin refund error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Admin: Approve payout for a booking
+router.post('/admin/tour-guide-bookings/:id/payout', isAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const booking = await require('../models/TourBookings').findById(id);
+    if (!booking) return res.status(404).json({ message: 'Booking not found' });
+    if (!booking.payoutReady) return res.status(400).json({ message: 'Payout not ready for this booking' });
+    // Here, trigger actual payout logic if needed
+    booking.payoutReady = false;
+    booking.status = 'confirmed'; // Mark as paid out
+    await booking.save();
+    res.status(200).json({ message: 'Payout approved and booking marked as confirmed', booking });
+  } catch (error) {
+    console.error('Admin payout error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });
