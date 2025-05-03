@@ -695,6 +695,77 @@ router.put('/tour-bookings/:id/status', async (req, res) => {
   }
 });
 
+// Get a single tour booking by ID (with user, guide, and package details)
+router.get('/tour-bookings/:id', async (req, res) => {
+  try {
+    const booking = await require('../models/TourBookings').findById(req.params.id)
+      .populate('userId', 'username email phoneNumber country')
+      .populate('guideId', 'name email phoneNumber')
+      .populate('packageId', 'title');
+    if (!booking) return res.status(404).json({ message: 'Booking not found' });
+    res.status(200).json(booking);
+  } catch (error) {
+    console.error('Fetch single booking error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Mark a tour booking as completed
+router.put('/tour-bookings/:id/complete', async (req, res) => {
+  try {
+    const booking = await require('../models/TourBookings').findById(req.params.id);
+    if (!booking) return res.status(404).json({ message: 'Booking not found' });
+    booking.status = 'completed';
+    await booking.save();
+    res.status(200).json({ message: 'Booking marked as completed', booking });
+  } catch (error) {
+    console.error('Complete booking error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Submit a review after booking is completed (tourist or guide)
+router.post('/tour-bookings/:id/review', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { reviewerType, rating, comment } = req.body;
+    if (!['tourist', 'guide'].includes(reviewerType)) {
+      return res.status(400).json({ message: 'Invalid reviewer type' });
+    }
+    if (!rating || !comment) {
+      return res.status(400).json({ message: 'Rating and comment are required' });
+    }
+    const booking = await require('../models/TourBookings').findById(id);
+    if (!booking || booking.status !== 'completed') {
+      return res.status(400).json({ message: 'Booking not found or not completed' });
+    }
+    const Review = require('../models/Review');
+    let reviewData = { rating, comment, reviewerType };
+    if (reviewerType === 'tourist') {
+      reviewData.tourGuideId = booking.guideId;
+      reviewData.touristId = booking.userId;
+    } else {
+      reviewData.tourGuideId = booking.guideId;
+      reviewData.touristId = booking.userId;
+    }
+    // Prevent duplicate review by same party for this booking
+    const existing = await Review.findOne({
+      tourGuideId: booking.guideId,
+      touristId: booking.userId,
+      reviewerType
+    });
+    if (existing) {
+      return res.status(400).json({ message: 'You have already reviewed this booking.' });
+    }
+    const review = new Review(reviewData);
+    await review.save();
+    res.status(201).json({ message: 'Review submitted successfully', review });
+  } catch (error) {
+    console.error('Submit review error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 // Admin: Get all tour guide bookings (with status/flags)
 router.get('/admin/tour-guide-bookings', isAdmin, async (req, res) => {
   try {

@@ -4,6 +4,7 @@ import TourGuideHeader from '../../components/TourGuideHeader';
 import Footer from '../../components/Footer';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import Modal from 'react-modal';
 
 function TourGuideEarnings({ tourGuide }) {
   const [summary, setSummary] = useState(null);
@@ -108,6 +109,13 @@ const TourGuideDashboard = () => {
     yearsOfExperience: 0,
     certification: '',
   });
+  const [selectedBooking, setSelectedBooking] = useState(null);
+  const [modalLoading, setModalLoading] = useState(false);
+  const [modalError, setModalError] = useState('');
+  const [review, setReview] = useState({ rating: 5, comment: '' });
+  const [reviewed, setReviewed] = useState(false);
+  const [completing, setCompleting] = useState(false);
+  const [showReviewForm, setShowReviewForm] = useState(false);
 
   const navigate = useNavigate();
   const BASE_URL = 'http://localhost:5000';
@@ -417,6 +425,65 @@ const TourGuideDashboard = () => {
     setTimeout(() => navigate('/service-provider/login', { replace: true }), 2000);
   };
 
+  const handleViewBooking = async (bookingId) => {
+    setModalLoading(true);
+    setModalError('');
+    try {
+      const token = localStorage.getItem('providerToken');
+      const res = await fetch(`${BASE_URL}/api/tour-bookings/${bookingId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error('Failed to fetch booking details');
+      const data = await res.json();
+      setSelectedBooking(data);
+    } catch (err) {
+      setModalError(err.message);
+      setSelectedBooking(null);
+    } finally {
+      setModalLoading(false);
+    }
+  };
+
+  const handleCompleteBooking = async () => {
+    if (!selectedBooking) return;
+    setCompleting(true);
+    try {
+      const token = localStorage.getItem('providerToken');
+      const res = await fetch(`${BASE_URL}/api/tour-bookings/${selectedBooking._id}/complete`, {
+        method: 'PUT',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error('Failed to mark as complete');
+      setSelectedBooking({ ...selectedBooking, status: 'completed' });
+      setShowReviewForm(true);
+      setTourBookings(prev => prev.map(b => b._id === selectedBooking._id ? { ...b, status: 'completed' } : b));
+    } catch (err) {
+      setModalError(err.message);
+    }
+    setCompleting(false);
+  };
+
+  const handleReviewSubmit = async (e) => {
+    e.preventDefault();
+    if (!selectedBooking) return;
+    try {
+      const token = localStorage.getItem('providerToken');
+      const res = await fetch(`${BASE_URL}/api/tour-bookings/${selectedBooking._id}/review`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ reviewerType: 'guide', rating: review.rating, comment: review.comment }),
+      });
+      if (!res.ok) throw new Error('Failed to submit review');
+      setReviewed(true);
+      setShowReviewForm(false);
+    } catch (err) {
+      setModalError(err.message);
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-b from-gray-100 to-gray-200">
       <TourGuideHeader />
@@ -548,7 +615,7 @@ const TourGuideDashboard = () => {
                       </thead>
                       <tbody className="bg-white divide-y divide-gray-200">
                         {tourBookings.map((booking) => (
-                          <tr key={booking._id}>
+                          <tr key={booking._id} onClick={() => handleViewBooking(booking._id)} style={{ cursor: 'pointer' }}>
                             <td className="px-6 py-4">
                               <div className="text-sm font-medium text-gray-900">{booking.email}</div>
                               <div className="text-sm text-gray-500">{booking.phone}</div>
@@ -577,13 +644,13 @@ const TourGuideDashboard = () => {
                               {booking.status === 'pending' && (
                                 <div className="space-x-2">
                                   <button
-                                    onClick={() => handleBookingStatusUpdate(booking._id, 'approved')}
+                                    onClick={e => { e.stopPropagation(); handleBookingStatusUpdate(booking._id, 'approved'); }}
                                     className="bg-blue-500 text-white px-3 py-1 rounded-lg text-sm hover:bg-blue-600"
                                   >
                                     Approve
                                   </button>
                                   <button
-                                    onClick={() => handleBookingStatusUpdate(booking._id, 'rejected')}
+                                    onClick={e => { e.stopPropagation(); handleBookingStatusUpdate(booking._id, 'rejected'); }}
                                     className="bg-red-500 text-white px-3 py-1 rounded-lg text-sm hover:bg-red-600"
                                   >
                                     Reject
@@ -840,6 +907,61 @@ const TourGuideDashboard = () => {
         )}
       </div>
       <Footer />
+
+      {/* Booking Details Modal */}
+      <Modal
+        isOpen={!!selectedBooking}
+        onRequestClose={() => { setSelectedBooking(null); setReviewed(false); setReview({ rating: 5, comment: '' }); setModalError(''); setShowReviewForm(false); }}
+        ariaHideApp={false}
+        className="fixed inset-0 flex items-center justify-center z-50"
+        overlayClassName="fixed inset-0 bg-black bg-opacity-40 z-40"
+      >
+        <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-lg relative">
+          <button className="absolute top-2 right-2 text-gray-400 hover:text-gray-700" onClick={() => { setSelectedBooking(null); setReviewed(false); setReview({ rating: 5, comment: '' }); setModalError(''); setShowReviewForm(false); }}>&times;</button>
+          {modalLoading ? (
+            <div>Loading...</div>
+          ) : modalError ? (
+            <div className="text-red-600">{modalError}</div>
+          ) : selectedBooking ? (
+            <>
+              <h3 className="text-xl font-bold mb-2">Booking Details</h3>
+              <div className="space-y-1 text-sm mb-4">
+                <div><b>Booking ID:</b> {selectedBooking._id}</div>
+                <div><b>Tourist:</b> {selectedBooking.userId?.username || selectedBooking.email}</div>
+                <div><b>Email:</b> {selectedBooking.userId?.email || selectedBooking.email}</div>
+                <div><b>Phone:</b> {selectedBooking.userId?.phoneNumber || selectedBooking.phone}</div>
+                <div><b>Country:</b> {selectedBooking.userId?.country || selectedBooking.country}</div>
+                <div><b>Tour Package:</b> {selectedBooking.packageId?.title || 'N/A'}</div>
+                <div><b>Travelers:</b> {selectedBooking.travelersCount}</div>
+                <div><b>Travel Date:</b> {selectedBooking.travelDate ? new Date(selectedBooking.travelDate).toLocaleDateString() : '-'}</div>
+                <div><b>Status:</b> {selectedBooking.status}</div>
+                <div><b>Total Price:</b> ${selectedBooking.totalPrice}</div>
+              </div>
+              {selectedBooking.status !== 'completed' && (
+                <button onClick={handleCompleteBooking} disabled={completing} className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 mb-4">
+                  {completing ? 'Completing...' : 'Mark as Complete'}
+                </button>
+              )}
+              {((selectedBooking.status === 'completed' && !reviewed) || showReviewForm) && (
+                <form onSubmit={handleReviewSubmit} className="mt-4">
+                  <h4 className="font-semibold mb-2">Leave a Review for Tourist</h4>
+                  <label className="block mb-2">Rating:
+                    <select value={review.rating} onChange={e => setReview({ ...review, rating: e.target.value })} className="ml-2">
+                      {[5,4,3,2,1].map(r => <option key={r} value={r}>{r}</option>)}
+                    </select>
+                  </label>
+                  <label className="block mb-2">Comment:
+                    <textarea value={review.comment} onChange={e => setReview({ ...review, comment: e.target.value })} required className="w-full border rounded p-2 mt-1" />
+                  </label>
+                  <button type="submit" className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">Submit Review</button>
+                </form>
+              )}
+              {reviewed && <div className="text-green-600 mt-2">Thank you for your review!</div>}
+            </>
+          ) : null}
+        </div>
+      </Modal>
+      {/* End of Modal */}
     </div>
   );
 };

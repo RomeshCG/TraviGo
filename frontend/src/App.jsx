@@ -4,7 +4,7 @@ import VehicleProviderRegister from './pages/VehicleProviderRegister';
 import ServiceProviderLogin from './pages/ServiceProviderLogin';
 import HotelProviderDashboard from './pages/hotel/HotelProviderDashboard';
 import VehicleProviderDashboard from './pages/vehicle/VehicleProviderDashboard';
-import TourGuideDashboard from './pages/tourguide/TourGuideDashboard';
+import TourGuideDashboard from  './pages/tourguide/TourGuideDashboard';
 import TourGuideCreatePackage from './pages/tourguide/TourGuideCreatePackage';
 import AboutUs from './pages/AboutUs';
 import ContactUs from './pages/ContactUs';
