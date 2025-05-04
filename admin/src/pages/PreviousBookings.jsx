@@ -1,34 +1,66 @@
+import { useState, useEffect } from "react";
+
 function PreviousBookings() {
-  const previousBookings = [
-    { id: 1, name: "Alice Johnson", date: "2025-03-25", roomType: "Standard Room", totalPrice: 200 },
-    { id: 2, name: "Bob Wilson", date: "2025-03-26", roomType: "Deluxe Room", totalPrice: 500 },
-  ];
+  const [bookings, setBookings] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchBookings = async () => {
+      try {
+        const response = await fetch("http://localhost:5000/api/bookings");
+        if (!response.ok) {
+          throw new Error(`Failed to fetch bookings (status: ${response.status})`);
+        }
+        const data = await response.json();
+        // Filter only accepted bookings
+        const acceptedBookings = data.filter((booking) => booking.status === "accepted");
+        console.log("Fetched accepted bookings:", acceptedBookings);
+        setBookings(acceptedBookings);
+      } catch (err) {
+        console.error("Fetch error:", err);
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchBookings();
+  }, []);
+
+  if (loading) return <div className="text-center text-gray-600 text-xl font-semibold py-10">Loading...</div>;
+  if (error) return <div className="text-center text-red-600 text-xl font-semibold py-10">{error}</div>;
 
   return (
-    <div>
+    <div className="bg-white rounded-xl shadow-lg p-6">
       <h2 className="text-3xl font-bold text-gray-800 mb-4">Previous Bookings</h2>
-      <div className="bg-white rounded-lg shadow-md overflow-hidden">
-        <table className="min-w-full">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-6 py-3 text-left text-gray-700 font-semibold">Name</th>
-              <th className="px-6 py-3 text-left text-gray-700 font-semibold">Date</th>
-              <th className="px-6 py-3 text-left text-gray-700 font-semibold">Room Type</th>
-              <th className="px-6 py-3 text-left text-gray-700 font-semibold">Total Price</th>
-            </tr>
-          </thead>
-          <tbody>
-            {previousBookings.map((booking) => (
-              <tr key={booking.id} className="border-t">
-                <td className="px-6 py-4 text-gray-700">{booking.name}</td>
-                <td className="px-6 py-4 text-gray-700">{booking.date}</td>
-                <td className="px-6 py-4 text-gray-700">{booking.roomType}</td>
-                <td className="px-6 py-4 text-gray-700">${booking.totalPrice}</td>
+      {bookings.length === 0 ? (
+        <p className="text-gray-600 text-center">No accepted bookings available.</p>
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="min-w-full bg-white border border-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-6 py-3 text-left text-gray-700 font-semibold">Name</th>
+                <th className="px-6 py-3 text-left text-gray-700 font-semibold">Check-In Date</th>
+                <th className="px-6 py-3 text-left text-gray-700 font-semibold">Room Type</th>
+                <th className="px-6 py-3 text-left text-gray-700 font-semibold">Total Price</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody>
+              {bookings.map((booking) => (
+                <tr key={booking._id} className="border-t">
+                  <td className="px-6 py-4 text-gray-700">{`${booking.firstName} ${booking.lastName}`}</td>
+                  <td className="px-6 py-4 text-gray-700">{new Date(booking.checkInDate).toLocaleDateString()}</td>
+                  <td className="px-6 py-4 text-gray-700">{booking.roomType}</td>
+                  <td className="px-6 py-4 text-gray-700">
+                    ${booking.bookingPrice ? Number(booking.bookingPrice).toFixed(2) : "N/A"}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 }

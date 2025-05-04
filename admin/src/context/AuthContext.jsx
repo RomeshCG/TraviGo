@@ -1,4 +1,3 @@
-// src/context/AuthContext.jsx
 import { createContext, useContext, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
@@ -6,10 +5,10 @@ const AuthContext = createContext()
 
 export const AuthProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [user, setUser] = useState({ name: "Hotel Manager" })
   const navigate = useNavigate()
 
   const login = (email, password) => {
-   
     if (email === 'test@example.com' && password === 'password') {
       setIsAuthenticated(true)
       navigate('/dashboard')
@@ -24,7 +23,7 @@ export const AuthProvider = ({ children }) => {
   }
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, login, logout }}>
+    <AuthContext.Provider value={{ isAuthenticated, login, logout, user }}>
       {children}
     </AuthContext.Provider>
   )

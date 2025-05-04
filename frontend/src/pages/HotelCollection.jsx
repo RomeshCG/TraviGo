@@ -1,8 +1,8 @@
 import React, { useRef, useEffect, useState } from "react";
 import HotelItem from "../components/HotelItem";
 import SearchBar from "../components/SearchBar";
-import SimpleHeader from "../components/SimpleHeader"; 
-import Footer from "../components/Footer"; 
+import SimpleHeader from "../components/SimpleHeader";
+import Footer from "../components/Footer";
 
 const HotelCollection = () => {
   const headerRef = useRef(null);
@@ -42,32 +42,39 @@ const HotelCollection = () => {
 
   return (
     <>
-      <SimpleHeader /> 
-      <div
-        className="flex flex-col items-center w-full min-h-screen bg-gradient-to-b from-blue-100 via-blue-300 to-blue-500"
-        style={{
-          backgroundImage:
-            "radial-gradient(circle at center, rgba(255, 255, 255, 0.3) 0%, rgba(59, 130, 246, 0.2) 70%, rgba(29, 78, 216, 0.1) 100%)",
-          backgroundBlendMode: "overlay",
-        }}
-      >
+      <SimpleHeader />
+      <div className="min-h-screen bg-gray-50">
+        {/* Hero Section */}
         <div
-          className="w-[90%] max-w-screen-xl mt-8 flex flex-col items-center"
+          className="relative w-full h-[400px] bg-cover bg-center"
           style={{
-            paddingTop: `${headerHeight + mobileMenuHeight + 16}px`,
+            backgroundImage: "url('https://images.unsplash.com/photo-1542314831-8d7e2b9b6b9e?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80')",
           }}
         >
-          <div className="w-full flex justify-center mt-15 mb-6">
-            <SearchBar />
-          </div>
-          <div className="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 py-10">
-            {hotels.map((hotel) => (
-              <HotelItem key={hotel._id} hotel={hotel} />
-            ))}
+          <div className="absolute inset-0 bg-black bg-opacity-50 flex flex-col items-center justify-center">
+            <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">Find Your Perfect Stay</h1>
+            <p className="text-lg text-white mb-6">Explore the best hotels with unbeatable prices</p>
+            <div className="w-full max-w-md">
+              <SearchBar />
+            </div>
           </div>
         </div>
+
+        {/* Hotel Listings */}
+        <div className="w-[90%] max-w-screen-xl mx-auto py-12">
+          <h2 className="text-3xl font-bold text-gray-800 mb-8 text-center">Featured Hotels</h2>
+          {hotels.length === 0 ? (
+            <p className="text-center text-gray-600">No hotels available at the moment.</p>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+              {hotels.map((hotel) => (
+                <HotelItem key={hotel._id} hotel={hotel} />
+              ))}
+            </div>
+          )}
+        </div>
       </div>
-      <Footer /> 
+      <Footer />
     </>
   );
 };

@@ -13,8 +13,12 @@ function IncomingBookings() {
           throw new Error(`Failed to fetch bookings (status: ${response.status})`);
         }
         const data = await response.json();
-        console.log("Fetched bookings:", data);
-        setBookings(data);
+        // Filter only pending bookings
+        const pendingBookings = data.filter(
+          (booking) => !booking.status || booking.status === "pending"
+        );
+        console.log("Fetched pending bookings:", pendingBookings);
+        setBookings(pendingBookings);
       } catch (err) {
         console.error("Fetch error:", err);
         setError(err.message);
@@ -37,9 +41,9 @@ function IncomingBookings() {
         const errorData = await response.json();
         throw new Error(`Failed to accept booking: ${errorData.message || response.status}`);
       }
-      const updatedBooking = await response.json();
-      console.log("Updated booking:", updatedBooking);
-      setBookings(bookings.map((b) => (b._id === id ? updatedBooking : b)));
+      console.log("Booking accepted:", id);
+      // Remove the accepted booking from the list
+      setBookings(bookings.filter((b) => b._id !== id));
     } catch (err) {
       console.error("Accept error:", err);
       setError(err.message);
@@ -67,15 +71,15 @@ function IncomingBookings() {
     }
   };
 
-  if (loading) return <h2 className="text-center text-gray-600 text-2xl font-semibold py-10">Loading...</h2>;
-  if (error) return <h2 className="text-center text-red-600 text-2xl font-semibold py-10">{error}</h2>;
+  if (loading) return <div className="text-center text-gray-600 text-xl font-semibold py-10">Loading...</div>;
+  if (error) return <div className="text-center text-red-600 text-xl font-semibold py-10">{error}</div>;
 
   return (
     <div className="min-h-screen bg-gray-100 py-8">
       <div className="max-w-6xl mx-auto">
         <h2 className="text-3xl font-bold text-gray-800 mb-4">Incoming Bookings</h2>
         {bookings.length === 0 ? (
-          <p className="text-gray-600 text-center">No bookings available.</p>
+          <p className="text-gray-600 text-center">No pending bookings available.</p>
         ) : (
           <div className="bg-white rounded-lg shadow-md overflow-hidden">
             <table className="min-w-full">
@@ -85,6 +89,7 @@ function IncomingBookings() {
                   <th className="px-6 py-3 text-left text-gray-700 font-semibold">Check-In Date</th>
                   <th className="px-6 py-3 text-left text-gray-700 font-semibold">Room Type</th>
                   <th className="px-6 py-3 text-left text-gray-700 font-semibold">Email</th>
+                  <th className="px-6 py-3 text-left text-gray-700 font-semibold">Total Price</th>
                   <th className="px-6 py-3 text-left text-gray-700 font-semibold">Actions</th>
                 </tr>
               </thead>
@@ -95,6 +100,9 @@ function IncomingBookings() {
                     <td className="px-6 py-4 text-gray-700">{new Date(booking.checkInDate).toLocaleDateString()}</td>
                     <td className="px-6 py-4 text-gray-700">{booking.roomType}</td>
                     <td className="px-6 py-4 text-gray-700">{booking.email}</td>
+                    <td className="px-6 py-4 text-gray-700">
+                      ${booking.bookingPrice ? Number(booking.bookingPrice).toFixed(2) : "N/A"}
+                    </td>
                     <td className="px-6 py-4">
                       {(!booking.status || booking.status === "pending") ? (
                         <>

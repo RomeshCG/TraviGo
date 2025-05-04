@@ -1,14 +1,16 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import Sidebar from "./Sidebar";
+import Home from "./Home";
 import IncomingBookings from "./IncomingBookings";
 import PreviousBookings from "./PreviousBookings";
 import HotelDetails from "./HotelDetails";
 import AddHotel from "./AddHotel";
+import Reports from "./Reports";
 import { useAuth } from "../context/AuthContext";
 
 function Dashboard() {
-  const [activeSection, setActiveSection] = useState("incoming");
+  const [activeSection, setActiveSection] = useState("home");
   const { logout } = useAuth();
   const [hotels, setHotels] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -35,60 +37,54 @@ function Dashboard() {
 
   const renderSection = () => {
     switch (activeSection) {
+      case "home":
+        return <Home />;
       case "incoming":
         return <IncomingBookings />;
       case "previous":
         return <PreviousBookings />;
       case "details":
-        if (loading) return <h2 className="text-center text-gray-600 text-2xl font-semibold py-10">Loading...</h2>;
-        if (error) return <h2 className="text-center text-red-600 text-2xl font-semibold py-10">{error}</h2>;
+        if (loading) return <div className="text-center text-gray-600 text-xl font-semibold py-10">Loading...</div>;
+        if (error) return <div className="text-center text-red-600 text-xl font-semibold py-10">{error}</div>;
         return (
-          <div>
-            <h2 className="text-2xl font-semibold text-gray-800 mb-4">Manage Hotels</h2>
+          <div className="bg-white rounded-xl shadow-lg p-6">
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">Manage Hotels</h2>
             {hotels.length === 0 ? (
               <p className="text-gray-600">No hotels available.</p>
             ) : (
-              <div className="bg-white rounded-lg shadow-md p-6">
-                <ul>
-                  {hotels.map((hotel) => (
-                    <li key={hotel._id} className="mb-2">
-                      <Link
-                        to={`/dashboard/hotel/${hotel._id}`}
-                        className="text-blue-600 hover:underline"
-                      >
-                        {hotel.name}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </div>
+              <ul className="space-y-4">
+                {hotels.map((hotel) => (
+                  <li key={hotel._id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
+                    <Link to={`/dashboard/hotel/${hotel._id}`} className="text-blue-600 hover:underline font-medium">
+                      {hotel.name}
+                    </Link>
+                    <span className="text-gray-500 text-sm">{hotel.location}</span>
+                  </li>
+                ))}
+              </ul>
             )}
           </div>
         );
       case "add-hotel":
         return <AddHotel />;
+      case "reports":
+        return <Reports />;
       default:
-        return <IncomingBookings />;
+        return <Home />;
     }
   };
 
   return (
-    <div className="flex h-screen bg-gray-100">
+    <div className="flex min-h-screen bg-gray-50">
       <Sidebar setActiveSection={setActiveSection} handleLogout={logout} />
       <div className="flex-1 flex flex-col">
-        <header className="bg-white shadow-md p-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-gray-800">Grand Horizons Dashboard</h1>
-          <button
-            onClick={logout}
-            className="bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition"
-          >
-            Logout
-          </button>
+        <header className="bg-white shadow-md p-4">
+          <h1 className="text-2xl font-bold text-gray-900">Grand Horizons Dashboard</h1>
         </header>
-        <main className="flex-1 p-6 overflow-auto">
-          <div className="mb-6">
-            <h2 className="text-xl font-semibold text-gray-800">Welcome, Hotel Manager!</h2>
-            <p className="text-gray-600">Manage your bookings and hotel details efficiently.</p>
+        <main className="flex-1 p-8 overflow-auto">
+          <div className="mb-8">
+            <h2 className="text-3xl font-bold text-gray-900">Welcome, Hotel Manager!</h2>
+            <p className="text-gray-600 mt-2">Manage your bookings, hotels, and generate reports with ease.</p>
           </div>
           {renderSection()}
         </main>

@@ -12,6 +12,10 @@ const BookingPage = () => {
   const [modal, setModal] = useState({ isOpen: false, message: "", type: "" });
   const [checkInDate, setCheckInDate] = useState("");
   const [checkOutDate, setCheckOutDate] = useState("");
+  const [email, setEmail] = useState("");
+  const [isVerifyingEmail, setIsVerifyingEmail] = useState(false);
+  const [verificationCode, setVerificationCode] = useState("");
+  const [emailVerified, setEmailVerified] = useState(false);
 
   useEffect(() => {
     const fetchHotel = async () => {
@@ -31,49 +35,61 @@ const BookingPage = () => {
     fetchHotel();
   }, [id]);
 
-  if (loading) {
-    return <h2 className="text-center text-gray-600 text-2xl font-semibold py-10">Loading...</h2>;
-  }
-
-  if (error || !hotel) {
-    return <h2 className="text-center text-red-600 text-2xl font-semibold py-10">{error || "Hotel Not Found"}</h2>;
-  }
-
-  const roomIndex = parseInt(roomType.replace("room", ""), 10);
-  const room = hotel.rooms[roomIndex];
-
-  if (!room) {
-    return <h2 className="text-center text-red-600 text-2xl font-semibold py-10">Room Not Found</h2>;
-  }
-
-  const roomName = room.type || "Unnamed Room";
-  const roomPrice = room.price || 0;
-
-  const calculateNights = () => {
-    if (!checkInDate || !checkOutDate) return 0;
-    const checkIn = new Date(checkInDate);
-    const checkOut = new Date(checkOutDate);
-    const timeDiff = checkOut - checkIn;
-    const nights = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
-    return nights > 0 ? nights : 0;
+  const handleSendVerificationCode = () => {
+    if (!email) {
+      setModal({ isOpen: true, message: "Please enter a valid email address.", type: "error" });
+      return;
+    }
+    // Mock email sending: Generate a 6-digit code
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    localStorage.setItem('verificationCode_' + email, code); // Store code locally
+    localStorage.setItem('codeExpiry_' + email, Date.now() + 15 * 60 * 1000); // Expires in 15 minutes
+    setIsVerifyingEmail(true);
+    setModal({
+      isOpen: true,
+      message: `A verification code has been sent to ${email}. Code (for demo): ${code}`,
+      type: "success",
+    });
   };
 
-  const nights = calculateNights();
-  const totalPrice = nights * roomPrice;
+  const handleVerifyCode = () => {
+    const storedCode = localStorage.getItem('verificationCode_' + email);
+    const expiry = localStorage.getItem('codeExpiry_' + email);
+    if (expiry && Date.now() > expiry) {
+      localStorage.removeItem('verificationCode_' + email);
+      localStorage.removeItem('codeExpiry_' + email);
+      setModal({ isOpen: true, message: "Verification code has expired.", type: "error" });
+      return;
+    }
+    if (verificationCode === storedCode) {
+      setEmailVerified(true);
+      setIsVerifyingEmail(false);
+      setModal({ isOpen: true, message: "Email verified successfully!", type: "success" });
+    } else {
+      setModal({ isOpen: true, message: "Invalid verification code.", type: "error" });
+    }
+  };
 
   const handleBooking = async (event) => {
     event.preventDefault();
+    if (!emailVerified) {
+      setModal({ isOpen: true, message: "Please verify your email before booking.", type: "error" });
+      return;
+    }
+
     const bookingData = {
       hotelId: id,
       userId: localStorage.getItem('userId') || 'guest',
-      roomType: roomName,
+      roomType: hotel.rooms[parseInt(roomType.replace("room", ""), 10)]?.type || "Unnamed Room",
       firstName: event.target.firstName.value,
       lastName: event.target.lastName.value,
-      email: event.target.email.value,
+      email: email,
       phoneNumber: event.target.phoneNumber.value,
       checkInDate,
       checkOutDate,
       specialRequests: event.target.specialRequests.value,
+      bookingPrice: calculateNights() * (hotel.rooms[parseInt(roomType.replace("room", ""), 10)]?.price || 0),
+      emailVerified: true, // Include verification status
     };
 
     try {
@@ -90,7 +106,7 @@ const BookingPage = () => {
           message: "Booking Successful! Proceeding to payment.",
           type: "success",
         });
-        setTimeout(() => navigate("/hotels/payment", { state: { bookingData, amount: totalPrice } }), 2000);
+        setTimeout(() => navigate("/hotels/payment", { state: { bookingData, amount: bookingData.bookingPrice } }), 2000);
       } else {
         setModal({
           isOpen: true,
@@ -107,11 +123,28 @@ const BookingPage = () => {
     }
   };
 
+  const calculateNights = () => {
+    if (!checkInDate || !checkOutDate) return 0;
+    const checkIn = new Date(checkInDate);
+    const checkOut = new Date(checkOutDate);
+    const timeDiff = checkOut - checkIn;
+    const nights = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
+    return nights > 0 ? nights : 0;
+  };
+
   const closeModal = () => setModal({ ...modal, isOpen: false });
+
+  if (loading) {
+    return <h2 className="text-center text-gray-600 text-2xl font-semibold py-10">Loading...</h2>;
+  }
+
+  if (error || !hotel) {
+    return <h2 className="text-center text-red-600 text-2xl font-semibold py-10">{error || "Hotel Not Found"}</h2>;
+  }
 
   return (
     <div className="min-h-screen bg-gray-100 py-8">
-      <div className="max-w-6xl mx-auto bg-white rounded-lg shadow-lg p-6">
+      <div className="max-w-6xl mx-auto bg-white rounded-lg shadow-lg p-8">
         {/* Header Section */}
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold text-gray-800">Book Your Stay</h1>
@@ -124,19 +157,19 @@ const BookingPage = () => {
         </div>
 
         {/* Booking Summary */}
-        <div className="bg-gray-50 p-4 rounded-lg mb-6">
-          <h2 className="text-xl font-semibold text-gray-800">Booking Summary</h2>
-          <p className="text-gray-700 mt-2">
+        <div className="bg-gray-50 p-6 rounded-lg mb-6 shadow-sm">
+          <h2 className="text-xl font-semibold text-gray-800 mb-4">Booking Summary</h2>
+          <p className="text-gray-700 mb-2">
             <strong>Hotel:</strong> {hotel.name}
           </p>
-          <p className="text-gray-700">
+          <p className="text-gray-700 mb-2">
             <strong>Location:</strong> {hotel.location}
           </p>
-          <p className="text-gray-700">
-            <strong>Room Type:</strong> {roomName}
+          <p className="text-gray-700 mb-2">
+            <strong>Room Type:</strong> {hotel.rooms[parseInt(roomType.replace("room", ""), 10)]?.type || "Unnamed Room"}
           </p>
           <p className="text-gray-700">
-            <strong>Price per Night:</strong> ${roomPrice}
+            <strong>Price per Night:</strong> ${hotel.rooms[parseInt(roomType.replace("room", ""), 10)]?.price || 0}
           </p>
         </div>
 
@@ -172,14 +205,56 @@ const BookingPage = () => {
             <label htmlFor="email" className="block text-gray-700 font-medium mb-1">
               Email Address
             </label>
-            <input
-              type="email"
-              id="email"
-              name="email"
-              placeholder="Enter your email"
-              className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
-              required
-            />
+            <div className="flex items-center space-x-4">
+              <input
+                type="email"
+                id="email"
+                name="email"
+                placeholder="Enter your email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                required
+                disabled={emailVerified}
+              />
+              {!emailVerified && !isVerifyingEmail && (
+                <button
+                  type="button"
+                  onClick={handleSendVerificationCode}
+                  className="bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition"
+                >
+                  Verify Email
+                </button>
+              )}
+            </div>
+            {isVerifyingEmail && (
+              <div className="mt-4">
+                <label htmlFor="verificationCode" className="block text-gray-700 font-medium mb-1">
+                  Verification Code
+                </label>
+                <div className="flex items-center space-x-4">
+                  <input
+                    type="text"
+                    id="verificationCode"
+                    value={verificationCode}
+                    onChange={(e) => setVerificationCode(e.target.value)}
+                    placeholder="Enter the 6-digit code"
+                    className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={handleVerifyCode}
+                    className="bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 transition"
+                  >
+                    Submit Code
+                  </button>
+                </div>
+              </div>
+            )}
+            {emailVerified && (
+              <p className="text-green-600 mt-2">Email Verified ✓</p>
+            )}
           </div>
           <div>
             <label htmlFor="phoneNumber" className="block text-gray-700 font-medium mb-1">
@@ -235,18 +310,18 @@ const BookingPage = () => {
           </div>
 
           {/* Pricing Summary */}
-          <div className="md:col-span-2 bg-gray-50 p-4 rounded-lg mt-4">
+          <div className="md:col-span-2 bg-gray-50 p-6 rounded-lg mt-4 shadow-sm">
             <h3 className="text-lg font-semibold text-gray-800 mb-2">Pricing Details</h3>
-            <p className="text-gray-700">
-              <strong>Nightly Rate:</strong> ${roomPrice}
+            <p className="text-gray-700 mb-2">
+              <strong>Nightly Rate:</strong> ${hotel.rooms[parseInt(roomType.replace("room", ""), 10)]?.price || 0}
             </p>
-            <p className="text-gray-700">
-              <strong>Number of Nights:</strong> {nights || "Select dates to calculate"}
+            <p className="text-gray-700 mb-2">
+              <strong>Number of Nights:</strong> {calculateNights() || "Select dates to calculate"}
             </p>
-            <p className="text-gray-700 font-semibold">
-              <strong>Total Price:</strong> ${totalPrice || "0"}
+            <p className="text-gray-700 font-semibold mb-2">
+              <strong>Total Price:</strong> ${calculateNights() * (hotel.rooms[parseInt(roomType.replace("room", ""), 10)]?.price || 0) || "0"}
             </p>
-            <p className="text-gray-400">
+            <p className="text-gray-500 text-sm">
               You can cancel your reservation free of charge up to 7 days before check-in for a full refund.
               Cancellations made within 7 days of arrival may incur a fee (varies by rate type).
               No-shows or early departures are non-refundable.
@@ -256,8 +331,8 @@ const BookingPage = () => {
           <div className="md:col-span-2 flex justify-end">
             <button
               type="submit"
-              className="bg-blue-600 text-white py-3 px-8 rounded-md hover:bg-blue-700 transition font-semibold shadow-md"
-              disabled={!nights}
+              className="bg-blue-600 text-white py-3 px-8 rounded-md hover:bg-blue-700 transition font-semibold shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={!calculateNights() || !emailVerified}
             >
               Confirm Booking
             </button>

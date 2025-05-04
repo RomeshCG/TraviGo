@@ -72,33 +72,30 @@ const HotelDetails = () => {
   return (
     <>
       <SimpleHeader />
-      <div
-        className="min-h-screen bg-gray-100 py-8"
-        style={{ paddingTop: "80px" }} // Add padding to prevent overlap
-      >
-        <div className="max-w-6xl mx-auto bg-white rounded-lg shadow-lg p-6">
+      <div className="min-h-screen bg-gray-50 py-12">
+        <div className="max-w-6xl mx-auto">
           {/* Main Image Gallery */}
-          <div className="relative mb-8 rounded-lg overflow-hidden">
-            <img src={mainImage} alt={Name} className="w-full h-[350px] object-cover" />
+          <div className="relative mb-10 rounded-xl overflow-hidden shadow-lg">
+            <img src={mainImage} alt={Name} className="w-full h-[500px] object-cover" />
             {allImages.length > 1 && (
               <>
                 <button
                   onClick={handlePrevImage}
-                  className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-gray-800 text-white p-2 rounded-full hover:bg-gray-900 transition"
+                  className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-gray-800 text-white p-3 rounded-full hover:bg-gray-900 transition"
                 >
                   ←
                 </button>
                 <button
                   onClick={handleNextImage}
-                  className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-gray-800 text-white p-2 rounded-full hover:bg-gray-900 transition"
+                  className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-gray-800 text-white p-3 rounded-full hover:bg-gray-900 transition"
                 >
                   →
                 </button>
-                <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 flex space-x-2">
+                <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-3">
                   {allImages.map((_, idx) => (
                     <span
                       key={idx}
-                      className={`w-2 h-2 rounded-full ${idx === currentImageIndex ? "bg-white" : "bg-gray-400"}`}
+                      className={`w-3 h-3 rounded-full ${idx === currentImageIndex ? "bg-white" : "bg-gray-400"}`}
                     />
                   ))}
                 </div>
@@ -107,40 +104,40 @@ const HotelDetails = () => {
           </div>
 
           {/* Hotel Name and Location */}
-          <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold text-gray-800">{Name}</h1>
-            <p className="text-gray-600 text-lg mt-1">{Location}</p>
+          <div className="text-center mb-12">
+            <h1 className="text-5xl font-bold text-gray-800">{Name}</h1>
+            <p className="text-gray-600 text-lg mt-2">{Location}</p>
           </div>
 
           {/* Hotel Description */}
-          <div className="mb-10 text-center">
-            <p className="text-gray-700 text-lg max-w-3xl mx-auto">{desc}</p>
+          <div className="mb-16 text-center">
+            <p className="text-gray-700 text-lg max-w-3xl mx-auto leading-relaxed">{desc}</p>
           </div>
 
           {/* Room Details Section */}
-          <h2 className="text-2xl font-semibold text-gray-800 mb-6">Rooms & Suites</h2>
+          <h2 className="text-3xl font-semibold text-gray-800 mb-8 text-center">Rooms & Suites</h2>
           {rooms.length > 0 ? (
             rooms.map((room, index) => (
-              <div key={index} className="mb-10 bg-gray-50 p-6 rounded-lg shadow-md">
-                <h3 className="text-xl font-semibold text-gray-800 mb-4">{room.type || "Unnamed Room"}</h3>
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div key={index} className="mb-12 bg-white p-8 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300">
+                <h3 className="text-2xl font-semibold text-gray-800 mb-6">{room.type || "Unnamed Room"}</h3>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                   <div>
                     {room.images?.length > 0 ? (
                       <>
                         <img
                           src={selectedRoomImages[index] || room.images[0]}
                           alt={room.type}
-                          className="w-full h-[400px] object-cover rounded-lg mb-4"
+                          className="w-full h-[450px] object-cover rounded-lg mb-6 shadow-md"
                         />
-                        <div className="flex gap-2 overflow-x-auto">
+                        <div className="flex gap-3 overflow-x-auto">
                           {room.images.map((img, imgIndex) => (
                             <img
                               key={imgIndex}
                               src={img}
                               alt={`${room.type} - ${imgIndex + 1}`}
-                              className={`w-20 h-20 object-cover rounded-md cursor-pointer ${
+                              className={`w-24 h-24 object-cover rounded-md cursor-pointer ${
                                 selectedRoomImages[index] === img ? "border-2 border-blue-600" : "border border-gray-300"
-                              }`}
+                              } hover:border-blue-500 transition`}
                               onClick={() =>
                                 setSelectedRoomImages((prev) => {
                                   const newImages = [...prev];
@@ -158,27 +155,27 @@ const HotelDetails = () => {
                   </div>
                   <div className="flex flex-col justify-between">
                     <div>
-                      <p className="text-gray-700 mb-2">
+                      <p className="text-gray-700 mb-3">
                         <strong>Features:</strong> {room.features || "N/A"}
                       </p>
-                      <p className="text-gray-700 mb-2">
+                      <p className="text-gray-700 mb-3">
                         <strong>Amenities:</strong> {room.amenities || "N/A"}
                       </p>
-                      <p className="text-gray-700 mb-2">
+                      <p className="text-gray-700 mb-3">
                         <strong>Size:</strong> {room.size || "N/A"}
                       </p>
-                      <p className="text-gray-700 mb-2">
+                      <p className="text-gray-700 mb-3">
                         <strong>Occupancy:</strong> {room.occupancy || "N/A"}
                       </p>
                       <p className="text-gray-700 mb-4">
                         <strong>Perks:</strong> {room.perks || "N/A"}
                       </p>
                     </div>
-                    <div className="flex justify-between items-center">
-                      <p className="text-gray-800 font-semibold text-lg">${room.price || "N/A"}/night</p>
+                    <div className="flex justify-between items-center mt-4">
+                      <p className="text-gray-800 font-semibold text-xl">${room.price || "N/A"}/night</p>
                       <button
                         onClick={() => handleBooking(index)}
-                        className="bg-blue-600 text-white py-2 px-6 rounded-md hover:bg-blue-700 transition"
+                        className="bg-blue-600 text-white py-2 px-8 rounded-lg hover:bg-blue-700 transition font-semibold shadow-md"
                       >
                         Book Now
                       </button>
@@ -188,35 +185,35 @@ const HotelDetails = () => {
               </div>
             ))
           ) : (
-            <p className="text-gray-600">No rooms available for this hotel.</p>
+            <p className="text-gray-600 text-center">No rooms available for this hotel.</p>
           )}
 
           {/* Hotel Facilities */}
-          <h2 className="text-2xl font-semibold text-gray-800 mb-6">Hotel Facilities</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-            <div className="bg-gray-50 p-4 rounded-lg shadow-md">
-              <h3 className="text-lg font-semibold text-gray-800">Swimming Pool</h3>
+          <h2 className="text-3xl font-semibold text-gray-800 mb-8 text-center">Hotel Facilities</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
+            <div className="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300">
+              <h3 className="text-xl font-semibold text-gray-800 mb-2">Swimming Pool</h3>
               <p className="text-gray-600">Enjoy our infinity pool with ocean views.</p>
             </div>
-            <div className="bg-gray-50 p-4 rounded-lg shadow-md">
-              <h3 className="text-lg font-semibold text-gray-800">Spa & Wellness</h3>
+            <div className="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300">
+              <h3 className="text-xl font-semibold text-gray-800 mb-2">Spa & Wellness</h3>
               <p className="text-gray-600">Relax with a range of spa treatments.</p>
             </div>
-            <div className="bg-gray-50 p-4 rounded-lg shadow-md">
-              <h3 className="text-lg font-semibold text-gray-800">Dining</h3>
+            <div className="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300">
+              <h3 className="text-xl font-semibold text-gray-800 mb-2">Dining</h3>
               <p className="text-gray-600">Savor local and international cuisine.</p>
             </div>
           </div>
 
           {/* Why Choose Us */}
-          <h2 className="text-2xl font-semibold text-gray-800 mb-6">Why Choose Us</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
-            <div className="bg-gray-50 p-4 rounded-lg shadow-md">
+          <h2 className="text-3xl font-semibold text-gray-800 mb-8 text-center">Why Choose Us</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16">
+            <div className="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300">
               <p className="text-gray-700">
                 <strong>Prime Location:</strong> Steps away from Galle’s historic fort and beaches.
               </p>
             </div>
-            <div className="bg-gray-50 p-4 rounded-lg shadow-md">
+            <div className="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300">
               <p className="text-gray-700">
                 <strong>Exceptional Service:</strong> 24/7 concierge and personalized attention.
               </p>
@@ -224,13 +221,13 @@ const HotelDetails = () => {
           </div>
 
           {/* Reviews Section */}
-          <h2 className="text-2xl font-semibold text-gray-800 mb-6">Guest Reviews</h2>
-          <div className="bg-gray-50 p-6 rounded-lg shadow-md">
+          <h2 className="text-3xl font-semibold text-gray-800 mb-8 text-center">Guest Reviews</h2>
+          <div className="bg-white p-8 rounded-xl shadow-lg">
             {reviews.map((review) => (
-              <div key={review.id} className="mb-4 pb-4 border-b border-gray-200 last:border-b-0">
-                <div className="flex items-center mb-2">
-                  <span className="text-gray-800 font-semibold">{review.user}</span>
-                  <span className="ml-2 text-yellow-500">{Array(review.rating).fill("★").join("")}</span>
+              <div key={review.id} className="mb-6 pb-6 border-b border-gray-200 last:border-b-0">
+                <div className="flex items-center mb-3">
+                  <span className="text-gray-800 font-semibold text-lg">{review.user}</span>
+                  <span className="ml-3 text-yellow-500 text-lg">{Array(review.rating).fill("★").join("")}</span>
                 </div>
                 <p className="text-gray-600">{review.comment}</p>
               </div>
