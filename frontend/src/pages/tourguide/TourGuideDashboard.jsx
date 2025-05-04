@@ -10,6 +10,10 @@ function TourGuideEarnings({ tourGuide }) {
   const [summary, setSummary] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [showModal, setShowModal] = useState(false);
+  const [cashoutAmount, setCashoutAmount] = useState('');
+  const [cashoutLoading, setCashoutLoading] = useState(false);
+  const [cashoutRequested, setCashoutRequested] = useState(false);
   const BASE_URL = 'http://localhost:5000';
 
   useEffect(() => {
@@ -27,14 +31,46 @@ function TourGuideEarnings({ tourGuide }) {
       });
   }, [tourGuide]);
 
+  const handleRequestCashout = async () => {
+    if (!cashoutAmount || isNaN(Number(cashoutAmount)) || Number(cashoutAmount) <= 0) {
+      toast.error('Enter a valid amount');
+      return;
+    }
+    setCashoutLoading(true);
+    setCashoutRequested(false);
+    try {
+      const token = localStorage.getItem('providerToken');
+      const res = await fetch(`${BASE_URL}/api/tour-guide/${tourGuide._id}/request-cashout`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ amount: Number(cashoutAmount) })
+      });
+      if (res.ok) {
+        setCashoutRequested(true);
+        toast.success('Cashout request sent to admin!');
+        setShowModal(false);
+        setCashoutAmount('');
+      } else {
+        const data = await res.json();
+        toast.error(data.message || 'Failed to request cashout');
+      }
+    } catch {
+      toast.error('Failed to request cashout');
+    }
+    setCashoutLoading(false);
+  };
+
   if (loading) return <div className="text-center py-10">Loading earnings...</div>;
   if (error) return <div className="text-center text-red-600">{error}</div>;
   if (!summary) return null;
 
   return (
-    <div className="bg-white rounded-xl shadow-lg p-6">
+    <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
       <h2 className="text-2xl font-bold mb-6">Earnings Overview</h2>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
         <div className="bg-green-50 rounded-lg p-5 text-center">
           <div className="text-lg text-gray-600 mb-2">Total Earnings</div>
           <div className="text-3xl font-bold text-green-700">${summary.totalEarnings.toFixed(2)}</div>
@@ -43,11 +79,51 @@ function TourGuideEarnings({ tourGuide }) {
           <div className="text-lg text-gray-600 mb-2">Pending Payout</div>
           <div className="text-3xl font-bold text-yellow-700">${summary.pendingEarnings.toFixed(2)}</div>
         </div>
+        <div className="bg-blue-50 rounded-lg p-5 text-center">
+          <div className="text-lg text-gray-600 mb-2">Total Cashouts</div>
+          <div className="text-3xl font-bold text-blue-700">${summary.totalCashouts?.toFixed(2) ?? '0.00'}</div>
+        </div>
         <div className="bg-red-50 rounded-lg p-5 text-center">
           <div className="text-lg text-gray-600 mb-2">Refunded/Cancelled</div>
           <div className="text-3xl font-bold text-red-700">${summary.refunded.toFixed(2)}</div>
         </div>
       </div>
+      <button
+        onClick={() => setShowModal(true)}
+        disabled={cashoutLoading || cashoutRequested}
+        className="bg-gradient-to-r from-green-500 to-teal-500 text-white px-6 py-2 rounded-lg shadow-md hover:from-green-600 hover:to-teal-600 transition mb-6"
+      >
+        Request Cashout
+      </button>
+      {showModal && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
+          <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-sm">
+            <h3 className="text-xl font-bold mb-4">Request Cashout</h3>
+            <label className="block mb-2 text-gray-700">Amount to cash out</label>
+            <input
+              type="number"
+              min="1"
+              max={summary.totalEarnings}
+              value={cashoutAmount}
+              onChange={e => setCashoutAmount(e.target.value)}
+              className="w-full p-2 border border-gray-300 rounded mb-4"
+              placeholder={`Max: $${summary.totalEarnings.toFixed(2)}`}
+            />
+            <div className="flex justify-end space-x-2">
+              <button
+                onClick={() => setShowModal(false)}
+                className="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300"
+                disabled={cashoutLoading}
+              >Cancel</button>
+              <button
+                onClick={handleRequestCashout}
+                className="px-4 py-2 rounded bg-green-500 text-white hover:bg-green-600"
+                disabled={cashoutLoading}
+              >{cashoutLoading ? 'Requesting...' : 'Request'}</button>
+            </div>
+          </div>
+        </div>
+      )}
       <h3 className="text-xl font-semibold mb-4">Recent Transactions</h3>
       <div className="overflow-x-auto">
         <table className="min-w-full bg-white rounded-lg">
@@ -69,18 +145,33 @@ function TourGuideEarnings({ tourGuide }) {
                 <td className="p-2">${tx.totalPrice?.toFixed(2) ?? '-'}</td>
                 <td className="p-2">
                   <span className={`px-2 py-1 rounded text-xs font-semibold ${
-                    tx.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                    tx.status === 'confirmed' ? 'bg-green-100 text-green-800' :
-                    tx.status === 'cancelled' ? 'bg-gray-200 text-gray-600' :
-                    tx.status === 'approved' ? 'bg-blue-100 text-blue-800' :
-                    tx.status === 'rejected' ? 'bg-red-100 text-red-800' :
+                    tx.bookingStatus === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                    tx.bookingStatus === 'confirmed' ? 'bg-green-100 text-green-800' :
+                    tx.bookingStatus === 'completed' ? 'bg-blue-100 text-blue-800' :
+                    tx.bookingStatus === 'cancelled' ? 'bg-gray-200 text-gray-600' :
+                    tx.bookingStatus === 'approved' ? 'bg-blue-100 text-blue-800' :
+                    tx.bookingStatus === 'rejected' ? 'bg-red-100 text-red-800' :
                     'bg-gray-100 text-gray-800'
                   }`}>
-                    {tx.status}
+                    {tx.bookingStatus}
                   </span>
                 </td>
-                <td className="p-2">{tx.payoutReady ? <span className="text-yellow-700 font-bold">Pending</span> : tx.status === 'confirmed' ? <span className="text-green-700 font-bold">Paid</span> : '-'}</td>
-                <td className="p-2">{tx.refundRequested || tx.status === 'cancelled' ? <span className="text-red-600 font-bold">Refunded</span> : '-'}</td>
+                <td className="p-2">
+                  {tx.paymentStatus === 'released' ? (
+                    <span className="text-blue-700 font-bold">In TraviGo Balance</span>
+                  ) : tx.paymentStatus === 'cashout_pending' ? (
+                    <span className="text-yellow-700 font-bold">Pending Cashout</span>
+                  ) : tx.paymentStatus === 'cashout_done' ? (
+                    <span className="text-green-700 font-bold">Cashed Out</span>
+                  ) : tx.paymentStatus === 'holding' ? (
+                    <span className="text-gray-700 font-bold">Holding</span>
+                  ) : tx.paymentStatus === 'refunded' ? (
+                    <span className="text-red-700 font-bold">Refunded</span>
+                  ) : (
+                    '-'
+                  )}
+                </td>
+                <td className="p-2">{tx.refundRequested || tx.bookingStatus === 'cancelled' ? <span className="text-red-600 font-bold">Refunded</span> : '-'}</td>
               </tr>
             ))}
           </tbody>
@@ -217,19 +308,18 @@ const TourGuideDashboard = () => {
   const handleBookingStatusUpdate = async (bookingId, newStatus) => {
     try {
       const token = localStorage.getItem('providerToken');
-      const response = await fetch(`${BASE_URL}/api/tour-bookings/${bookingId}/status`, {
+      const response = await fetch(`${BASE_URL}/api/tour-bookings/${bookingId}/booking-status`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ status: newStatus }),
+        body: JSON.stringify({ bookingStatus: newStatus }),
       });
-
       if (response.ok) {
         setTourBookings(prevBookings =>
           prevBookings.map(booking =>
-            booking._id === bookingId ? { ...booking, status: newStatus } : booking
+            booking._id === bookingId ? { ...booking, bookingStatus: newStatus } : booking
           )
         );
         toast.success(`Booking ${newStatus} successfully!`);
@@ -454,9 +544,9 @@ const TourGuideDashboard = () => {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) throw new Error('Failed to mark as complete');
-      setSelectedBooking({ ...selectedBooking, status: 'completed' });
+      setSelectedBooking({ ...selectedBooking, bookingStatus: 'completed' });
       setShowReviewForm(true);
-      setTourBookings(prev => prev.map(b => b._id === selectedBooking._id ? { ...b, status: 'completed' } : b));
+      setTourBookings(prev => prev.map(b => b._id === selectedBooking._id ? { ...b, bookingStatus: 'completed' } : b));
     } catch (err) {
       setModalError(err.message);
     }
@@ -631,17 +721,18 @@ const TourGuideDashboard = () => {
                             </td>
                             <td className="px-6 py-4">
                               <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                                ${booking.status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 
-                                  booking.status === 'confirmed' ? 'bg-green-100 text-green-800' : 
-                                  booking.status === 'cancelled' ? 'bg-gray-200 text-gray-600' :
-                                  booking.status === 'approved' ? 'bg-blue-100 text-blue-800' :
-                                  booking.status === 'rejected' ? 'bg-red-100 text-red-800' :
+                                ${booking.bookingStatus === 'pending' ? 'bg-yellow-100 text-yellow-800' : 
+                                  booking.bookingStatus === 'confirmed' ? 'bg-green-100 text-green-800' : 
+                                  booking.bookingStatus === 'cancelled' ? 'bg-gray-200 text-gray-600' :
+                                  booking.bookingStatus === 'approved' ? 'bg-blue-100 text-blue-800' :
+                                  booking.bookingStatus === 'rejected' ? 'bg-red-100 text-red-800' :
+                                  booking.bookingStatus === 'completed' ? 'bg-blue-100 text-blue-800' :
                                   'bg-gray-100 text-gray-800'}`}>
-                                {booking.status}
+                                {booking.bookingStatus}
                               </span>
                             </td>
                             <td className="px-6 py-4">
-                              {booking.status === 'pending' && (
+                              {booking.bookingStatus === 'pending' && (
                                 <div className="space-x-2">
                                   <button
                                     onClick={e => { e.stopPropagation(); handleBookingStatusUpdate(booking._id, 'approved'); }}
@@ -934,15 +1025,15 @@ const TourGuideDashboard = () => {
                 <div><b>Tour Package:</b> {selectedBooking.packageId?.title || 'N/A'}</div>
                 <div><b>Travelers:</b> {selectedBooking.travelersCount}</div>
                 <div><b>Travel Date:</b> {selectedBooking.travelDate ? new Date(selectedBooking.travelDate).toLocaleDateString() : '-'}</div>
-                <div><b>Status:</b> {selectedBooking.status}</div>
+                <div><b>Status:</b> {selectedBooking.bookingStatus}</div>
                 <div><b>Total Price:</b> ${selectedBooking.totalPrice}</div>
               </div>
-              {selectedBooking.status !== 'completed' && (
+              {selectedBooking.bookingStatus !== 'completed' && (
                 <button onClick={handleCompleteBooking} disabled={completing} className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 mb-4">
                   {completing ? 'Completing...' : 'Mark as Complete'}
                 </button>
               )}
-              {((selectedBooking.status === 'completed' && !reviewed) || showReviewForm) && (
+              {((selectedBooking.bookingStatus === 'completed' && !reviewed) || showReviewForm) && (
                 <form onSubmit={handleReviewSubmit} className="mt-4">
                   <h4 className="font-semibold mb-2">Leave a Review for Tourist</h4>
                   <label className="block mb-2">Rating:

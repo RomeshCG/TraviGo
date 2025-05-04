@@ -41,6 +41,16 @@ const TourBookingSchema = new mongoose.Schema({
     enum: ['pending', 'confirmed', 'cancelled', 'approved', 'rejected', 'completed'], // Added 'completed'
     default: 'pending',
   },
+  bookingStatus: {
+    type: String,
+    enum: ['pending', 'approved', 'rejected', 'cancelled', 'completed'],
+    default: 'pending',
+  },
+  paymentStatus: {
+    type: String,
+    enum: ['holding', 'released', 'refunded', 'cashout_pending', 'cashout_done'],
+    default: 'holding',
+  },
   adminNotified: {
     type: Boolean,
     default: false,
@@ -52,6 +62,10 @@ const TourBookingSchema = new mongoose.Schema({
   payoutReady: {
     type: Boolean,
     default: false,
+  },
+cashoutAmount: {
+    type: Number,
+    default: 0,
   },
   totalPrice: {
     type: Number,
