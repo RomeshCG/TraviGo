@@ -12,6 +12,8 @@ const TourGuidePayments = () => {
   const [search, setSearch] = useState("");
   const [success, setSuccess] = useState(null);
   const [selectedBooking, setSelectedBooking] = useState(null);
+  const [cashoutRequests, setCashoutRequests] = useState([]);
+  const [cashoutLoading, setCashoutLoading] = useState(true);
   const searchInput = useRef();
 
   // Set axios default headers with admin token
@@ -33,6 +35,19 @@ const TourGuidePayments = () => {
       }
     };
     fetchBookings();
+
+    // Fetch cashout requests for admin
+    const fetchCashoutRequests = async () => {
+      try {
+        const response = await axios.get("/api/admin/cashout-requests");
+        setCashoutRequests(response.data);
+      } catch {
+        // Optionally handle error
+      } finally {
+        setCashoutLoading(false);
+      }
+    };
+    fetchCashoutRequests();
   }, []);
 
   useEffect(() => {
@@ -89,6 +104,30 @@ const TourGuidePayments = () => {
     }
   };
 
+  // Approve a cashout request (admin)
+  const handleApproveCashoutRequest = async (requestId) => {
+    if (!window.confirm("Approve this cashout request?")) return;
+    try {
+      await axios.post(`/api/admin/cashout-requests/${requestId}/approve`);
+      setCashoutRequests((prev) => prev.filter((r) => r._id !== requestId));
+      setSuccess("Cashout request approved and marked as completed.");
+    } catch (error) {
+      setError(error.response?.data?.message || "Cashout approval failed.");
+    }
+  };
+
+  // Reject a cashout request (admin)
+  const handleRejectCashoutRequest = async (requestId) => {
+    if (!window.confirm("Reject this cashout request?")) return;
+    try {
+      await axios.post(`/api/admin/cashout-requests/${requestId}/reject`);
+      setCashoutRequests((prev) => prev.filter((r) => r._id !== requestId));
+      setSuccess("Cashout request rejected.");
+    } catch (error) {
+      setError(error.response?.data?.message || "Cashout rejection failed.");
+    }
+  };
+
   const statusBadge = (status) => {
     const color = {
       pending: "bg-yellow-100 text-yellow-800",
@@ -125,22 +164,76 @@ const TourGuidePayments = () => {
         <div className="flex-1 p-6 bg-gray-100">
           <div className="max-w-5xl mx-auto">
             <h2 className="text-2xl font-bold mb-6">Tour Guide Payment Manager</h2>
-{/* Payout Summary */}
+
+            {/* --- New: Pending Cashout Requests Table --- */}
+            <div className="mb-8">
+              <h3 className="font-bold mb-2 text-blue-800 text-lg">Pending Cashout Requests (Requested Amount Only)</h3>
+              {cashoutLoading ? (
+                <p>Loading cashout requests...</p>
+              ) : cashoutRequests.length === 0 ? (
+                <p className="text-gray-500">No pending cashout requests.</p>
+              ) : (
+                <div className="overflow-x-auto mb-4">
+                  <table className="min-w-full bg-white rounded-lg shadow">
+                    <thead>
+                      <tr>
+                        <th className="p-2">Tour Guide</th>
+                        <th className="p-2">Email</th>
+                        <th className="p-2">Location</th>
+                        <th className="p-2">Requested Amount</th>
+                        <th className="p-2">Bookings</th>
+                        <th className="p-2">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {cashoutRequests.map((req) => (
+                        <tr key={req._id} className="border-b hover:bg-blue-50 transition">
+                          <td className="p-2">{req.tourGuideId?.name || '-'}</td>
+                          <td className="p-2">{req.tourGuideId?.email || '-'}</td>
+                          <td className="p-2">{req.tourGuideId?.location || '-'}</td>
+                          <td className="p-2 text-green-700 font-bold">${Number(req.amount).toFixed(2)}</td>
+                          <td className="p-2 text-xs">
+                            {req.bookings && req.bookings.length > 0 ? (
+                              <ul className="list-disc pl-4">
+                                {req.bookings.map((b) => (
+                                  <li key={b._id}>{b._id.slice(-6)} (${Number(b.cashoutAmount).toFixed(2)})</li>
+                                ))}
+                              </ul>
+                            ) : '-'}
+                          </td>
+                          <td className="p-2 space-x-2">
+                            <button onClick={() => handleApproveCashoutRequest(req._id)} className="bg-green-500 text-white px-2 py-1 rounded hover:bg-green-600 text-xs" title="Approve Cashout">Approve</button>
+                            <button onClick={() => handleRejectCashoutRequest(req._id)} className="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600 text-xs" title="Reject Cashout">Reject</button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+            {/* --- End New: Pending Cashout Requests Table --- */}
+
+            {/* --- Admin Cashout Requests Section --- */}
             {(() => {
               const payoutSummary = getGuideSummary(filteredBookings);
               return payoutSummary.length > 0 && (
-                <div className="mb-4 bg-blue-50 rounded-lg p-4">
-                  <h3 className="font-bold mb-2 text-blue-800">Payout Summary</h3>
-                  <ul className="list-disc pl-6">
+                <div className="mb-6 bg-blue-50 rounded-lg p-4 border border-blue-200">
+                  <h3 className="font-bold mb-2 text-blue-800 text-lg">Pending Cashout Requests</h3>
+                  <ul className="list-disc pl-6 mb-2">
                     {payoutSummary.map(s => (
                       <li key={s.guide._id}>
-                        <span className="font-semibold">{s.guide.name}:</span> <span className="text-green-700 font-bold">${s.total.toFixed(2)}</span> to pay</li>
+                        <span className="font-semibold">{s.guide.name}:</span> <span className="text-green-700 font-bold">${s.total.toFixed(2)}</span> to pay
+                      </li>
                     ))}
                   </ul>
+                  <p className="text-sm text-blue-700">Approve cashout requests using the green button in the table below.</p>
                 </div>
               );
             })()}
-            {/* Search and Filter */}
+            {/* --- End Admin Cashout Requests Section --- */}
+
+            {/* --- Booking Management Section --- */}
             <div className="flex flex-wrap items-center gap-2 mb-4">
               <div className="relative">
                 <input

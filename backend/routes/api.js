@@ -17,6 +17,7 @@ const path = require('path');
 const fs = require('fs');
 const TourGuideBooking = require('../models/TourBookings');
 const ContactMessage = require('../models/ContactMessage');
+const CashoutRequest = require('../models/CashoutRequest');
 
 // Load environment variables
 require('dotenv').config();
@@ -607,6 +608,11 @@ router.post('/tour-guide/:tourGuideId/request-cashout', isProvider, async (req, 
     if (!tourGuide) {
       return res.status(404).json({ message: 'Tour guide not found' });
     }
+    // Prevent multiple pending requests
+    const existingRequest = await CashoutRequest.findOne({ tourGuideId, status: 'pending' });
+    if (existingRequest) {
+      return res.status(400).json({ message: 'You already have a pending cashout request.' });
+    }
     // Find all bookings for this guide that are eligible for cashout (paymentStatus: 'released')
     const TourBooking = require('../models/TourBookings');
     const eligibleBookings = await TourBooking.find({
@@ -621,10 +627,10 @@ router.post('/tour-guide/:tourGuideId/request-cashout', isProvider, async (req, 
     }
     // Mark eligible bookings as cashout_pending until the requested amount is reached
     let sum = 0;
+    let usedBookings = [];
     for (const booking of eligibleBookings) {
       if (sum >= amount) break;
       booking.paymentStatus = 'cashout_pending';
-      // Calculate how much to assign for this booking
       let assign = 0;
       if (sum + (booking.totalPrice || 0) > amount) {
         assign = amount - sum;
@@ -633,11 +639,83 @@ router.post('/tour-guide/:tourGuideId/request-cashout', isProvider, async (req, 
       }
       booking.cashoutAmount = assign;
       sum += assign;
+      usedBookings.push(booking._id);
       await booking.save();
     }
-    res.status(200).json({ message: 'Cashout request submitted', payoutAmount: sum });
+    // Create a cashout request entry
+    const cashoutRequest = new CashoutRequest({
+      tourGuideId,
+      amount: sum,
+      bookings: usedBookings,
+      status: 'pending',
+      requestedAt: new Date(),
+    });
+    await cashoutRequest.save();
+    res.status(200).json({ message: 'Cashout request submitted', payoutAmount: sum, requestId: cashoutRequest._id });
   } catch (error) {
     console.error('Cashout request error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// ADMIN: List all pending cashout requests
+router.get('/admin/cashout-requests', isAdmin, async (req, res) => {
+  try {
+    const requests = await require('../models/CashoutRequest')
+      .find({ status: 'pending' })
+      .populate('tourGuideId', 'name email location')
+      .populate('bookings');
+    res.status(200).json(requests);
+  } catch (error) {
+    console.error('Error fetching cashout requests:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// ADMIN: Approve a cashout request
+router.post('/admin/cashout-requests/:id/approve', isAdmin, async (req, res) => {
+  try {
+    const CashoutRequest = require('../models/CashoutRequest');
+    const TourBooking = require('../models/TourBookings');
+    const request = await CashoutRequest.findById(req.params.id);
+    if (!request || request.status !== 'pending') {
+      return res.status(404).json({ message: 'Pending cashout request not found' });
+    }
+    // Mark all included bookings as cashout_done
+    await TourBooking.updateMany(
+      { _id: { $in: request.bookings } },
+      { $set: { paymentStatus: 'cashout_done', cashoutAmount: 0 } }
+    );
+    request.status = 'approved';
+    request.processedAt = new Date();
+    await request.save();
+    res.status(200).json({ message: 'Cashout request approved' });
+  } catch (error) {
+    console.error('Error approving cashout request:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// ADMIN: Reject a cashout request
+router.post('/admin/cashout-requests/:id/reject', isAdmin, async (req, res) => {
+  try {
+    const CashoutRequest = require('../models/CashoutRequest');
+    const TourBooking = require('../models/TourBookings');
+    const request = await CashoutRequest.findById(req.params.id);
+    if (!request || request.status !== 'pending') {
+      return res.status(404).json({ message: 'Pending cashout request not found' });
+    }
+    // Revert all included bookings to released
+    await TourBooking.updateMany(
+      { _id: { $in: request.bookings } },
+      { $set: { paymentStatus: 'released', cashoutAmount: 0 } }
+    );
+    request.status = 'rejected';
+    request.processedAt = new Date();
+    await request.save();
+    res.status(200).json({ message: 'Cashout request rejected' });
+  } catch (error) {
+    console.error('Error rejecting cashout request:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });
