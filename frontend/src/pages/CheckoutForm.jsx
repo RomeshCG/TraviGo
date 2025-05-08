@@ -2,7 +2,7 @@ import { CardNumberElement, CardExpiryElement, CardCvcElement, useStripe, useEle
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import MessageModal from "../components/MessageModal";
-import { Loader2 } from "lucide-react";
+import { Loader2, Lock, Shield, CreditCard } from "lucide-react";
 
 const visaLogo = "https://www.logo.wine/a/logo/Visa_Inc./Visa_Inc.-Logo.wine.svg";
 const mastercardLogo = "https://www.logo.wine/a/logo/Mastercard/Mastercard-Logo.wine.svg";
@@ -141,208 +141,254 @@ const CheckoutForm = ({ clientSecret }) => {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-100 py-8">
-      <div className="max-w-lg mx-auto bg-white rounded-lg shadow-lg p-6">
-        {/* Header Section */}
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold text-gray-800">Payment</h1>
-          <button
-            onClick={() => navigate(`/hotels/booking/${bookingData?.hotelId}/${bookingData?.roomType.toLowerCase().replace(" ", "")}`)}
-            className="text-blue-600 hover:underline font-semibold"
-          >
-            ← Back
-          </button>
-        </div>
-
-        {/* Email Verification Section */}
-        <div className="mb-6">
-          <h2 className="text-xl font-semibold text-gray-800 mb-4">Verify Your Email</h2>
-          <div className="flex items-center space-x-4">
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Enter your email"
-              className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
-              required
-              disabled={emailVerified || bookingData?.emailVerified}
-            />
-            {!emailVerified && !isVerifyingEmail && !bookingData?.emailVerified && (
-              <button
-                type="button"
-                onClick={handleSendVerificationCode}
-                className="bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition"
-              >
-                Verify Email
-              </button>
-            )}
-          </div>
-          {isVerifyingEmail && (
-            <div className="mt-4">
-              <label htmlFor="verificationCode" className="block text-gray-700 font-medium mb-1">
-                Verification Code
-              </label>
-              <div className="flex items-center space-x-4">
-                <input
-                  type="text"
-                  id="verificationCode"
-                  value={verificationCode}
-                  onChange={(e) => setVerificationCode(e.target.value)}
-                  placeholder="Enter the 6-digit code"
-                  className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
-                  required
-                />
+    <div className="min-h-screen bg-gray-50 py-12">
+      <div className="max-w-4xl mx-auto px-4">
+        <div className="flex flex-col lg:flex-row gap-8">
+          {/* Payment Form Section */}
+          <div className="lg:w-2/3">
+            <div className="bg-white rounded-xl shadow-lg p-8">
+              <div className="flex justify-between items-center mb-8">
+                <h1 className="text-2xl font-bold text-gray-800">Payment Details</h1>
                 <button
-                  type="button"
-                  onClick={handleVerifyCode}
-                  className="bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 transition"
+                  onClick={() => navigate(`/hotels/booking/${bookingData?.hotelId}/${bookingData?.roomType.toLowerCase().replace(" ", "")}`)}
+                  className="text-blue-600 hover:underline font-semibold"
                 >
-                  Submit Code
+                  ← Back
                 </button>
               </div>
-            </div>
-          )}
-          {emailVerified && (
-            <p className="text-green-600 mt-2">Email Verified ✓</p>
-          )}
-        </div>
 
-        {/* Payment Method Tabs */}
-        {emailVerified && (
-          <>
-            <div className="flex space-x-2 mb-6">
-              <button
-                onClick={() => setPaymentMethod("card")}
-                className={`flex-1 py-2 px-4 rounded-lg font-medium text-sm border-2 transition-all duration-200 ${
-                  paymentMethod === "card" ? "border-blue-500 bg-blue-50 text-blue-700" : "border-gray-300 text-gray-700"
-                }`}
-              >
-                Card
-              </button>
-              <button
-                onClick={() => setPaymentMethod("bancontact")}
-                className={`flex-1 py-2 px-4 rounded-lg font-medium text-sm border-2 transition-all duration-200 ${
-                  paymentMethod === "bancontact" ? "border-blue-500 bg-blue-50 text-blue-700" : "border-gray-300 text-gray-700"
-                }`}
-              >
-                Bancontact
-              </button>
-              <button
-                onClick={() => setPaymentMethod("ideal")}
-                className={`flex-1 py-2 px-4 rounded-lg font-medium text-sm border-2 transition-all duration-200 ${
-                  paymentMethod === "ideal" ? "border-blue-500 bg-blue-50 text-blue-700" : "border-gray-300 text-gray-700"
-                }`}
-              >
-                iDEAL
-              </button>
-            </div>
-
-            {/* Payment Form */}
-            {paymentMethod === "card" && (
-              <form onSubmit={handleSubmit} className="space-y-4">
-                {/* Card Number */}
-                <div>
-                  <label htmlFor="cardNumber" className="block text-gray-700 font-medium mb-1">
-                    Card Number
-                  </label>
-                  <div className="p-3 border border-gray-300 rounded-md bg-white flex items-center justify-between">
-                    <CardNumberElement options={{ style: stripeElementStyles }} className="flex-1" />
-                    <div className="flex space-x-2">
-                      <img src={visaLogo} alt="Visa" className="h-5" />
-                      <img src={mastercardLogo} alt="Mastercard" className="h-5" />
-                      <img src={amexLogo} alt="Amex" className="h-5" />
-                      <img src={unionpayLogo} alt="UnionPay" className="h-5" />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Expiry and CVC */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label htmlFor="expiryDate" className="block text-gray-700 font-medium mb-1">
-                      Expiry MM / YY
-                    </label>
-                    <div className="p-3 border border-gray-300 rounded-md bg-white">
-                      <CardExpiryElement options={{ style: stripeElementStyles }} />
-                    </div>
-                  </div>
-                  <div>
-                    <label htmlFor="cvc" className="block text-gray-700 font-medium mb-1">
-                      CVC
-                    </label>
-                    <div className="p-3 border border-gray-300 rounded-md bg-white flex items-center justify-between">
-                      <CardCvcElement options={{ style: stripeElementStyles }} className="flex-1" />
-                      <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 10h18M3 6h18M3 14h18M3 18h18"></path>
-                      </svg>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Country and ZIP */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label htmlFor="country" className="block text-gray-700 font-medium mb-1">
-                      Country
-                    </label>
-                    <select
-                      id="country"
-                      value={country}
-                      onChange={(e) => setCountry(e.target.value)}
-                      className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+              {/* Email Verification Section */}
+              <div className="mb-6">
+                <h2 className="text-xl font-semibold text-gray-800 mb-4">Verify Your Email</h2>
+                <div className="flex items-center space-x-4">
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="Enter your email"
+                    className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                    required
+                    disabled={emailVerified || bookingData?.emailVerified}
+                  />
+                  {!emailVerified && !isVerifyingEmail && !bookingData?.emailVerified && (
+                    <button
+                      type="button"
+                      onClick={handleSendVerificationCode}
+                      className="bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition"
                     >
-                      {countries.map((c) => (
-                        <option key={c} value={c}>
-                          {c}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label htmlFor="postalCode" className="block text-gray-700 font-medium mb-1">
-                      ZIP
+                      Verify Email
+                    </button>
+                  )}
+                </div>
+                {isVerifyingEmail && (
+                  <div className="mt-4">
+                    <label htmlFor="verificationCode" className="block text-gray-700 font-medium mb-1">
+                      Verification Code
                     </label>
-                    <input
-                      type="text"
-                      id="postalCode"
-                      value={postalCode}
-                      onChange={(e) => setPostalCode(e.target.value)}
-                      placeholder="90210"
-                      className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
-                      required
-                    />
+                    <div className="flex items-center space-x-4">
+                      <input
+                        type="text"
+                        id="verificationCode"
+                        value={verificationCode}
+                        onChange={(e) => setVerificationCode(e.target.value)}
+                        placeholder="Enter the 6-digit code"
+                        className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                        required
+                      />
+                      <button
+                        type="button"
+                        onClick={handleVerifyCode}
+                        className="bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 transition"
+                      >
+                        Submit Code
+                      </button>
+                    </div>
+                  </div>
+                )}
+                {emailVerified && (
+                  <p className="text-green-600 mt-2">Email Verified ✓</p>
+                )}
+              </div>
+
+              {/* Payment Method Selection */}
+              <div className="mb-8">
+                <h2 className="text-lg font-semibold text-gray-700 mb-4">Select Payment Method</h2>
+                <div className="grid grid-cols-3 gap-4">
+                  <button
+                    onClick={() => setPaymentMethod("card")}
+                    className={`p-4 rounded-lg border-2 transition-all duration-200 ${
+                      paymentMethod === "card" 
+                        ? "border-blue-500 bg-blue-50" 
+                        : "border-gray-200 hover:border-gray-300"
+                    }`}
+                  >
+                    <div className="flex flex-col items-center">
+                      <CreditCard className="w-6 h-6 mb-2" />
+                      <span className="text-sm font-medium">Credit Card</span>
+                    </div>
+                  </button>
+                  <button
+                    onClick={() => setPaymentMethod("paypal")}
+                    className={`p-4 rounded-lg border-2 transition-all duration-200 ${
+                      paymentMethod === "paypal" 
+                        ? "border-blue-500 bg-blue-50" 
+                        : "border-gray-200 hover:border-gray-300"
+                    }`}
+                  >
+                    <div className="flex flex-col items-center">
+                      <img src="https://www.paypalobjects.com/webstatic/mktg/Logo/pp-logo-100px.png" alt="PayPal" className="h-6 mb-2" />
+                      <span className="text-sm font-medium">PayPal</span>
+                    </div>
+                  </button>
+                  <button
+                    onClick={() => setPaymentMethod("apple")}
+                    className={`p-4 rounded-lg border-2 transition-all duration-200 ${
+                      paymentMethod === "apple" 
+                        ? "border-blue-500 bg-blue-50" 
+                        : "border-gray-200 hover:border-gray-300"
+                    }`}
+                  >
+                    <div className="flex flex-col items-center">
+                      <img src="https://upload.wikimedia.org/wikipedia/commons/f/fa/Apple_pay.svg" alt="Apple Pay" className="h-6 mb-2" />
+                      <span className="text-sm font-medium">Apple Pay</span>
+                    </div>
+                  </button>
+                </div>
+              </div>
+
+              {/* Card Details Form */}
+              {paymentMethod === "card" && (
+                <form onSubmit={handleSubmit} className="space-y-6">
+                  <div>
+                    <label className="block text-gray-700 font-medium mb-2">Card Number</label>
+                    <div className="p-3 border border-gray-300 rounded-lg bg-white">
+                      <CardNumberElement 
+                        options={{ 
+                          style: stripeElementStyles,
+                          placeholder: '1234 1234 1234 1234'
+                        }} 
+                        className="w-full"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-gray-700 font-medium mb-2">Expiry Date</label>
+                      <div className="p-3 border border-gray-300 rounded-lg bg-white">
+                        <CardExpiryElement options={stripeElementStyles} />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-gray-700 font-medium mb-2">CVC</label>
+                      <div className="p-3 border border-gray-300 rounded-lg bg-white">
+                        <CardCvcElement options={stripeElementStyles} />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-gray-700 font-medium mb-2">Postal Code</label>
+                      <input
+                        type="text"
+                        value={postalCode}
+                        onChange={(e) => setPostalCode(e.target.value)}
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-gray-700 font-medium mb-2">Country</label>
+                      <select
+                        value={country}
+                        onChange={(e) => setCountry(e.target.value)}
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        required
+                      >
+                        {countries.map((country) => (
+                          <option key={country} value={country}>
+                            {country}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full bg-blue-600 text-white py-4 rounded-lg font-semibold hover:bg-blue-700 transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {loading ? (
+                      <>
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                        Processing...
+                      </>
+                    ) : (
+                      <>
+                        <Lock className="w-5 h-5" />
+                        Pay ${amount}
+                      </>
+                    )}
+                  </button>
+                </form>
+              )}
+            </div>
+          </div>
+
+          {/* Order Summary Section */}
+          <div className="lg:w-1/3">
+            <div className="bg-white rounded-xl shadow-lg p-8 sticky top-8">
+              <h2 className="text-xl font-bold text-gray-800 mb-6">Order Summary</h2>
+              
+              <div className="space-y-4 mb-6">
+                <div className="flex justify-between text-gray-600">
+                  <span>Room Type</span>
+                  <span>{bookingData?.roomType}</span>
+                </div>
+                <div className="flex justify-between text-gray-600">
+                  <span>Check-in</span>
+                  <span>{bookingData?.checkInDate}</span>
+                </div>
+                <div className="flex justify-between text-gray-600">
+                  <span>Check-out</span>
+                  <span>{bookingData?.checkOutDate}</span>
+                </div>
+                <div className="flex justify-between text-gray-600">
+                  <span>Nights</span>
+                  <span>{bookingData?.nights || 1}</span>
+                </div>
+                <div className="border-t pt-4 mt-4">
+                  <div className="flex justify-between text-lg font-semibold">
+                    <span>Total</span>
+                    <span>${amount}</span>
                   </div>
                 </div>
-
-                {/* Terms */}
-                <p className="text-gray-500 text-sm mt-4">
-                  By providing your card information, you allow Techfolia to charge your card for future payments in accordance with their terms.
-                </p>
-
-                {/* Pay Button */}
-                <button
-                  type="submit"
-                  className="mt-6 w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-all duration-200 flex justify-center items-center disabled:opacity-50 disabled:cursor-not-allowed"
-                  disabled={loading || !stripe || !clientSecret}
-                >
-                  {loading ? <Loader2 className="animate-spin w-5 h-5 mr-2" /> : null}
-                  {loading ? "Processing..." : `Pay Now $${amount || "0"}`}
-                </button>
-              </form>
-            )}
-
-            {/* Placeholder for other payment methods */}
-            {paymentMethod !== "card" && (
-              <div className="text-center text-gray-600">
-                <p>This payment method is not supported yet. Please select "Card" to proceed.</p>
               </div>
-            )}
-          </>
-        )}
+
+              <div className="bg-gray-50 rounded-lg p-4 space-y-3">
+                <div className="flex items-center gap-2 text-gray-600">
+                  <Shield className="w-5 h-5 text-green-500" />
+                  <span className="text-sm">Secure Payment</span>
+                </div>
+                <div className="flex items-center gap-2 text-gray-600">
+                  <Lock className="w-5 h-5 text-green-500" />
+                  <span className="text-sm">SSL Encrypted</span>
+                </div>
+              </div>
+
+              <div className="mt-6 flex justify-center gap-4">
+                <img src={visaLogo} alt="Visa" className="h-8" />
+                <img src={mastercardLogo} alt="Mastercard" className="h-8" />
+                <img src={amexLogo} alt="American Express" className="h-8" />
+                <img src={unionpayLogo} alt="UnionPay" className="h-8" />
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
-      {modal.isOpen && (
-        <MessageModal message={modal.message} type={modal.type} onClose={closeModal} showContinue={modal.type === "success" && !isVerifyingEmail} />
-      )}
+      {modal.isOpen && <MessageModal message={modal.message} type={modal.type} onClose={closeModal} />}
     </div>
   );
 };

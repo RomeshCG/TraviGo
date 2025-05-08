@@ -13,9 +13,6 @@ const BookingPage = () => {
   const [checkInDate, setCheckInDate] = useState("");
   const [checkOutDate, setCheckOutDate] = useState("");
   const [email, setEmail] = useState("");
-  const [isVerifyingEmail, setIsVerifyingEmail] = useState(false);
-  const [verificationCode, setVerificationCode] = useState("");
-  const [emailVerified, setEmailVerified] = useState(false);
 
   useEffect(() => {
     const fetchHotel = async () => {
@@ -35,45 +32,26 @@ const BookingPage = () => {
     fetchHotel();
   }, [id]);
 
-  const handleSendVerificationCode = () => {
-    if (!email) {
-      setModal({ isOpen: true, message: "Please enter a valid email address.", type: "error" });
-      return;
-    }
-    // Mock email sending: Generate a 6-digit code
-    const code = Math.floor(100000 + Math.random() * 900000).toString();
-    localStorage.setItem('verificationCode_' + email, code); // Store code locally
-    localStorage.setItem('codeExpiry_' + email, Date.now() + 15 * 60 * 1000); // Expires in 15 minutes
-    setIsVerifyingEmail(true);
-    setModal({
-      isOpen: true,
-      message: `A verification code has been sent to ${email}. Code (for demo): ${code}`,
-      type: "success",
-    });
-  };
-
-  const handleVerifyCode = () => {
-    const storedCode = localStorage.getItem('verificationCode_' + email);
-    const expiry = localStorage.getItem('codeExpiry_' + email);
-    if (expiry && Date.now() > expiry) {
-      localStorage.removeItem('verificationCode_' + email);
-      localStorage.removeItem('codeExpiry_' + email);
-      setModal({ isOpen: true, message: "Verification code has expired.", type: "error" });
-      return;
-    }
-    if (verificationCode === storedCode) {
-      setEmailVerified(true);
-      setIsVerifyingEmail(false);
-      setModal({ isOpen: true, message: "Email verified successfully!", type: "success" });
-    } else {
-      setModal({ isOpen: true, message: "Invalid verification code.", type: "error" });
-    }
-  };
-
   const handleBooking = async (event) => {
     event.preventDefault();
-    if (!emailVerified) {
-      setModal({ isOpen: true, message: "Please verify your email before booking.", type: "error" });
+
+    // Validate dates
+    if (!checkInDate || !checkOutDate) {
+      setModal({
+        isOpen: true,
+        message: "Please select both check-in and check-out dates.",
+        type: "error",
+      });
+      return;
+    }
+
+    const nights = calculateNights();
+    if (nights <= 0) {
+      setModal({
+        isOpen: true,
+        message: "Please select valid check-in and check-out dates.",
+        type: "error",
+      });
       return;
     }
 
@@ -87,9 +65,9 @@ const BookingPage = () => {
       phoneNumber: event.target.phoneNumber.value,
       checkInDate,
       checkOutDate,
+      nights,
       specialRequests: event.target.specialRequests.value,
-      bookingPrice: calculateNights() * (hotel.rooms[parseInt(roomType.replace("room", ""), 10)]?.price || 0),
-      emailVerified: true, // Include verification status
+      bookingPrice: nights * (hotel.rooms[parseInt(roomType.replace("room", ""), 10)]?.price || 0)
     };
 
     try {
@@ -106,7 +84,17 @@ const BookingPage = () => {
           message: "Booking Successful! Proceeding to payment.",
           type: "success",
         });
-        setTimeout(() => navigate("/hotels/payment", { state: { bookingData, amount: bookingData.bookingPrice } }), 2000);
+        // Navigate to payment page with booking data
+        setTimeout(() => {
+          navigate("/payment", { 
+            state: { 
+              bookingData, 
+              amount: bookingData.bookingPrice,
+              hotelName: hotel.name,
+              roomType: bookingData.roomType
+            } 
+          });
+        }, 2000);
       } else {
         setModal({
           isOpen: true,
@@ -201,60 +189,20 @@ const BookingPage = () => {
               required
             />
           </div>
-          <div className="md:col-span-2">
+          <div>
             <label htmlFor="email" className="block text-gray-700 font-medium mb-1">
               Email Address
             </label>
-            <div className="flex items-center space-x-4">
-              <input
-                type="email"
-                id="email"
-                name="email"
-                placeholder="Enter your email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
-                required
-                disabled={emailVerified}
-              />
-              {!emailVerified && !isVerifyingEmail && (
-                <button
-                  type="button"
-                  onClick={handleSendVerificationCode}
-                  className="bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition"
-                >
-                  Verify Email
-                </button>
-              )}
-            </div>
-            {isVerifyingEmail && (
-              <div className="mt-4">
-                <label htmlFor="verificationCode" className="block text-gray-700 font-medium mb-1">
-                  Verification Code
-                </label>
-                <div className="flex items-center space-x-4">
-                  <input
-                    type="text"
-                    id="verificationCode"
-                    value={verificationCode}
-                    onChange={(e) => setVerificationCode(e.target.value)}
-                    placeholder="Enter the 6-digit code"
-                    className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
-                    required
-                  />
-                  <button
-                    type="button"
-                    onClick={handleVerifyCode}
-                    className="bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 transition"
-                  >
-                    Submit Code
-                  </button>
-                </div>
-              </div>
-            )}
-            {emailVerified && (
-              <p className="text-green-600 mt-2">Email Verified ✓</p>
-            )}
+            <input
+              type="email"
+              id="email"
+              name="email"
+              placeholder="Enter your email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+              required
+            />
           </div>
           <div>
             <label htmlFor="phoneNumber" className="block text-gray-700 font-medium mb-1">
@@ -279,6 +227,7 @@ const BookingPage = () => {
               name="checkInDate"
               value={checkInDate}
               onChange={(e) => setCheckInDate(e.target.value)}
+              min={new Date().toISOString().split('T')[0]}
               className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
               required
             />
@@ -293,6 +242,7 @@ const BookingPage = () => {
               name="checkOutDate"
               value={checkOutDate}
               onChange={(e) => setCheckOutDate(e.target.value)}
+              min={checkInDate || new Date().toISOString().split('T')[0]}
               className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
               required
             />
@@ -332,9 +282,9 @@ const BookingPage = () => {
             <button
               type="submit"
               className="bg-blue-600 text-white py-3 px-8 rounded-md hover:bg-blue-700 transition font-semibold shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
-              disabled={!calculateNights() || !emailVerified}
+              disabled={!calculateNights()}
             >
-              Confirm Booking
+              Proceed to Payment
             </button>
           </div>
         </form>
