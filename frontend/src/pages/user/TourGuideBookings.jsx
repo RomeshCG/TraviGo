@@ -85,14 +85,15 @@ const TourGuideBookings = () => {
                       <td className="p-3">{booking.country ?? '-'}</td>
                       <td className="p-3">
                         <span className={`px-2 py-1 rounded text-xs font-semibold ${
-                          booking.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                          booking.status === 'confirmed' ? 'bg-green-100 text-green-800' :
-                          booking.status === 'cancelled' ? 'bg-gray-200 text-gray-600' :
-                          booking.status === 'approved' ? 'bg-blue-100 text-blue-800' :
-                          booking.status === 'rejected' ? 'bg-red-100 text-red-800' :
+                          (booking.bookingStatus || booking.status) === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                          (booking.bookingStatus || booking.status) === 'confirmed' ? 'bg-green-100 text-green-800' :
+                          (booking.bookingStatus || booking.status) === 'cancelled' ? 'bg-gray-200 text-gray-600' :
+                          (booking.bookingStatus || booking.status) === 'approved' ? 'bg-blue-100 text-blue-800' :
+                          (booking.bookingStatus || booking.status) === 'rejected' ? 'bg-red-100 text-red-800' :
+                          (booking.bookingStatus || booking.status) === 'completed' ? 'bg-blue-100 text-blue-800' :
                           'bg-gray-100 text-gray-800'
                         }`}>
-                          {booking.status}
+                          {booking.bookingStatus || booking.status}
                         </span>
                       </td>
                       <td className="p-3">{booking.totalPrice !== undefined ? `$${Number(booking.totalPrice).toFixed(2)}` : '-'}</td>
