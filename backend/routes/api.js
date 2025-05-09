@@ -158,7 +158,7 @@ router.post('/login', async (req, res) => {
     const token = jwt.sign(
       { id: existingUser._id, username: existingUser.username },
       JWT_SECRET,
-      { expiresIn: '1h' }
+      { expiresIn: '24h' }
     );
     const userResponse = {
       _id: existingUser._id,
@@ -379,7 +379,7 @@ router.post('/service-provider/login', async (req, res) => {
     const token = jwt.sign(
       { id: existingProvider._id, email: existingProvider.email, providerType: existingProvider.providerType },
       JWT_SECRET,
-      { expiresIn: '1h' }
+      { expiresIn: '24h' }
     );
     const providerResponse = {
       _id: existingProvider._id,
@@ -1195,7 +1195,7 @@ router.post('/admin/login', async (req, res) => {
     const token = jwt.sign(
       { id: admin._id, email: admin.email, role: 'admin' },
       JWT_SECRET,
-      { expiresIn: '1h' }
+      { expiresIn: '24h' }
     );
     const adminResponse = {
       _id: admin._id,
@@ -1325,7 +1325,7 @@ router.post('/api/admin/generate-registration-token', isAdmin, async (req, res) 
     const registrationToken = jwt.sign(
       { issuer: req.adminId, purpose: 'admin-registration' },
       JWT_SECRET,
-      { expiresIn: '1h' }
+      { expiresIn: '24h' }
     );
     res.status(200).json({ token: registrationToken });
   } catch (error) {

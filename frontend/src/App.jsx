@@ -1,10 +1,12 @@
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react';
+import { Elements } from '@stripe/react-stripe-js';
+import { loadStripe } from '@stripe/stripe-js';
 import VehicleProviderRegister from './pages/VehicleProviderRegister';
 import ServiceProviderLogin from './pages/ServiceProviderLogin';
-import HotelProviderDashboard from './pages/hotel/HotelProviderDashboard';
+import Dashboard from './pages/hotel/Dashboard';
 import VehicleProviderDashboard from './pages/vehicle/VehicleProviderDashboard';
-import TourGuideDashboard from  './pages/tourguide/TourGuideDashboard';
+import TourGuideDashboard from './pages/tourguide/TourGuideDashboard';
 import TourGuideCreatePackage from './pages/tourguide/TourGuideCreatePackage';
 import AboutUs from './pages/AboutUs';
 import ContactUs from './pages/ContactUs';
@@ -51,6 +53,9 @@ import TourGuideReports from './pages/Admin/TourGuideReports';
 import UserTopBar from './components/UserTopBar';
 import TourGuideBookings from './pages/user/TourGuideBookings';
 
+// Load Stripe
+const stripePromise = loadStripe(import.meta.env.VITE_REACT_APP_STRIPE_PUBLISHABLE_KEY);
+
 // Protected Route Component for Users
 const ProtectedRoute = ({ children }) => {
     const token = localStorage.getItem('token');
@@ -59,7 +64,7 @@ const ProtectedRoute = ({ children }) => {
     useEffect(() => {
         const verifyToken = async () => {
             try {
-                const response = await fetch('/api/verify-token', {
+                const response = await fetch('/api/bookings/verify-token', {
                     headers: { Authorization: `Bearer ${token}` },
                 });
                 if (response.ok) {
@@ -118,7 +123,7 @@ const ProtectedAdminRoute = ({ children }) => {
 };
 
 // Protected Route Component for Service Providers
-const ProtectedProviderRoute = ({ children }) => {
+const ProtectedProviderRoute = ({ children, allowedProviderType }) => {
     const token = localStorage.getItem('providerToken');
     const [isAuthenticated, setIsAuthenticated] = useState(null);
 
@@ -128,7 +133,8 @@ const ProtectedProviderRoute = ({ children }) => {
                 const response = await fetch('/api/verify-provider-token', {
                     headers: { Authorization: `Bearer ${token}` },
                 });
-                if (response.ok) {
+                const data = await response.json();
+                if (response.ok && (!allowedProviderType || data.provider.providerType === allowedProviderType)) {
                     setIsAuthenticated(true);
                 } else {
                     setIsAuthenticated(false);
@@ -143,7 +149,7 @@ const ProtectedProviderRoute = ({ children }) => {
         };
         if (token) verifyToken();
         else setIsAuthenticated(false);
-    }, [token]);
+    }, [token, allowedProviderType]);
 
     if (isAuthenticated === null) return <div>Loading...</div>;
     if (!isAuthenticated) return <Navigate to="/service-provider/login" replace />;
@@ -156,10 +162,11 @@ function AppContent() {
     const [username, setUsername] = useState('');
 
     useEffect(() => {
+        console.log(`Current route: ${location.pathname}`);
         const token = localStorage.getItem('token');
         const user = localStorage.getItem('user');
         if (token && user) {
-            fetch('/api/verify-token', {
+            fetch('/api/bookings/verify-token', {
                 headers: { Authorization: `Bearer ${token}` },
             })
                 .then(res => {
@@ -206,7 +213,6 @@ function AppContent() {
             {isAuthenticated && username && !hideUserTopBar && (
                 <UserTopBar username={username} onLogout={handleLogout} />
             )}
-            {/* Main header would go here */}
             <Routes>
                 <Route path="/admin/register" element={<AdminRegister />} />
                 <Route path="/" element={<Home />} />
@@ -230,7 +236,9 @@ function AppContent() {
                     path="/hotels/payment"
                     element={
                         <ProtectedRoute>
-                            <PaymentPage />
+                            <Elements stripe={stripePromise}>
+                                <PaymentPage />
+                            </Elements>
                         </ProtectedRoute>
                     }
                 />
@@ -306,7 +314,6 @@ function AppContent() {
                         </ProtectedRoute>
                     }
                 />
-                {/* Vehicle Rental Routes */}
                 <Route path="/vehicles" element={<VehiclesPage />} />
                 <Route path="/vehicles/:id" element={<VehicleDetailPage />} />
                 <Route
@@ -317,15 +324,6 @@ function AppContent() {
                         </ProtectedRoute>
                     }
                 />
-                <Route
-                    path="/payment"
-                    element={
-                        <ProtectedRoute>
-                            <PaymentPage />
-                        </ProtectedRoute>
-                    }
-                />
-                {/* Admin Routes */}
                 <Route path="/admin/login" element={<AdminLogin />} />
                 <Route
                     path="/admin/dashboard"
@@ -409,7 +407,7 @@ function AppContent() {
                 <Route
                     path="/tour-guide/dashboard"
                     element={
-                        <ProtectedProviderRoute>
+                        <ProtectedProviderRoute allowedProviderType="TourGuide">
                             <TourGuideDashboard />
                         </ProtectedProviderRoute>
                     }
@@ -417,13 +415,35 @@ function AppContent() {
                 <Route
                     path="/tour-guide/create-package"
                     element={
-                        <ProtectedProviderRoute>
+                        <ProtectedProviderRoute allowedProviderType="TourGuide">
                             <TourGuideCreatePackage />
                         </ProtectedProviderRoute>
                     }
                 />
-                <Route path="/pages/hotel/dashboard" element={<HotelProviderDashboard />} />
-                <Route path="/pages/vehicle/dashboard" element={<VehicleProviderDashboard />} />
+                <Route
+                    path="/pages/hotel/dashboard"
+                    element={
+                        <ProtectedProviderRoute allowedProviderType="HotelProvider">
+                            <Dashboard />
+                        </ProtectedProviderRoute>
+                    }
+                />
+                <Route
+                    path="/dashboard"
+                    element={
+                        <ProtectedProviderRoute allowedProviderType="HotelProvider">
+                            <Dashboard />
+                        </ProtectedProviderRoute>
+                    }
+                />
+                <Route
+                    path="/pages/vehicle/dashboard"
+                    element={
+                        <ProtectedProviderRoute allowedProviderType="VehicleProvider">
+                            <VehicleProviderDashboard />
+                        </ProtectedProviderRoute>
+                    }
+                />
                 <Route path="/tour-guides" element={<TourGuidess />} />
                 <Route
                     path="/book-tour-package/:guideId/:packageId"
@@ -449,6 +469,7 @@ function AppContent() {
                         </ProtectedRoute>
                     }
                 />
+                <Route path="*" element={<div>404 - Page Not Found</div>} />
             </Routes>
         </>
     );

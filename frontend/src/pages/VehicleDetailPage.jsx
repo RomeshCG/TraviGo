@@ -66,6 +66,11 @@ const VehicleDetailPage = () => {
   } = vehicle;
 
   const handleHireNow = () => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      navigate('/login', { state: { from: `/vehicles/${id}` } });
+      return;
+    }
     navigate('/rent', { state: { totalPrice: price, vehicle } });
   };
 
@@ -82,7 +87,7 @@ const VehicleDetailPage = () => {
       id: 2,
       author: 'Sarah Smith',
       rating: 4,
-      comment: 'Really enjoyed driving this car. It’s perfect for city trips, though I wish it had a bit more trunk space. Still a great choice!',
+      comment: 'Really enjoyed driving this car. It\'s perfect for city trips, though I wish it had a bit more trunk space. Still a great choice!',
       date: 'September 28, 2024',
     },
     {

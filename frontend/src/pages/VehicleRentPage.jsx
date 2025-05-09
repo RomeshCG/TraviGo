@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocation, Link, useNavigate } from 'react-router-dom';
 import MessageBox from '../components/MessageBox';
 import Header from '../components/Header';
@@ -7,6 +7,14 @@ const VehicleRentPage = () => {
   const { state } = useLocation();
   const vehicle = state?.vehicle;
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      navigate('/login', { state: { from: '/rent' } });
+      return;
+    }
+  }, [navigate]);
 
   const [formData, setFormData] = useState({
     name: '',

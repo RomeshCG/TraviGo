@@ -1,243 +1,166 @@
-import React, { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import SimpleHeader from "../components/SimpleHeader";
-import Footer from "../components/Footer";
+import { useState, useEffect } from "react";
+     import { useParams, useNavigate } from "react-router-dom";
+     import Slider from "react-slick";
+     import "slick-carousel/slick/slick.css";
+     import "slick-carousel/slick/slick-theme.css";
 
-const HotelDetails = () => {
-  const { id } = useParams();
-  const navigate = useNavigate();
+     function HotelDetails() {
+       const { id } = useParams();
+       const navigate = useNavigate();
+       const [accommodation, setAccommodation] = useState(null);
+       const [loading, setLoading] = useState(true);
+       const [error, setError] = useState(null);
+       const [selectedRoomIndex, setSelectedRoomIndex] = useState(null);
 
-  const [hotel, setHotel] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [selectedRoomImages, setSelectedRoomImages] = useState([]);
-  const [reviews] = useState([
-    { id: 1, user: "John D.", rating: 5, comment: "Stunning views and excellent service!" },
-    { id: 2, user: "Sarah M.", rating: 4, comment: "Great ambiance, Wi-Fi could improve." },
-  ]);
+       useEffect(() => {
+         const fetchAccommodation = async () => {
+           try {
+             const response = await fetch(`http://localhost:5000/api/hotels/${id}`);
+             if (!response.ok) {
+               throw new Error(`Accommodation not found: ${response.status}`);
+             }
+             const data = await response.json();
+             console.log(`Fetched hotel ID: ${data._id}`);
+             setAccommodation(data);
+           } catch (err) {
+             setError(err.message);
+           } finally {
+             setLoading(false);
+           }
+         };
+         fetchAccommodation();
+       }, [id]);
 
-  useEffect(() => {
-    const fetchHotel = async () => {
-      try {
-        const response = await fetch(`/api/hotels/${id}`);
-        if (!response.ok) {
-          throw new Error(`Hotel not found (status: ${response.status})`);
-        }
-        const data = await response.json();
-        setHotel(data);
-        setSelectedRoomImages(data.rooms?.map((room) => room.images?.[0] || "") || []);
-      } catch (error) {
-        console.error("Error fetching hotel:", error);
-        setError(error.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchHotel();
-  }, [id]);
+       const handleRoomSelect = (roomIndex) => {
+         try {
+           const token = localStorage.getItem('token');
+           console.log(`Token present: ${!!token}`);
+           setSelectedRoomIndex(roomIndex);
+           const bookingPath = `/hotels/booking/${id}/room${roomIndex}`;
+           console.log(`Navigating to: ${bookingPath}`);
+           navigate(bookingPath);
+         } catch (err) {
+           console.error("Navigation error:", err);
+         }
+       };
 
-  if (loading) {
-    return <h2 className="text-center text-gray-600 text-2xl font-semibold py-10">Loading...</h2>;
-  }
+       // Slider settings for image carousel
+       const sliderSettings = {
+         dots: true,
+         infinite: true,
+         speed: 500,
+         slidesToShow: 1,
+         slidesToScroll: 1,
+         autoplay: true,
+         autoplaySpeed: 3000,
+       };
 
-  if (error || !hotel) {
-    return <h2 className="text-center text-red-600 text-2xl font-semibold py-10">{error || "Hotel Not Found"}</h2>;
-  }
+       if (loading) {
+         return <div className="text-center text-gray-600 text-2xl font-semibold py-10">Loading...</div>;
+       }
 
-  const {
-    name: Name,
-    image: Image,
-    imageArray: ImageArray = [],
-    location: Location,
-    description: desc,
-    rooms = [],
-  } = hotel;
+       if (error || !accommodation) {
+         return <div className="text-center text-red-600 text-2xl font-semibold py-10">{error || "Accommodation Not Found"}</div>;
+       }
 
-  const allImages = [Image, ...(ImageArray || [])];
-  const mainImage = allImages[currentImageIndex] || Image;
+       return (
+         <div className="min-h-screen bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
+           <div className="max-w-7xl mx-auto bg-white rounded-xl shadow-xl overflow-hidden">
+             {/* Header */}
+             <div className="bg-gradient-to-r from-blue-600 to-blue-800 p-6">
+               <h1 className="text-3xl md:text-4xl font-bold text-white">
+                 {accommodation.name}
+               </h1>
+               <p className="text-blue-100 mt-2">{accommodation.location}</p>
+             </div>
 
-  const handleBooking = (roomIndex) => {
-    navigate(`/hotels/booking/${id}/room${roomIndex}`);
-  };
+             <div className="p-8">
+               <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                 {/* Image Carousel */}
+                 <div className="lg:col-span-2">
+                   <Slider {...sliderSettings}>
+                     <div>
+                       <img
+                         src={accommodation.image || '/images/placeholder.jpg'}
+                         alt={accommodation.name}
+                         className="w-full h-96 object-cover rounded-lg"
+                       />
+                     </div>
+                     {accommodation.imageArray.map((img, index) => (
+                       <div key={index}>
+                         <img
+                           src={img || '/images/placeholder.jpg'}
+                           alt={`Additional view ${index + 1}`}
+                           className="w-full h-96 object-cover rounded-lg"
+                         />
+                       </div>
+                     ))}
+                   </Slider>
+                 </div>
 
-  const handleNextImage = () => {
-    setCurrentImageIndex((prev) => (prev >= allImages.length - 1 ? 0 : prev + 1));
-  };
+                 {/* Details */}
+                 <div>
+                   <h2 className="text-2xl font-semibold text-gray-800 mb-4">Details</h2>
+                   <div className="space-y-3">
+                     <p className="text-gray-700"><strong>Name:</strong> {accommodation.name}</p>
+                     <p className="text-gray-700"><strong>Price:</strong> ${accommodation.price}/night</p>
+                     <p className="text-gray-700"><strong>Description:</strong> {accommodation.description}</p>
+                     {accommodation.phone && (
+                       <p className="text-gray-700"><strong>Phone:</strong> {accommodation.phone}</p>
+                     )}
+                     {accommodation.email && (
+                       <p className="text-gray-700"><strong>Email:</strong> {accommodation.email}</p>
+                     )}
+                   </div>
+                 </div>
+               </div>
 
-  const handlePrevImage = () => {
-    setCurrentImageIndex((prev) => (prev <= 0 ? allImages.length - 1 : prev - 1));
-  };
+               {/* Rooms */}
+               <h2 className="text-2xl font-semibold text-gray-800 mt-10 mb-6">Available Rooms</h2>
+               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                 {accommodation.rooms.map((room, index) => (
+                   <div key={index} className="bg-gray-50 p-6 rounded-lg shadow-md hover:shadow-lg transition">
+                     <h3 className="text-xl font-semibold text-gray-800">{room.type}</h3>
+                     <p className="text-gray-600 mt-2"><strong>Price:</strong> ${room.price}/night</p>
+                     <p className="text-gray-600 mt-1"><strong>Features:</strong> {room.features}</p>
+                     <p className="text-gray-600 mt-1"><strong>Amenities:</strong> {room.amenities}</p>
+                     {room.size && <p className="text-gray-600 mt-1"><strong>Size:</strong> {room.size}</p>}
+                     {room.occupancy && <p className="text-gray-600 mt-1"><strong>Occupancy:</strong> {room.occupancy}</p>}
+                     {room.perks && <p className="text-gray-600 mt-1"><strong>Perks:</strong> {room.perks}</p>}
+                     <div className="mt-4 grid grid-cols-2 gap-2">
+                       {room.images.map((img, imgIndex) => (
+                         <img
+                           key={imgIndex}
+                           src={img || '/images/placeholder.jpg'}
+                           alt={`Room view ${imgIndex + 1}`}
+                           className="w-full h-24 object-cover rounded-md"
+                         />
+                       ))}
+                     </div>
+                     <button
+                       onClick={() => handleRoomSelect(index)}
+                       className="mt-4 w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition font-semibold"
+                     >
+                       Book This Room
+                     </button>
+                   </div>
+                 ))}
+               </div>
 
-  return (
-    <>
-      <SimpleHeader />
-      <div className="min-h-screen bg-gray-50 py-12">
-        <div className="max-w-6xl mx-auto">
-          {/* Main Image Gallery */}
-          <div className="relative mb-10 rounded-xl overflow-hidden shadow-lg">
-            <img src={mainImage} alt={Name} className="w-full h-[500px] object-cover" />
-            {allImages.length > 1 && (
-              <>
-                <button
-                  onClick={handlePrevImage}
-                  className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-gray-800 text-white p-3 rounded-full hover:bg-gray-900 transition"
-                >
-                  ←
-                </button>
-                <button
-                  onClick={handleNextImage}
-                  className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-gray-800 text-white p-3 rounded-full hover:bg-gray-900 transition"
-                >
-                  →
-                </button>
-                <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-3">
-                  {allImages.map((_, idx) => (
-                    <span
-                      key={idx}
-                      className={`w-3 h-3 rounded-full ${idx === currentImageIndex ? "bg-white" : "bg-gray-400"}`}
-                    />
-                  ))}
-                </div>
-              </>
-            )}
-          </div>
+               {/* Back Button */}
+               <button
+                 onClick={() => navigate('/hotels')}
+                 className="mt-8 text-blue-600 hover:underline font-semibold flex items-center"
+               >
+                 <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
+                 </svg>
+                 Back to Accommodations
+               </button>
+             </div>
+           </div>
+         </div>
+       );
+     }
 
-          {/* Hotel Name and Location */}
-          <div className="text-center mb-12">
-            <h1 className="text-5xl font-bold text-gray-800">{Name}</h1>
-            <p className="text-gray-600 text-lg mt-2">{Location}</p>
-          </div>
-
-          {/* Hotel Description */}
-          <div className="mb-16 text-center">
-            <p className="text-gray-700 text-lg max-w-3xl mx-auto leading-relaxed">{desc}</p>
-          </div>
-
-          {/* Room Details Section */}
-          <h2 className="text-3xl font-semibold text-gray-800 mb-8 text-center">Rooms & Suites</h2>
-          {rooms.length > 0 ? (
-            rooms.map((room, index) => (
-              <div key={index} className="mb-12 bg-white p-8 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300">
-                <h3 className="text-2xl font-semibold text-gray-800 mb-6">{room.type || "Unnamed Room"}</h3>
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                  <div>
-                    {room.images?.length > 0 ? (
-                      <>
-                        <img
-                          src={selectedRoomImages[index] || room.images[0]}
-                          alt={room.type}
-                          className="w-full h-[450px] object-cover rounded-lg mb-6 shadow-md"
-                        />
-                        <div className="flex gap-3 overflow-x-auto">
-                          {room.images.map((img, imgIndex) => (
-                            <img
-                              key={imgIndex}
-                              src={img}
-                              alt={`${room.type} - ${imgIndex + 1}`}
-                              className={`w-24 h-24 object-cover rounded-md cursor-pointer ${
-                                selectedRoomImages[index] === img ? "border-2 border-blue-600" : "border border-gray-300"
-                              } hover:border-blue-500 transition`}
-                              onClick={() =>
-                                setSelectedRoomImages((prev) => {
-                                  const newImages = [...prev];
-                                  newImages[index] = img;
-                                  return newImages;
-                                })
-                              }
-                            />
-                          ))}
-                        </div>
-                      </>
-                    ) : (
-                      <p className="text-gray-600">No images available</p>
-                    )}
-                  </div>
-                  <div className="flex flex-col justify-between">
-                    <div>
-                      <p className="text-gray-700 mb-3">
-                        <strong>Features:</strong> {room.features || "N/A"}
-                      </p>
-                      <p className="text-gray-700 mb-3">
-                        <strong>Amenities:</strong> {room.amenities || "N/A"}
-                      </p>
-                      <p className="text-gray-700 mb-3">
-                        <strong>Size:</strong> {room.size || "N/A"}
-                      </p>
-                      <p className="text-gray-700 mb-3">
-                        <strong>Occupancy:</strong> {room.occupancy || "N/A"}
-                      </p>
-                      <p className="text-gray-700 mb-4">
-                        <strong>Perks:</strong> {room.perks || "N/A"}
-                      </p>
-                    </div>
-                    <div className="flex justify-between items-center mt-4">
-                      <p className="text-gray-800 font-semibold text-xl">${room.price || "N/A"}/night</p>
-                      <button
-                        onClick={() => handleBooking(index)}
-                        className="bg-blue-600 text-white py-2 px-8 rounded-lg hover:bg-blue-700 transition font-semibold shadow-md"
-                      >
-                        Book Now
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))
-          ) : (
-            <p className="text-gray-600 text-center">No rooms available for this hotel.</p>
-          )}
-
-          {/* Hotel Facilities */}
-          <h2 className="text-3xl font-semibold text-gray-800 mb-8 text-center">Hotel Facilities</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
-            <div className="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300">
-              <h3 className="text-xl font-semibold text-gray-800 mb-2">Swimming Pool</h3>
-              <p className="text-gray-600">Enjoy our infinity pool with ocean views.</p>
-            </div>
-            <div className="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300">
-              <h3 className="text-xl font-semibold text-gray-800 mb-2">Spa & Wellness</h3>
-              <p className="text-gray-600">Relax with a range of spa treatments.</p>
-            </div>
-            <div className="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300">
-              <h3 className="text-xl font-semibold text-gray-800 mb-2">Dining</h3>
-              <p className="text-gray-600">Savor local and international cuisine.</p>
-            </div>
-          </div>
-
-          {/* Why Choose Us */}
-          <h2 className="text-3xl font-semibold text-gray-800 mb-8 text-center">Why Choose Us</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16">
-            <div className="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300">
-              <p className="text-gray-700">
-                <strong>Prime Location:</strong> Steps away from Galle’s historic fort and beaches.
-              </p>
-            </div>
-            <div className="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300">
-              <p className="text-gray-700">
-                <strong>Exceptional Service:</strong> 24/7 concierge and personalized attention.
-              </p>
-            </div>
-          </div>
-
-          {/* Reviews Section */}
-          <h2 className="text-3xl font-semibold text-gray-800 mb-8 text-center">Guest Reviews</h2>
-          <div className="bg-white p-8 rounded-xl shadow-lg">
-            {reviews.map((review) => (
-              <div key={review.id} className="mb-6 pb-6 border-b border-gray-200 last:border-b-0">
-                <div className="flex items-center mb-3">
-                  <span className="text-gray-800 font-semibold text-lg">{review.user}</span>
-                  <span className="ml-3 text-yellow-500 text-lg">{Array(review.rating).fill("★").join("")}</span>
-                </div>
-                <p className="text-gray-600">{review.comment}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-      <Footer />
-    </>
-  );
-};
-
-export default HotelDetails;
+     export default HotelDetails;

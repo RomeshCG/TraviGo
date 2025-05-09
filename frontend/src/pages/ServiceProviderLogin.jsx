@@ -26,7 +26,7 @@ const ServiceProviderLogin = () => {
             const { providerType } = data.provider;
             let redirectPath = '';
             if (providerType === 'HotelProvider') {
-              redirectPath = '/pages/hotel/dashboard';
+              redirectPath = '/dashboard';
             } else if (providerType === 'TourGuide') {
               redirectPath = '/tour-guide/dashboard';
             } else if (providerType === 'VehicleProvider') {
@@ -62,16 +62,15 @@ const ServiceProviderLogin = () => {
 
       const data = await response.json();
       if (response.ok) {
-        console.log('Login response:', data); // Debug
+        console.log('Login response:', data);
         setSuccess('Login successful! Redirecting...');
-        // Store both token and provider in localStorage
         localStorage.setItem('providerToken', data.token);
         localStorage.setItem('provider', JSON.stringify(data.provider));
 
         const { providerType } = data.provider;
         let redirectPath = '';
         if (providerType === 'HotelProvider') {
-          redirectPath = '/pages/hotel/dashboard';
+          redirectPath = '/dashboard';
         } else if (providerType === 'TourGuide') {
           redirectPath = '/tour-guide/dashboard';
         } else if (providerType === 'VehicleProvider') {
@@ -81,7 +80,7 @@ const ServiceProviderLogin = () => {
           return;
         }
 
-        console.log('Navigating to:', redirectPath); // Debug
+        console.log('Navigating to:', redirectPath);
         setTimeout(() => {
           navigate(redirectPath, { replace: true });
         }, 2000);
@@ -107,7 +106,7 @@ const ServiceProviderLogin = () => {
           <div className="text-white mb-8 lg:mb-0 lg:w-1/2">
             <h1 className="text-4xl lg:text-5xl font-bold mb-4">PARTNER WITH TRAVIGO</h1>
             <p className="text-lg">
-              Earn more with TraviGo Partner Programe.
+              Earn more with TraviGo Partner Programme.
             </p>
           </div>
           <div className="bg-white bg-opacity-90 rounded-lg p-8 w-full max-w-md">
