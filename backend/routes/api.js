@@ -279,6 +279,17 @@ router.post('/contact', async (req, res) => {
   }
 });
 
+// ADMIN: Get all contact form inquiries
+router.get('/admin/contact-inquiries', isAdmin, async (req, res) => {
+  try {
+    const inquiries = await ContactMessage.find().sort({ createdAt: -1 });
+    res.status(200).json(inquiries);
+  } catch (error) {
+    console.error('Error fetching contact inquiries:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 // Service provider registration
 router.post('/service-provider/register', async (req, res) => {
   const { name, email, password, providerType } = req.body;

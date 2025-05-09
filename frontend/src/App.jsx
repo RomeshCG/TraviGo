@@ -53,6 +53,7 @@ import TourGuideReports from './pages/Admin/TourGuideReports';
 import UserTopBar from './components/UserTopBar';
 import TourGuideBookings from './pages/user/TourGuideBookings';
 import ReviewManagement from './pages/Admin/ReviewManagement';
+import ContactInquiries from './pages/Admin/ContactInquiries';
 
 // Load Stripe
 const stripePromise = loadStripe(import.meta.env.VITE_REACT_APP_STRIPE_PUBLISHABLE_KEY);
@@ -403,6 +404,14 @@ function AppContent() {
                     element={
                         <ProtectedAdminRoute>
                             <ReviewManagement />
+                        </ProtectedAdminRoute>
+                    }
+                />
+                <Route
+                    path="/admin/contact-inquiries"
+                    element={
+                        <ProtectedAdminRoute>
+                            <ContactInquiries />
                         </ProtectedAdminRoute>
                     }
                 />
