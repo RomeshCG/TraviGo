@@ -253,6 +253,20 @@ const SidebarAdmin = () => {
             </li>
             <li>
               <NavLink
+                to="/admin/review-management"
+                className={({ isActive }) =>
+                  `flex items-center space-x-2 p-4 hover:bg-pink-100 hover:text-black ${
+                    isActive ? "bg-pink-100 text-black" : ""
+                  }`
+                }
+                onClick={() => setIsOpen(false)}
+              >
+                <FaFileAlt className="w-5 h-5" />
+                <span>Review Management</span>
+              </NavLink>
+            </li>
+            <li>
+              <NavLink
                 to="/admin/register"
                 className={({ isActive }) =>
                   `flex items-center space-x-2 p-4 hover:bg-pink-100 hover:text-black ${

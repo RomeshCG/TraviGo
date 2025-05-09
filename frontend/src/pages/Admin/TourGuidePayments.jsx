@@ -195,8 +195,11 @@ const TourGuidePayments = () => {
                           <td className="p-2 text-xs">
                             {req.bookings && req.bookings.length > 0 ? (
                               <ul className="list-disc pl-4">
-                                {req.bookings.map((b) => (
-                                  <li key={b._id}>{b._id.slice(-6)} (${Number(b.cashoutAmount).toFixed(2)})</li>
+                                {req.bookings.map((b, idx) => (
+                                  <li key={b._id || idx}>
+                                    {(b._id ? b._id.slice(-6) : '-') +
+                                      ' ($' + Number(b.cashoutAmount || 0).toFixed(2) + ')'}
+                                  </li>
                                 ))}
                               </ul>
                             ) : '-'}

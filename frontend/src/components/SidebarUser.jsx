@@ -9,7 +9,7 @@ import {
   FaHotel,
   FaCar,
   FaUserFriends,
-    FaSignOutAlt,
+  FaSignOutAlt,
 } from 'react-icons/fa';
 
 const BACKEND_URL = 'http://localhost:5000';
@@ -52,9 +52,9 @@ const SidebarUser = () => {
   };
 
   return (
-    <div className="w-64 h-screen bg-gradient-to-b from-gray-900 to-gray-800 text-white shadow-lg flex flex-col">
+    <div className="fixed top-0 left-0 w-64 h-screen bg-gradient-to-b from-gray-900 to-gray-800 text-white shadow-lg flex flex-col z-40">
       {/* Header Section */}
-      <div className="p-6">
+      <div className="p-6 flex-shrink-0">
         <div className="mt-6 flex items-center group">
           <div className="w-12 h-12 rounded-full mr-3 flex items-center justify-center transition-transform group-hover:scale-105">
             <img
@@ -71,7 +71,7 @@ const SidebarUser = () => {
       </div>
 
       {/* Navigation Links */}
-      <nav className="flex-1 px-4">
+      <nav className="flex-1 px-4 overflow-y-auto custom-scrollbar">
         <ul>
           <li className="mb-2">
             <NavLink
@@ -87,6 +87,42 @@ const SidebarUser = () => {
           </li>
           <li className="mb-2">
             <NavLink
+              to="/user/profile"
+              className={({ isActive }) =>
+                `flex items-center p-3 rounded-lg text-gray-300 hover:bg-blue-700/50 hover:text-white transition-all duration-300 ${
+                  isActive ? 'bg-gradient-to-r from-blue-600 to-blue-800 text-white' : ''
+                }`
+              }
+            >
+              <FaUserEdit className="mr-3" /> Profile
+            </NavLink>
+          </li>
+          <li className="mb-2">
+            <NavLink
+              to="/user/reviews"
+              className={({ isActive }) =>
+                `flex items-center p-3 rounded-lg text-gray-300 hover:bg-blue-700/50 hover:text-white transition-all duration-300 ${
+                  isActive ? 'bg-gradient-to-r from-blue-600 to-blue-800 text-white' : ''
+                }`
+              }
+            >
+              <FaBook className="mr-3" /> My Reviews
+            </NavLink>
+          </li>
+          <li className="mb-2">
+            <NavLink
+              to="/user/settings"
+              className={({ isActive }) =>
+                `flex items-center p-3 rounded-lg text-gray-300 hover:bg-blue-700/50 hover:text-white transition-all duration-300 ${
+                  isActive ? 'bg-gradient-to-r from-blue-600 to-blue-800 text-white' : ''
+                }`
+              }
+            >
+              <FaCog className="mr-3" /> Settings
+            </NavLink>
+          </li>
+          <li className="mb-2">
+            <NavLink
               to="/user/explore"
               className={({ isActive }) =>
                 `flex items-center p-3 rounded-lg text-gray-300 hover:bg-blue-700/50 hover:text-white transition-all duration-300 ${
@@ -97,9 +133,9 @@ const SidebarUser = () => {
               <FaGlobe className="mr-3" /> Explore Destinations
             </NavLink>
           </li>
-{/* My Booking Section with Sub-Items */}
+          {/* My Booking Section with Sub-Items */}
           <li className="mb-2">
-<div className="flex items-center p-3 rounded-lg text-gray-300 bg-blue-900/60 font-semibold">
+            <div className="flex items-center p-3 rounded-lg text-gray-300 bg-blue-900/60 font-semibold">
               <FaBook className="mr-3" /> My Booking
             </div>
             <ul className="ml-8 mt-1 space-y-1">
@@ -128,18 +164,18 @@ const SidebarUser = () => {
                 </NavLink>
               </li>
               <li>
-            <NavLink
-              to="/user/my-booking/vehicles"
-              className={({ isActive }) =>
-                `flex items-center p-2 rounded-lg text-gray-300 hover:bg-blue-700/50 hover:text-white transition-all duration-300 ${
-                  isActive ? 'bg-gradient-to-r from-blue-500 to-blue-700 text-white' : ''
-                }`
-              }
-            >
-              <FaCar className="mr-2" /> Vehicle Bookings
-            </NavLink>
-          </li>
-</ul>
+                <NavLink
+                  to="/user/my-booking/vehicles"
+                  className={({ isActive }) =>
+                    `flex items-center p-2 rounded-lg text-gray-300 hover:bg-blue-700/50 hover:text-white transition-all duration-300 ${
+                      isActive ? 'bg-gradient-to-r from-blue-500 to-blue-700 text-white' : ''
+                    }`
+                  }
+                >
+                  <FaCar className="mr-2" /> Vehicle Bookings
+                </NavLink>
+              </li>
+            </ul>
           </li>
           {/* Profile and Settings */}
           <li className="mb-2">
@@ -166,11 +202,11 @@ const SidebarUser = () => {
               <FaCog className="mr-3" /> Account Settings
             </NavLink>
           </li>
-                  </ul>
+        </ul>
       </nav>
 
       {/* Sign Out Button */}
-      <div className="p-4">
+      <div className="p-4 flex-shrink-0">
         <button
           onClick={handleSignOut}
           className="flex items-center p-3 rounded-lg text-gray-300 hover:bg-red-600/50 hover:text-white transition-all duration-300 w-full text-left"

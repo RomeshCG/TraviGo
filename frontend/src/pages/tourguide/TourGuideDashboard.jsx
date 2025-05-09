@@ -11,9 +11,10 @@ function TourGuideEarnings({ tourGuide }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showModal, setShowModal] = useState(false);
-  const [cashoutAmount, setCashoutAmount] = useState('');
   const [cashoutLoading, setCashoutLoading] = useState(false);
   const [cashoutRequested, setCashoutRequested] = useState(false);
+  const [eligibleBookings, setEligibleBookings] = useState([]);
+  const [selectedBookings, setSelectedBookings] = useState([]);
   const BASE_URL = 'http://localhost:5000';
 
   useEffect(() => {
@@ -31,9 +32,44 @@ function TourGuideEarnings({ tourGuide }) {
       });
   }, [tourGuide]);
 
+  const fetchEligibleBookings = async () => {
+    setCashoutLoading(true);
+    try {
+      const token = localStorage.getItem('providerToken');
+      const res = await fetch(`${BASE_URL}/api/tour-guide/${tourGuide._id}/tour-guide-bookings`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error('Failed to fetch bookings');
+      const allBookings = await res.json();
+      const eligible = allBookings.filter(b =>
+        b.paymentStatus === 'released' &&
+        !b.refundRequested &&
+        ['approved', 'completed'].includes(b.bookingStatus)
+      );
+      setEligibleBookings(eligible);
+    } catch {
+      setEligibleBookings([]);
+    }
+    setCashoutLoading(false);
+  };
+
+  const handleOpenCashoutModal = () => {
+    setShowModal(true);
+    setSelectedBookings([]);
+    fetchEligibleBookings();
+  };
+
+  const handleBookingCheckbox = (bookingId) => {
+    setSelectedBookings(prev =>
+      prev.includes(bookingId)
+        ? prev.filter(id => id !== bookingId)
+        : [...prev, bookingId]
+    );
+  };
+
   const handleRequestCashout = async () => {
-    if (!cashoutAmount || isNaN(Number(cashoutAmount)) || Number(cashoutAmount) <= 0) {
-      toast.error('Enter a valid amount');
+    if (!selectedBookings.length) {
+      toast.error('Select at least one trip to cash out');
       return;
     }
     setCashoutLoading(true);
@@ -46,13 +82,13 @@ function TourGuideEarnings({ tourGuide }) {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`
         },
-        body: JSON.stringify({ amount: Number(cashoutAmount) })
+        body: JSON.stringify({ bookings: selectedBookings })
       });
       if (res.ok) {
         setCashoutRequested(true);
         toast.success('Cashout request sent to admin!');
         setShowModal(false);
-        setCashoutAmount('');
+        setSelectedBookings([]);
       } else {
         const data = await res.json();
         toast.error(data.message || 'Failed to request cashout');
@@ -89,7 +125,7 @@ function TourGuideEarnings({ tourGuide }) {
         </div>
       </div>
       <button
-        onClick={() => setShowModal(true)}
+        onClick={handleOpenCashoutModal}
         disabled={cashoutLoading || cashoutRequested}
         className="bg-gradient-to-r from-green-500 to-teal-500 text-white px-6 py-2 rounded-lg shadow-md hover:from-green-600 hover:to-teal-600 transition mb-6"
       >
@@ -99,28 +135,43 @@ function TourGuideEarnings({ tourGuide }) {
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
           <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-sm">
             <h3 className="text-xl font-bold mb-4">Request Cashout</h3>
-            <label className="block mb-2 text-gray-700">Amount to cash out</label>
-            <input
-              type="number"
-              min="1"
-              max={summary.totalEarnings}
-              value={cashoutAmount}
-              onChange={e => setCashoutAmount(e.target.value)}
-              className="w-full p-2 border border-gray-300 rounded mb-4"
-              placeholder={`Max: $${summary.totalEarnings.toFixed(2)}`}
-            />
-            <div className="flex justify-end space-x-2">
-              <button
-                onClick={() => setShowModal(false)}
-                className="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300"
-                disabled={cashoutLoading}
-              >Cancel</button>
-              <button
-                onClick={handleRequestCashout}
-                className="px-4 py-2 rounded bg-green-500 text-white hover:bg-green-600"
-                disabled={cashoutLoading}
-              >{cashoutLoading ? 'Requesting...' : 'Request'}</button>
-            </div>
+            {cashoutLoading ? (
+              <div>Loading eligible trips...</div>
+            ) : eligibleBookings.length === 0 ? (
+              <div className="text-gray-600">No eligible trips for cashout.</div>
+            ) : (
+              <>
+                <label className="block mb-2 text-gray-700">Select trips to cash out:</label>
+                <div className="max-h-48 overflow-y-auto border rounded mb-4">
+                  {eligibleBookings.map(b => (
+                    <div key={b._id} className="flex items-center px-2 py-1 border-b last:border-b-0">
+                      <input
+                        type="checkbox"
+                        checked={selectedBookings.includes(b._id)}
+                        onChange={() => handleBookingCheckbox(b._id)}
+                        className="mr-2"
+                        id={`booking-${b._id}`}
+                      />
+                      <label htmlFor={`booking-${b._id}`} className="flex-1 cursor-pointer">
+                        {b.packageId?.title || 'Trip'} | {new Date(b.travelDate).toLocaleDateString()} | ${b.totalPrice?.toFixed(2)}
+                      </label>
+                    </div>
+                  ))}
+                </div>
+                <div className="flex justify-end space-x-2">
+                  <button
+                    onClick={() => setShowModal(false)}
+                    className="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300"
+                    disabled={cashoutLoading}
+                  >Cancel</button>
+                  <button
+                    onClick={handleRequestCashout}
+                    className="px-4 py-2 rounded bg-green-500 text-white hover:bg-green-600"
+                    disabled={cashoutLoading}
+                  >{cashoutLoading ? 'Requesting...' : 'Request'}</button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}
@@ -556,8 +607,13 @@ const TourGuideDashboard = () => {
   const handleReviewSubmit = async (e) => {
     e.preventDefault();
     if (!selectedBooking) return;
+    const token = localStorage.getItem('providerToken');
+    if (!token) {
+      setModalError('You must be logged in as a service provider to submit a review.');
+      setTimeout(() => window.location.href = '/service-provider/login', 1500);
+      return;
+    }
     try {
-      const token = localStorage.getItem('providerToken');
       const res = await fetch(`${BASE_URL}/api/tour-bookings/${selectedBooking._id}/review`, {
         method: 'POST',
         headers: {
@@ -566,7 +622,12 @@ const TourGuideDashboard = () => {
         },
         body: JSON.stringify({ reviewerType: 'guide', rating: review.rating, comment: review.comment }),
       });
-      if (!res.ok) throw new Error('Failed to submit review');
+      if (!res.ok) {
+        let data = {};
+        try { data = await res.json(); } catch (err) { console.error('Error parsing response JSON:', err); }
+        setModalError(data.message || 'Failed to submit review');
+        return;
+      }
       setReviewed(true);
       setShowReviewForm(false);
     } catch (err) {
@@ -829,7 +890,7 @@ const TourGuideDashboard = () => {
                                   fill="currentColor"
                                   viewBox="0 0 20 20"
                                 >
-                                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.95-.69l1.07-3.292z" />
                                 </svg>
                               ))}
                             </div>
