@@ -11,6 +11,8 @@ function UserDashboard() {
   const [error, setError] = useState('');
   const [uploadLoading, setUploadLoading] = useState(false);
   const [uploadError, setUploadError] = useState('');
+  const [userReviews, setUserReviews] = useState([]);
+  const [showAllReviews, setShowAllReviews] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -42,6 +44,16 @@ function UserDashboard() {
     };
 
     fetchUserData();
+
+    // Fetch reviews received by the user
+    const storedUser = JSON.parse(localStorage.getItem('user'));
+    if (storedUser && storedUser._id) {
+      fetch(`http://localhost:5000/api/user/${storedUser._id}/reviews`)
+        .then(res => res.json())
+        .then(data => {
+          if (Array.isArray(data.reviews)) setUserReviews(data.reviews);
+        });
+    }
   }, []);
 
   const handleProfilePictureUpload = async (e) => {
@@ -114,118 +126,176 @@ function UserDashboard() {
   }
 
   return (
-    <div className="flex">
+    <div>
       <SidebarUser />
-      <div className="flex-1">
-        <HeaderUser />
-        <div className="p-6 md:p-10 bg-gradient-to-b from-gray-50 to-gray-100 min-h-screen">
-          {/* Header Section */}
-          <div className="mb-10">
-            <h1 className="text-4xl font-bold text-gray-800">User Dashboard</h1>
-          </div>
-
-          {/* Main Content */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Left Column: Profile and Quick Actions */}
-            <div className="space-y-6">
-              {/* Profile Card */}
-              <div className="bg-white p-6 rounded-2xl shadow-lg">
-                <h2 className="text-2xl font-semibold text-gray-800 mb-4">
-                  Welcome back, {user.username}
-                </h2>
-                <div className="flex items-center space-x-4 mb-4">
-                  <div className="relative">
-                    <img
-                      src={user.profilePicture}
-                      alt="Profile"
-                      className="w-16 h-16 rounded-full object-cover border-2 border-blue-600"
-                    />
-                    <label
-                      htmlFor="profile-picture-upload"
-                      className="absolute bottom-0 right-0 bg-blue-600 text-white p-1 rounded-full cursor-pointer hover:bg-blue-700 transition-all"
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-5 w-5"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth="2"
-                          d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.536L16.732 3.732z"
-                        />
-                      </svg>
-                    </label>
-                    <input
-                      id="profile-picture-upload"
-                      type="file"
-                      accept="image/*"
-                      onChange={handleProfilePictureUpload}
-                      className="hidden"
-                    />
-                  </div>
-                  <div>
-                    <p className="text-gray-600">
-                      <span className="font-semibold">Email:</span> {user.email}
-                    </p>
-                    <p className="text-gray-600">
-                      <span className="font-semibold">Phone:</span> {user.phoneNumber}
-                    </p>
-                    <p className="text-gray-600">
-                      <span className="font-semibold">Country:</span> {user.country}
-                    </p>
-                  </div>
-                </div>
-                {uploadLoading && <p className="text-gray-600">Uploading...</p>}
-                {uploadError && <p className="text-red-500">{uploadError}</p>}
-                <button
-                  onClick={handleEditProfile}
-                  className="w-full bg-gradient-to-r from-blue-600 to-blue-800 text-white py-2 rounded-lg hover:from-blue-700 hover:to-blue-900 transition-all shadow-md"
-                >
-                  Edit Profile
-                </button>
-              </div>
-
-              {/* Quick Actions Card */}
-              <div className="bg-white p-6 rounded-2xl shadow-lg">
-                <h2 className="text-2xl font-semibold text-gray-800 mb-4">
-                  Quick Actions
-                </h2>
-                <div className="space-y-3">
-                  <button className="w-full bg-gradient-to-r from-blue-600 to-blue-800 text-white py-3 rounded-lg hover:from-blue-700 hover:to-blue-900 transition-all shadow-md">
-                    Book a Hotel
-                  </button>
-                  <button className="w-full bg-gradient-to-r from-blue-600 to-blue-800 text-white py-3 rounded-lg hover:from-blue-700 hover:to-blue-900 transition-all shadow-md">
-                    Rent a Car
-                  </button>
-                  <button className="w-full bg-gradient-to-r from-blue-600 to-blue-800 text-white py-3 rounded-lg hover:from-blue-700 hover:to-blue-900 transition-all shadow-md">
-                    Plan a Tour
-                  </button>
-                </div>
-              </div>
+      <div className="ml-64">
+        <div className="flex-1">
+          <HeaderUser />
+          <div className="p-6 md:p-10 bg-gradient-to-b from-gray-50 to-gray-100 min-h-screen">
+            {/* Header Section */}
+            <div className="mb-10">
+              <h1 className="text-4xl font-bold text-gray-800">User Dashboard</h1>
             </div>
 
-            {/* Right Column: Placeholder for Future Features */}
-            <div className="lg:col-span-2 space-y-6">
-              <div className="bg-white p-6 rounded-2xl shadow-lg">
-                <h2 className="text-2xl font-semibold text-gray-800 mb-4">
-                  Travel Statistics
-                </h2>
-                <p className="text-gray-600">
-                  No activity yet—feature coming soon! Our team is working on bringing you travel statistics.
-                </p>
+            {/* Main Content */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              {/* Left Column: Profile and Quick Actions */}
+              <div className="space-y-6">
+                {/* Profile Card */}
+                <div className="bg-white p-6 rounded-2xl shadow-lg">
+                  <h2 className="text-2xl font-semibold text-gray-800 mb-4">
+                    Welcome back, {user.username}
+                  </h2>
+                  <div className="flex items-center space-x-4 mb-4">
+                    <div className="relative">
+                      <img
+                        src={user.profilePicture}
+                        alt="Profile"
+                        className="w-16 h-16 rounded-full object-cover border-2 border-blue-600"
+                      />
+                      <label
+                        htmlFor="profile-picture-upload"
+                        className="absolute bottom-0 right-0 bg-blue-600 text-white p-1 rounded-full cursor-pointer hover:bg-blue-700 transition-all"
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-5 w-5"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
+                            d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.536L16.732 3.732z"
+                          />
+                        </svg>
+                      </label>
+                      <input
+                        id="profile-picture-upload"
+                        type="file"
+                        accept="image/*"
+                        onChange={handleProfilePictureUpload}
+                        className="hidden"
+                      />
+                    </div>
+                    <div>
+                      <p className="text-gray-600">
+                        <span className="font-semibold">Email:</span> {user.email}
+                      </p>
+                      <p className="text-gray-600">
+                        <span className="font-semibold">Phone:</span> {user.phoneNumber}
+                      </p>
+                      <p className="text-gray-600">
+                        <span className="font-semibold">Country:</span> {user.country}
+                      </p>
+                    </div>
+                  </div>
+                  {uploadLoading && <p className="text-gray-600">Uploading...</p>}
+                  {uploadError && <p className="text-red-500">{uploadError}</p>}
+                  <button
+                    onClick={handleEditProfile}
+                    className="w-full bg-gradient-to-r from-blue-600 to-blue-800 text-white py-2 rounded-lg hover:from-blue-700 hover:to-blue-900 transition-all shadow-md"
+                  >
+                    Edit Profile
+                  </button>
+                </div>
+
+                {/* Quick Actions Card */}
+                <div className="bg-white p-6 rounded-2xl shadow-lg">
+                  <h2 className="text-2xl font-semibold text-gray-800 mb-4">
+                    Quick Actions
+                  </h2>
+                  <div className="space-y-3">
+                    <button className="w-full bg-gradient-to-r from-blue-600 to-blue-800 text-white py-3 rounded-lg hover:from-blue-700 hover:to-blue-900 transition-all shadow-md">
+                      Book a Hotel
+                    </button>
+                    <button className="w-full bg-gradient-to-r from-blue-600 to-blue-800 text-white py-3 rounded-lg hover:from-blue-700 hover:to-blue-900 transition-all shadow-md">
+                      Rent a Car
+                    </button>
+                    <button className="w-full bg-gradient-to-r from-blue-600 to-blue-800 text-white py-3 rounded-lg hover:from-blue-700 hover:to-blue-900 transition-all shadow-md">
+                      Plan a Tour
+                    </button>
+                  </div>
+                </div>
+
+                {/* Reviews Received Section */}
+                <div className="bg-white p-6 rounded-2xl shadow-lg">
+                  <h2 className="text-2xl font-semibold text-gray-800 mb-4">Reviews Received</h2>
+                  {userReviews.length === 0 ? (
+                    <p className="text-gray-600">No reviews received yet.</p>
+                  ) : (
+                    <>
+                      {/* Show most recent review */}
+                      <div className="border rounded-lg p-4 mb-2">
+                        <div className="flex items-center mb-2">
+                          <span className="font-bold text-green-700 mr-2">Guide:</span>
+                          <span>{userReviews[0].tourGuideId?.name || 'Tour Guide'}</span>
+                          <span className="ml-4 text-yellow-500">{'★'.repeat(userReviews[0].rating)}{'☆'.repeat(5 - userReviews[0].rating)}</span>
+                        </div>
+                        <div className="text-gray-700">{userReviews[0].comment}</div>
+                        <div className="text-xs text-gray-400 mt-1">{new Date(userReviews[0].createdAt).toLocaleDateString()}</div>
+                      </div>
+                      {userReviews.length > 1 && (
+                        <button
+                          className="text-blue-600 hover:underline text-sm mb-2"
+                          onClick={() => setShowAllReviews(true)}
+                        >
+                          Show All Reviews
+                        </button>
+                      )}
+                      {/* Modal or expandable section for all reviews */}
+                      {showAllReviews && (
+                        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+                          <div className="bg-white rounded-xl shadow-lg p-6 max-w-lg w-full max-h-[80vh] overflow-y-auto relative">
+                            <button
+                              className="absolute top-2 right-2 text-gray-400 hover:text-gray-700 text-2xl"
+                              onClick={() => setShowAllReviews(false)}
+                            >
+                              &times;
+                            </button>
+                            <h3 className="text-xl font-bold mb-4">All Reviews</h3>
+                            <div className="space-y-4">
+                              {userReviews.map((review) => (
+                                <div key={review._id} className="border rounded-lg p-4">
+                                  <div className="flex items-center mb-2">
+                                    <span className="font-bold text-green-700 mr-2">Guide:</span>
+                                    <span>{review.tourGuideId?.name || 'Tour Guide'}</span>
+                                    <span className="ml-4 text-yellow-500">{'★'.repeat(review.rating)}{'☆'.repeat(5 - review.rating)}</span>
+                                  </div>
+                                  <div className="text-gray-700">{review.comment}</div>
+                                  <div className="text-xs text-gray-400 mt-1">{new Date(review.createdAt).toLocaleDateString()}</div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
               </div>
 
-              <div className="bg-white p-6 rounded-2xl shadow-lg">
-                <h2 className="text-2xl font-semibold text-gray-800 mb-4">
-                  Upcoming Trips
-                </h2>
-                <p className="text-gray-600">
-                  No activity yet—feature coming soon! Booking and trip management features are under development.
-                </p>
+              {/* Right Column: Placeholder for Future Features */}
+              <div className="lg:col-span-2 space-y-6">
+                <div className="bg-white p-6 rounded-2xl shadow-lg">
+                  <h2 className="text-2xl font-semibold text-gray-800 mb-4">
+                    Travel Statistics
+                  </h2>
+                  <p className="text-gray-600">
+                    No activity yet—feature coming soon! Our team is working on bringing you travel statistics.
+                  </p>
+                </div>
+
+                <div className="bg-white p-6 rounded-2xl shadow-lg">
+                  <h2 className="text-2xl font-semibold text-gray-800 mb-4">
+                    Upcoming Trips
+                  </h2>
+                  <p className="text-gray-600">
+                    No activity yet—feature coming soon! Booking and trip management features are under development.
+                  </p>
+                </div>
               </div>
             </div>
           </div>

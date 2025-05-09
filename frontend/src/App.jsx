@@ -50,6 +50,7 @@ import TourGuidePayments from './pages/Admin/TourGuidePayments';
 import TourGuideReports from './pages/Admin/TourGuideReports';
 import UserTopBar from './components/UserTopBar';
 import TourGuideBookings from './pages/user/TourGuideBookings';
+import ReviewManagement from './pages/Admin/ReviewManagement';
 
 // Protected Route Component for Users
 const ProtectedRoute = ({ children }) => {
@@ -396,6 +397,14 @@ function AppContent() {
                     element={
                         <ProtectedAdminRoute>
                             <TourGuideReports />
+                        </ProtectedAdminRoute>
+                    }
+                />
+                <Route
+                    path="/admin/review-management"
+                    element={
+                        <ProtectedAdminRoute>
+                            <ReviewManagement />
                         </ProtectedAdminRoute>
                     }
                 />

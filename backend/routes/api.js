@@ -832,6 +832,18 @@ router.get('/user/:id', async (req, res) => {
   }
 });
 
+// Get all reviews received by a user (tourist)
+router.get('/user/:userId/reviews', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const reviews = await Review.find({ touristId: userId }).populate('tourGuideId', 'name');
+    res.status(200).json({ reviews });
+  } catch (error) {
+    console.error('Fetch user reviews error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
 // Update booking status for a tour booking (extended for approved/rejected)
 router.put('/tour-bookings/:id/status', async (req, res) => {
   try {
@@ -916,9 +928,40 @@ router.post('/tour-bookings/:id/review', async (req, res) => {
     const Review = require('../models/Review');
     let reviewData = { rating, comment, reviewerType };
     if (reviewerType === 'tourist') {
+      // Only the user who made the booking can review the guide
+      if (!req.headers.authorization) return res.status(401).json({ message: 'No token provided' });
+      const token = req.headers.authorization.split(' ')[1];
+      const jwt = require('jsonwebtoken');
+      const JWT_SECRET = process.env.JWT_SECRET;
+      let userId;
+      try {
+        userId = jwt.verify(token, JWT_SECRET).id;
+      } catch {
+        return res.status(401).json({ message: 'Invalid token' });
+      }
+      if (String(booking.userId) !== String(userId)) {
+        return res.status(403).json({ message: 'You can only review bookings you made.' });
+      }
       reviewData.tourGuideId = booking.guideId;
       reviewData.touristId = booking.userId;
-    } else {
+    } else if (reviewerType === 'guide') {
+      // Only the guide assigned to the booking can review the tourist
+      if (!req.headers.authorization) return res.status(401).json({ message: 'No token provided' });
+      const token = req.headers.authorization.split(' ')[1];
+      const jwt = require('jsonwebtoken');
+      const JWT_SECRET = process.env.JWT_SECRET;
+      let providerId;
+      try {
+        providerId = jwt.verify(token, JWT_SECRET).id;
+      } catch {
+        return res.status(401).json({ message: 'Invalid token' });
+      }
+      // Find the guide's providerId
+      const TourGuide = require('../models/TourGuide');
+      const guide = await TourGuide.findById(booking.guideId);
+      if (!guide || String(guide.providerId) !== String(providerId)) {
+        return res.status(403).json({ message: 'You can only review tourists from your own bookings.' });
+      }
       reviewData.tourGuideId = booking.guideId;
       reviewData.touristId = booking.userId;
     }
@@ -936,6 +979,23 @@ router.post('/tour-bookings/:id/review', async (req, res) => {
     res.status(201).json({ message: 'Review submitted successfully', review });
   } catch (error) {
     console.error('Submit review error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Admin: Submit a complaint about a review
+router.post('/reviews/:id/complaint', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { complaint } = req.body;
+    const Review = require('../models/Review');
+    const review = await Review.findById(id);
+    if (!review) return res.status(404).json({ message: 'Review not found' });
+    review.complaint = complaint;
+    await review.save();
+    res.status(200).json({ message: 'Complaint submitted for review', review });
+  } catch (error) {
+    console.error('Review complaint error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });
@@ -1460,6 +1520,37 @@ router.get('/tour-packages/:packageId', async (req, res) => {
     res.status(200).json(tourPackage);
   } catch (error) {
     console.error('Error fetching tour package:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Admin: Get all reviews and stats
+router.get('/admin/reviews', isAdmin, async (req, res) => {
+  try {
+    // Get all reviews, populate tour guide and tourist info
+    const reviews = await Review.find()
+      .populate('tourGuideId', 'name email')
+      .populate('touristId', 'username email');
+
+    // Calculate stats
+    const stats = {
+      total: reviews.length,
+      ratings: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
+      good: 0, // 4 or 5 stars
+      bad: 0,  // 1 or 2 stars
+      neutral: 0 // 3 stars
+    };
+    reviews.forEach(r => {
+      const rating = r.rating;
+      if (stats.ratings[rating] !== undefined) stats.ratings[rating]++;
+      if (rating >= 4) stats.good++;
+      else if (rating <= 2) stats.bad++;
+      else stats.neutral++;
+    });
+
+    res.status(200).json({ reviews, stats });
+  } catch (error) {
+    console.error('Admin fetch all reviews error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });
