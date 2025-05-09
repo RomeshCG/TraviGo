@@ -15,7 +15,7 @@ const mongoose = require('mongoose');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
-const TourGuideBooking = require('../models/TourBookings');
+const TourGuideBooking = require('../models/TourBookings'); // Model name is 'TourBooking'
 const ContactMessage = require('../models/ContactMessage');
 const CashoutRequest = require('../models/CashoutRequest');
 
@@ -517,7 +517,7 @@ router.get('/tour-guide/:tourGuideId/tour-packages', async (req, res) => {
 router.get('/tour-guide/:tourGuideId/tour-guide-bookings', async (req, res) => {
   try {
     const { tourGuideId } = req.params;
-    // Use guideId field for TourBookings model
+    // Use guideId field for TourBooking model
     const tourBookings = await require('../models/TourBookings').find({ guideId: tourGuideId })
       .populate('userId', 'username')
       .populate('packageId', 'title');
@@ -600,9 +600,9 @@ router.get('/tour-guide/:tourGuideId/earnings-summary', async (req, res) => {
 router.post('/tour-guide/:tourGuideId/request-cashout', isProvider, async (req, res) => {
   try {
     const { tourGuideId } = req.params;
-    const { amount } = req.body;
-    if (!amount || amount <= 0) {
-      return res.status(400).json({ message: 'Amount is required and must be positive' });
+    const { bookings } = req.body; // bookings: array of booking IDs
+    if (!Array.isArray(bookings) || bookings.length === 0) {
+      return res.status(400).json({ message: 'Select at least one trip to cash out.' });
     }
     const tourGuide = await TourGuide.findById(tourGuideId);
     if (!tourGuide) {
@@ -613,40 +613,31 @@ router.post('/tour-guide/:tourGuideId/request-cashout', isProvider, async (req, 
     if (existingRequest) {
       return res.status(400).json({ message: 'You already have a pending cashout request.' });
     }
-    // Find all bookings for this guide that are eligible for cashout (paymentStatus: 'released')
+    // Fetch and validate selected bookings
     const TourBooking = require('../models/TourBookings');
-    const eligibleBookings = await TourBooking.find({
+    const selectedBookings = await TourBooking.find({
+      _id: { $in: bookings },
       guideId: tourGuideId,
       paymentStatus: 'released',
       refundRequested: false,
       bookingStatus: { $in: ['approved', 'completed'] },
     });
-    const totalAvailable = eligibleBookings.reduce((sum, b) => sum + (b.totalPrice || 0), 0);
-    if (amount > totalAvailable) {
-      return res.status(400).json({ message: `Requested amount exceeds available earnings ($${totalAvailable.toFixed(2)})` });
+    if (selectedBookings.length !== bookings.length) {
+      return res.status(400).json({ message: 'One or more selected trips are not eligible for cashout.' });
     }
-    // Mark eligible bookings as cashout_pending until the requested amount is reached
+    // Mark selected bookings as cashout_pending
     let sum = 0;
-    let usedBookings = [];
-    for (const booking of eligibleBookings) {
-      if (sum >= amount) break;
+    for (const booking of selectedBookings) {
       booking.paymentStatus = 'cashout_pending';
-      let assign = 0;
-      if (sum + (booking.totalPrice || 0) > amount) {
-        assign = amount - sum;
-      } else {
-        assign = booking.totalPrice || 0;
-      }
-      booking.cashoutAmount = assign;
-      sum += assign;
-      usedBookings.push(booking._id);
+      booking.cashoutAmount = booking.totalPrice || 0;
+      sum += booking.totalPrice || 0;
       await booking.save();
     }
     // Create a cashout request entry
     const cashoutRequest = new CashoutRequest({
       tourGuideId,
       amount: sum,
-      bookings: usedBookings,
+      bookings: selectedBookings.map(b => b._id),
       status: 'pending',
       requestedAt: new Date(),
     });
