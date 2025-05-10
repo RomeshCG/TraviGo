@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { FaStar } from 'react-icons/fa';
+import { FaStar, FaCheckCircle, FaTimesCircle } from 'react-icons/fa';
 import SidebarUser from '../../components/SidebarUser';
 import HeaderUser from '../../components/HeaderUser';
 
@@ -120,12 +120,14 @@ const TourGuideBookings = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 flex">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-100 flex">
       <SidebarUser />
-      <div className="flex-1">
+      <div style={{ marginLeft: 'var(--sidebar-width, 16rem)' }} className="flex-1">
         <HeaderUser />
         <div className="p-6 md:p-10">
-          <h1 className="text-3xl font-bold text-gray-900 mb-8">My Tour Guide Bookings</h1>
+          <h1 className="text-3xl font-extrabold text-blue-800 mb-8 flex items-center gap-3">
+            <FaCheckCircle className="text-blue-400" /> My Tour Guide Bookings
+          </h1>
           {loading ? (
             <div className="text-center text-lg text-gray-600">Loading...</div>
           ) : error ? (
@@ -134,62 +136,76 @@ const TourGuideBookings = () => {
             <div className="text-center text-gray-600">No tour guide bookings found.</div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="min-w-full bg-white rounded-lg shadow">
+              <table className="min-w-full bg-white rounded-3xl shadow-xl border border-blue-100">
                 <thead>
-                  <tr>
-                    <th className="p-3 text-left">Guide Name</th>
-                    <th className="p-3 text-left">Package</th>
-                    <th className="p-3 text-left">Travel Date</th>
-                    <th className="p-3 text-left">Travelers</th>
-                    <th className="p-3 text-left">Country</th>
-                    <th className="p-3 text-left">Status</th>
-                    <th className="p-3 text-left">Total Price</th>
+                  <tr className="bg-gradient-to-r from-blue-100 to-blue-50">
+                    <th className="p-3 text-left font-semibold text-blue-700">Guide Name</th>
+                    <th className="p-3 text-left font-semibold text-blue-700">Package</th>
+                    <th className="p-3 text-left font-semibold text-blue-700">Travel Date</th>
+                    <th className="p-3 text-left font-semibold text-blue-700">Travelers</th>
+                    <th className="p-3 text-left font-semibold text-blue-700">Country</th>
+                    <th className="p-3 text-left font-semibold text-blue-700">Status</th>
+                    <th className="p-3 text-left font-semibold text-blue-700">Total Price</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {bookings.map((booking) => (
-                    <React.Fragment key={booking._id}>
-                      <tr className="border-b hover:bg-blue-50 transition">
-                        <td className="p-3">{booking.guideId && typeof booking.guideId === 'object' ? booking.guideId.name : String(booking.guideId)}</td>
-                        <td className="p-3">{booking.packageId && typeof booking.packageId === 'object' ? booking.packageId.title : String(booking.packageId)}</td>
-                        <td className="p-3">{booking.travelDate ? new Date(booking.travelDate).toLocaleDateString() : '-'}</td>
-                        <td className="p-3">{booking.travelersCount ?? '-'}</td>
-                        <td className="p-3">{booking.country ?? '-'}</td>
-                        <td className="p-3">
-                          <span className={`px-2 py-1 rounded text-xs font-semibold ${
-                            (booking.bookingStatus || booking.status) === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                            (booking.bookingStatus || booking.status) === 'confirmed' ? 'bg-green-100 text-green-800' :
-                            (booking.bookingStatus || booking.status) === 'cancelled' ? 'bg-gray-200 text-gray-600' :
-                            (booking.bookingStatus || booking.status) === 'approved' ? 'bg-blue-100 text-blue-800' :
-                            (booking.bookingStatus || booking.status) === 'rejected' ? 'bg-red-100 text-red-800' :
-                            (booking.bookingStatus || booking.status) === 'completed' ? 'bg-blue-100 text-blue-800' :
-                            'bg-gray-100 text-gray-800'
-                          }`}>
-                            {booking.bookingStatus || booking.status}
-                          </span>
-                        </td>
-                        <td className="p-3">{booking.totalPrice !== undefined ? `$${Number(booking.totalPrice).toFixed(2)}` : '-'}</td>
-                      </tr>
-                      {(booking.bookingStatus === 'completed' || booking.status === 'completed') &&
-                        !reviewedBookings.includes(booking._id) && (
+                  {bookings.map((booking) => {
+                    const isCompleted = booking.bookingStatus === 'completed' || booking.status === 'completed';
+                    const isReviewed = reviewedBookings.includes(booking._id);
+                    return (
+                      <React.Fragment key={booking._id}>
+                        <tr className="border-b hover:bg-blue-50 transition">
+                          <td className="p-3 font-medium text-gray-800">{booking.guideId && typeof booking.guideId === 'object' ? booking.guideId.name : String(booking.guideId)}</td>
+                          <td className="p-3">{booking.packageId && typeof booking.packageId === 'object' ? booking.packageId.title : String(booking.packageId)}</td>
+                          <td className="p-3">{booking.travelDate ? new Date(booking.travelDate).toLocaleDateString() : '-'}</td>
+                          <td className="p-3">{booking.travelersCount ?? '-'}</td>
+                          <td className="p-3">{booking.country ?? '-'}</td>
+                          <td className="p-3">
+                            <span className={`px-2 py-1 rounded text-xs font-semibold flex items-center gap-1 ${
+                              (booking.bookingStatus === 'pending' || booking.status === 'pending') ? 'bg-yellow-100 text-yellow-800' :
+                              (booking.bookingStatus === 'confirmed' || booking.status === 'confirmed') ? 'bg-green-100 text-green-800' :
+                              (booking.bookingStatus === 'cancelled' || booking.status === 'cancelled') ? 'bg-gray-200 text-gray-600' :
+                              (booking.bookingStatus === 'approved' || booking.status === 'approved') ? 'bg-blue-100 text-blue-800' :
+                              (booking.bookingStatus === 'rejected' || booking.status === 'rejected') ? 'bg-red-100 text-red-800' :
+                              (booking.bookingStatus === 'completed' || booking.status === 'completed') ? 'bg-blue-100 text-blue-800' :
+                              'bg-gray-100 text-gray-800'
+                            }`}>
+                              {(booking.bookingStatus === 'completed' || booking.status === 'completed') && (booking.bookingStatus !== 'rejected' && booking.status !== 'rejected') ? (
+                                <>
+                                  <FaCheckCircle className="text-green-500" /> Completed
+                                </>
+                              ) : (booking.bookingStatus === 'rejected' || booking.status === 'rejected') ? (
+                                <>
+                                  <FaTimesCircle className="text-red-400" /> Rejected
+                                </>
+                              ) : (
+                                booking.bookingStatus || booking.status
+                              )}
+                            </span>
+                          </td>
+                          <td className="p-3">{booking.totalPrice !== undefined ? `$${Number(booking.totalPrice).toFixed(2)}` : '-'}</td>
+                        </tr>
+                        {/* Review section logic */}
+                        {isCompleted && !isReviewed && (
                           <tr>
-                            <td colSpan={7} className="bg-gray-50 p-4">
+                            <td colSpan={7} className="bg-blue-50 p-6 border-b border-blue-100">
                               {reviewingId === booking._id ? (
                                 <form
                                   onSubmit={e => {
                                     e.preventDefault();
                                     handleReviewSubmit(booking);
                                   }}
-                                  className="flex flex-col md:flex-row md:items-center gap-2"
+                                  className="flex flex-col md:flex-row md:items-center gap-3 animate-fade-in"
                                 >
-                                  <span className="font-semibold mr-2">Leave a review for {booking.guideId && typeof booking.guideId === 'object' ? booking.guideId.name : 'Guide'}:</span>
-                                  <span className="flex items-center">
+                                  <span className="font-semibold mr-2 text-blue-700">Leave a review for {booking.guideId && typeof booking.guideId === 'object' ? booking.guideId.name : 'Guide'}:</span>
+                                  <span className="flex items-center gap-1">
                                     {[1,2,3,4,5].map(star => (
                                       <button
                                         type="button"
                                         key={star}
                                         onClick={() => setReview(r => ({ ...r, rating: star }))}
-                                        className={star <= review.rating ? 'text-yellow-500' : 'text-gray-300'}
+                                        className={`text-2xl transition-colors ${star <= review.rating ? 'text-yellow-400 scale-110' : 'text-gray-300'} hover:scale-125`}
+                                        aria-label={`Rate ${star} star${star > 1 ? 's' : ''}`}
                                       >
                                         <FaStar />
                                       </button>
@@ -200,18 +216,20 @@ const TourGuideBookings = () => {
                                     value={review.comment}
                                     onChange={e => setReview(r => ({ ...r, comment: e.target.value }))}
                                     placeholder="Write your review..."
-                                    className="border rounded px-2 py-1 flex-1"
+                                    className="border-2 border-blue-200 rounded px-3 py-2 flex-1 focus:outline-none focus:ring-2 focus:ring-blue-300"
                                     required
                                   />
-                                  <button type="submit" className="bg-blue-600 text-white px-4 py-1 rounded">Submit</button>
-                                  <button type="button" className="ml-2 text-gray-500" onClick={() => setReviewingId(null)}>Cancel</button>
-                                  {reviewError && <span className="text-red-600 ml-2">{reviewError}</span>}
+                                  <button type="submit" className="bg-gradient-to-r from-blue-600 to-blue-800 text-white px-6 py-2 rounded-lg font-semibold shadow hover:from-blue-700 hover:to-blue-900 transition-all">Submit</button>
+                                  <button type="button" className="ml-2 text-gray-500 hover:text-red-400 font-semibold" onClick={() => setReviewingId(null)}>Cancel</button>
+                                  {reviewError && <span className="text-red-600 ml-2 font-semibold">{reviewError}</span>}
                                 </form>
                               ) : reviewSuccess && reviewedBookings.includes(booking._id) ? (
-                                <span className="text-green-600 font-semibold">Thank you for your review!</span>
+                                <span className="text-green-600 font-semibold flex items-center gap-2 animate-fade-in">
+                                  <FaCheckCircle className="text-green-500" /> Thank you for your review!
+                                </span>
                               ) : (
                                 <button
-                                  className="bg-yellow-100 text-yellow-800 px-3 py-1 rounded"
+                                  className="bg-yellow-100 text-yellow-800 px-4 py-2 rounded-lg font-semibold shadow hover:bg-yellow-200 transition-all"
                                   onClick={() => setReviewingId(booking._id)}
                                 >
                                   Leave a Review
@@ -220,10 +238,31 @@ const TourGuideBookings = () => {
                             </td>
                           </tr>
                         )}
-                    </React.Fragment>
-                  ))}
+                        {/* If not completed, show disabled review button with tooltip for clarity */}
+                        {!isCompleted && (
+                          <tr>
+                            <td colSpan={7} className="bg-gray-50 p-4 border-b border-blue-50 text-center">
+                              <button
+                                className="bg-gray-200 text-gray-500 px-4 py-2 rounded-lg font-semibold cursor-not-allowed"
+                                title="You can only review after the booking is marked as completed."
+                                disabled
+                              >
+                                Leave a Review
+                              </button>
+                              <div className="text-xs text-gray-400 mt-1">(Complete your trip to leave a review for your guide.)</div>
+                            </td>
+                          </tr>
+                        )}
+                      </React.Fragment>
+                    );
+                  })}
                 </tbody>
               </table>
+              {bookings.every(
+                b => !(b.bookingStatus === 'completed' || b.status === 'completed') || reviewedBookings.includes(b._id)
+              ) && (
+                null
+              )}
             </div>
           )}
         </div>

@@ -782,14 +782,20 @@ const TourGuideDashboard = () => {
                             </td>
                             <td className="px-6 py-4">
                               <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                                ${booking.bookingStatus === 'pending' ? 'bg-yellow-100 text-yellow-800' : 
-                                  booking.bookingStatus === 'confirmed' ? 'bg-green-100 text-green-800' : 
-                                  booking.bookingStatus === 'cancelled' ? 'bg-gray-200 text-gray-600' :
-                                  booking.bookingStatus === 'approved' ? 'bg-blue-100 text-blue-800' :
-                                  booking.bookingStatus === 'rejected' ? 'bg-red-100 text-red-800' :
-                                  booking.bookingStatus === 'completed' ? 'bg-blue-100 text-blue-800' :
+                                ${(booking.bookingStatus === 'pending' || booking.status === 'pending') ? 'bg-yellow-100 text-yellow-800' : 
+                                  (booking.bookingStatus === 'confirmed' || booking.status === 'confirmed') ? 'bg-green-100 text-green-800' : 
+                                  (booking.bookingStatus === 'cancelled' || booking.status === 'cancelled') ? 'bg-gray-200 text-gray-600' :
+                                  (booking.bookingStatus === 'approved' || booking.status === 'approved') ? 'bg-blue-100 text-blue-800' :
+                                  (booking.bookingStatus === 'rejected' || booking.status === 'rejected') ? 'bg-red-100 text-red-800' :
+                                  (booking.bookingStatus === 'completed' || booking.status === 'completed') ? 'bg-blue-100 text-blue-800' :
                                   'bg-gray-100 text-gray-800'}`}>
-                                {booking.bookingStatus}
+                                {(booking.bookingStatus === 'completed' || booking.status === 'completed') && (booking.bookingStatus !== 'rejected' && booking.status !== 'rejected') ? (
+                                  'Completed'
+                                ) : (booking.bookingStatus === 'rejected' || booking.status === 'rejected') ? (
+                                  'Rejected'
+                                ) : (
+                                  booking.bookingStatus || booking.status
+                                )}
                               </span>
                             </td>
                             <td className="px-6 py-4">

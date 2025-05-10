@@ -25,6 +25,9 @@ function Home() {
   const guidesRef = useRef(null);
   const [currentSlide, setCurrentSlide] = useState(0);
 
+  // Get current path to hide header on dashboard
+  const location = window.location.pathname;
+
   const scrollToSection = (ref) => {
     if (ref && ref.current) {
       ref.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -44,7 +47,8 @@ function Home() {
       {/* Hero Section with Image Slider */}
       <div className="relative min-h-screen bg-cover bg-center flex flex-col">
         <div className="absolute top-0 left-0 w-full z-50 bg-opacity-90">
-          <Header />
+          {/* Hide Header if on dashboard */}
+          {!(location.startsWith('/dashboard') || location.startsWith('/user/dashboard')) && <Header />}
         </div>
 
         <div className="relative flex flex-col items-center justify-center flex-grow text-white text-center px-4">

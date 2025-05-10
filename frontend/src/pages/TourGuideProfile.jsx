@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import SimpleHeader from '../components/SimpleHeader'; 
 import Footer from '../components/Footer'; 
@@ -12,6 +12,9 @@ const TourGuideProfile = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [ratingInfo, setRatingInfo] = useState({ avgRating: 0, reviewCount: 0 });
+  const [reviews, setReviews] = useState([]);
+  const [currentReviewIndex, setCurrentReviewIndex] = useState(0);
+  const reviewIntervalRef = useRef(null);
   const navigate = useNavigate();
 
   const BASE_URL = 'http://localhost:5000';
@@ -57,6 +60,13 @@ console.log('Provider ID from URL:', providerId); // Log the providerId for debu
         const packagesData = await packagesResponse.json();
         // Filter for published packages only
         setTourPackages(packagesData.filter(pkg => pkg.status === 'published'));
+
+        // Fetch reviews for this guide
+        const reviewsRes = await fetch(`${BASE_URL}/api/tour-guide/${guideData._id}/reviews`);
+        if (reviewsRes.ok) {
+          const reviewsData = await reviewsRes.json();
+          setReviews(reviewsData.reviews || []);
+        }
       } catch (error) {
         setError(error.message);
         toast.error(`Error: ${error.message}`);
@@ -67,6 +77,15 @@ console.log('Provider ID from URL:', providerId); // Log the providerId for debu
 
     fetchTourGuideData();
   }, [providerId]);
+
+  useEffect(() => {
+    if (reviews.length > 1) {
+      reviewIntervalRef.current = setInterval(() => {
+        setCurrentReviewIndex((prev) => (prev + 1) % reviews.length);
+      }, 3000);
+      return () => clearInterval(reviewIntervalRef.current);
+    }
+  }, [reviews]);
 
   const handleBookNow = (packageId) => {
     // Pass the TourGuide model's _id instead of providerId
@@ -187,6 +206,51 @@ console.log('Provider ID from URL:', providerId); // Log the providerId for debu
                       </div>
                     </div>
                   ))}
+                </div>
+              )}
+            </section>
+
+            {/* Reviews Section */}
+            <section className="space-y-6">
+              <h2 className="text-2xl md:text-3xl font-bold text-gray-800 text-center mb-4">
+                <span className="bg-gradient-to-r from-yellow-400 to-yellow-600 text-transparent bg-clip-text">Reviews</span>
+              </h2>
+              {reviews.length === 0 ? (
+                <p className="text-center text-gray-600 text-lg">No reviews yet for this tour guide.</p>
+              ) : (
+                <div className="flex justify-center">
+                  <div className="relative w-full max-w-2xl overflow-hidden">
+                    <div className="flex transition-transform duration-700" style={{ transform: `translateX(-${currentReviewIndex * 100}%)` }}>
+                      {reviews.map((review, idx) => (
+                        <div key={review._id || idx} className="w-full min-w-full flex-shrink-0 px-4">
+                          <div className="bg-white rounded-xl shadow p-6 flex flex-col items-center">
+                            <div className="flex items-center gap-2 mb-2">
+                              {Array.from({ length: 5 }).map((_, i) => (
+                                <svg key={i} className={`w-5 h-5 ${i < review.rating ? 'text-yellow-400' : 'text-gray-300'}`} fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.967a1 1 0 00.95.69h4.175c.969 0 1.371 1.24.588 1.81l-3.38 2.455a1 1 0 00-.364 1.118l1.287 3.966c.3.922-.755 1.688-1.54 1.118l-3.38-2.454a1 1 0 00-1.175 0l-3.38 2.454c-.784.57-1.838-.196-1.54-1.118l1.287-3.966a1 1 0 00-.364-1.118L2.05 9.394c-.783-.57-.38-1.81.588-1.81h4.175a1 1 0 00.95-.69l1.286-3.967z" /></svg>
+                              ))}
+                            </div>
+                            <span className="text-sm font-semibold text-gray-700">{review.touristId?.username || 'Tourist'}</span>
+                            <span className="text-xs text-gray-400 mb-2">{new Date(review.createdAt).toLocaleDateString()}</span>
+                            <p className="text-gray-800 text-base mb-2 text-center">{review.comment}</p>
+                            {review.complaint && (
+                              <p className="text-xs text-red-500 mt-1">Complaint: {review.complaint}</p>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    {/* Dots navigation */}
+                    <div className="flex justify-center mt-4 gap-2">
+                      {reviews.map((_, idx) => (
+                        <button
+                          key={idx}
+                          className={`w-3 h-3 rounded-full ${idx === currentReviewIndex ? 'bg-yellow-500' : 'bg-gray-300'}`}
+                          onClick={() => setCurrentReviewIndex(idx)}
+                          aria-label={`Go to review ${idx + 1}`}
+                        />
+                      ))}
+                    </div>
+                  </div>
                 </div>
               )}
             </section>

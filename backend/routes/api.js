@@ -976,6 +976,8 @@ router.post('/tour-bookings/:id/review', async (req, res) => {
       reviewData.tourGuideId = booking.guideId;
       reviewData.touristId = booking.userId;
     }
+    // Add bookingId to reviewData to satisfy Review model
+    reviewData.bookingId = id;
     // Prevent duplicate review by same party for this booking
     const existing = await Review.findOne({
       tourGuideId: booking.guideId,
@@ -1063,7 +1065,7 @@ router.post('/admin/tour-guide-bookings/:id/payout', isAdmin, async (req, res) =
   }
 });
 
-// Tour guide reviews
+// Tour guide reviews (only reviews from tourists to guide)
 router.get('/tour-guide/:tourGuideId/reviews', async (req, res) => {
   try {
     const { tourGuideId } = req.params;
@@ -1074,7 +1076,8 @@ router.get('/tour-guide/:tourGuideId/reviews', async (req, res) => {
     if (!tourGuide) {
       return res.status(404).json({ message: 'Tour guide not found' });
     }
-    const reviews = await Review.find({ tourGuideId }).populate('touristId', 'username');
+    // Only fetch reviews written by tourists about this guide
+    const reviews = await Review.find({ tourGuideId, reviewerType: 'tourist' }).populate('touristId', 'username');
     const averageRating = reviews.length
       ? reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length
       : 0;
