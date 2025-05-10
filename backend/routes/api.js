@@ -303,6 +303,50 @@ router.put('/tour-guide/update-bank-details', async (req, res) => {
   }
 });
 
+// Change user password
+router.put('/user/change-password', async (req, res) => {
+  try {
+    const { userId, currentPassword, newPassword } = req.body;
+    if (!userId || !currentPassword || !newPassword) {
+      return res.status(400).json({ message: 'All fields are required' });
+    }
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    if (!isMatch) {
+      return res.status(401).json({ message: 'Current password is incorrect' });
+    }
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(newPassword, salt);
+    user.password = hashedPassword;
+    await user.save();
+    res.json({ message: 'Password updated successfully' });
+  } catch (error) {
+    console.error('Change password error:', error.stack);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Delete user account
+router.delete('/user/delete-account', async (req, res) => {
+  try {
+    const { userId } = req.body;
+    if (!userId) {
+      return res.status(400).json({ message: 'User ID is required' });
+    }
+    const user = await User.findByIdAndDelete(userId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    res.json({ message: 'Account deleted successfully' });
+  } catch (error) {
+    console.error('Delete account error:', error.stack);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 // Route to handle contact form submission
 router.post('/contact', async (req, res) => {
   try {
@@ -990,6 +1034,63 @@ router.get('/user/tour-bookings', async (req, res) => {
     res.status(200).json(bookings);
   } catch (error) {
     console.error('Error fetching user tour bookings:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// USER: Monthly booking statistics (hotel, tour, vehicle) for dashboard
+router.get('/user/booking-stats/monthly', async (req, res) => {
+  const token = req.headers['authorization']?.split(' ')[1];
+  if (!token) {
+    return res.status(401).json({ message: 'No token provided' });
+  }
+  let userId;
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    userId = decoded.id;
+  } catch (error) {
+    return res.status(401).json({ message: 'Invalid token' });
+  }
+  try {
+    const Booking = require('../models/Booking');
+    const TourBooking = require('../models/TourBookings');
+    const RentalRequest = require('../models/RentalRequest');
+    // Get date range: last 12 months
+    const now = new Date();
+    const months = [];
+    for (let i = 11; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      months.push({
+        label: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`,
+        start: new Date(d.getFullYear(), d.getMonth(), 1),
+        end: new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59, 999)
+      });
+    }
+    // Hotel bookings
+    const hotelBookings = await Booking.find({ userId });
+    // Tour bookings
+    const tourBookings = await TourBooking.find({ userId });
+    // Vehicle bookings (RentalRequest)
+    const vehicleBookings = await RentalRequest.find({ email: { $exists: true, $ne: null } });
+    // Try to match vehicle bookings by user email (since userId may not be present)
+    let userEmail = null;
+    if (hotelBookings.length > 0) userEmail = hotelBookings[0].email;
+    else if (tourBookings.length > 0) userEmail = tourBookings[0].email;
+    // If userId is present in RentalRequest, prefer that
+    let userVehicleBookings = [];
+    if (vehicleBookings.length > 0 && userEmail) {
+      userVehicleBookings = vehicleBookings.filter(b => b.email === userEmail);
+    }
+    // Aggregate counts per month
+    const stats = months.map(({ label, start, end }) => {
+      const hotel = hotelBookings.filter(b => b.createdAt >= start && b.createdAt <= end).length;
+      const tour = tourBookings.filter(b => b.createdAt >= start && b.createdAt <= end).length;
+      const vehicle = userVehicleBookings.filter(b => b.createdAt >= start && b.createdAt <= end).length;
+      return { month: label, hotel, tour, vehicle };
+    });
+    res.status(200).json({ stats });
+  } catch (error) {
+    console.error('User monthly booking stats error:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 });

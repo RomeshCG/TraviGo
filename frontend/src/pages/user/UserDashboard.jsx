@@ -1,8 +1,20 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaUserEdit, FaHotel, FaCar, FaMapMarkedAlt, FaStar } from 'react-icons/fa';
+import { Bar } from 'react-chartjs-2';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+} from 'chart.js';
 import SidebarUser from "../../components/SidebarUser";
 import HeaderUser from "../../components/HeaderUser";
+
+ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
 const BACKEND_URL = 'http://localhost:5000';
 
@@ -14,6 +26,7 @@ function UserDashboard() {
   const [uploadError, setUploadError] = useState('');
   const [userReviews, setUserReviews] = useState([]);
   const [showAllReviews, setShowAllReviews] = useState(false);
+  const [travelStats, setTravelStats] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -55,6 +68,22 @@ function UserDashboard() {
           if (Array.isArray(data.reviews)) setUserReviews(data.reviews);
         });
     }
+
+    // Fetch travel statistics (real data)
+    const fetchTravelStats = async () => {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+      try {
+        const res = await fetch('/api/user/booking-stats/monthly', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await res.json();
+        if (res.ok && data.stats) {
+          setTravelStats(data.stats);
+        }
+      } catch { /* ignore error */ }
+    };
+    fetchTravelStats();
   }, []);
 
   const handleProfilePictureUpload = async (e) => {
@@ -98,6 +127,105 @@ function UserDashboard() {
     navigate('/edit-profile');
   };
 
+  // Calculate review ratings distribution for chart
+  const reviewRatings = [1, 2, 3, 4, 5].map(star =>
+    userReviews.filter(r => r.rating === star).length
+  );
+  const reviewChartData = {
+    labels: ['1★', '2★', '3★', '4★', '5★'],
+    datasets: [
+      {
+        label: 'Number of Reviews',
+        data: reviewRatings,
+        backgroundColor: [
+          '#64748b', // slate-500
+          '#475569', // slate-700
+          '#2563eb', // blue-600
+          '#0ea5e9', // sky-500
+          '#22d3ee', // cyan-400
+        ],
+        borderRadius: 6,
+      },
+    ],
+  };
+  const reviewChartOptions = {
+    responsive: true,
+    plugins: {
+      legend: { display: false },
+      title: { display: false },
+      tooltip: { enabled: true },
+    },
+    scales: {
+      y: { beginAtZero: true, ticks: { stepSize: 1 } },
+    },
+  };
+
+  // Travel statistics data for chart (real data if available)
+  const travelStatsOptions = {
+    responsive: true,
+    plugins: {
+      legend: { position: 'bottom' },
+      title: { display: false },
+    },
+    scales: {
+      y: { beginAtZero: true, ticks: { stepSize: 1 } },
+    },
+  };
+
+  let travelStatsData = {
+    labels: [
+      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+    ],
+    datasets: [
+      {
+        label: 'Hotel Bookings',
+        data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        backgroundColor: '#2563eb',
+        borderRadius: 6,
+      },
+      {
+        label: 'Tour Bookings',
+        data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        backgroundColor: '#0ea5e9',
+        borderRadius: 6,
+      },
+      {
+        label: 'Vehicle Bookings',
+        data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        backgroundColor: '#64748b',
+        borderRadius: 6,
+      },
+    ],
+  };
+  if (travelStats && travelStats.length === 12) {
+    travelStatsData = {
+      labels: travelStats.map(s => {
+        const [year, month] = s.month.split('-');
+        return new Date(year, month - 1).toLocaleString('default', { month: 'short' });
+      }),
+      datasets: [
+        {
+          label: 'Hotel Bookings',
+          data: travelStats.map(s => s.hotel),
+          backgroundColor: '#2563eb',
+          borderRadius: 6,
+        },
+        {
+          label: 'Tour Bookings',
+          data: travelStats.map(s => s.tour),
+          backgroundColor: '#0ea5e9',
+          borderRadius: 6,
+        },
+        {
+          label: 'Vehicle Bookings',
+          data: travelStats.map(s => s.vehicle),
+          backgroundColor: '#64748b',
+          borderRadius: 6,
+        },
+      ],
+    };
+  }
+
   if (loading) {
     return (
       <div className="flex">
@@ -135,7 +263,6 @@ function UserDashboard() {
           <div className="p-6 md:p-10 bg-gradient-to-br from-blue-50 via-white to-blue-100 min-h-screen">
             {/* Header Section */}
             <div className="mb-10 flex items-center gap-4">
-              <img src="/logo.png" alt="TraviGo Logo" className="h-12 w-12 rounded-full shadow-lg border-2 border-blue-400" />
               <h1 className="text-4xl font-extrabold text-blue-800 tracking-tight drop-shadow-lg">Welcome, {user.username}!</h1>
             </div>
 
@@ -231,6 +358,12 @@ function UserDashboard() {
                     <p className="text-gray-600">No reviews received yet.</p>
                   ) : (
                     <>
+                      {/* Chart for review ratings distribution */}
+                      <div className="mb-4 flex justify-center">
+                        <div style={{ width: 260 }}>
+                          <Bar data={reviewChartData} options={reviewChartOptions} height={180} />
+                        </div>
+                      </div>
                       {/* Show most recent review */}
                       <div className="border rounded-xl p-4 mb-2 bg-gradient-to-r from-yellow-50 to-white shadow-sm">
                         <div className="flex items-center mb-2 gap-2">
@@ -289,23 +422,19 @@ function UserDashboard() {
                 </div>
               </div>
 
-              {/* Right Column: Placeholder for Future Features */}
+              {/* Right Column: Travel Statistics Only (remove Upcoming Trips) */}
               <div className="lg:col-span-2 space-y-6">
                 <div className="bg-white p-8 rounded-3xl shadow-xl border border-blue-100">
                   <h2 className="text-2xl font-bold text-blue-700 mb-4 flex items-center gap-2">
                     <FaMapMarkedAlt className="text-blue-400" /> Travel Statistics
                   </h2>
+                  <div className="mb-4 flex justify-center">
+                    <div style={{ width: 600 }}>
+                      <Bar data={travelStatsData} options={travelStatsOptions} height={320} />
+                    </div>
+                  </div>
                   <p className="text-gray-600">
-                    No activity yet—feature coming soon! Our team is working on bringing you travel statistics.
-                  </p>
-                </div>
-
-                <div className="bg-white p-8 rounded-3xl shadow-xl border border-blue-100">
-                  <h2 className="text-2xl font-bold text-blue-700 mb-4 flex items-center gap-2">
-                    <FaMapMarkedAlt className="text-blue-400" /> Upcoming Trips
-                  </h2>
-                  <p className="text-gray-600">
-                    No activity yet—feature coming soon! Booking and trip management features are under development.
+                    {userReviews.length === 0 ? 'No activity yet.' : 'Your travel statistics for the year are shown above.'}
                   </p>
                 </div>
               </div>

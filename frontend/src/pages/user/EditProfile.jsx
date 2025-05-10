@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import SidebarUser from '../../components/SidebarUser';
 import HeaderUser from '../../components/HeaderUser';
+import { FaUser, FaEnvelope, FaPhone, FaGlobe, FaMapMarkerAlt, FaUniversity, FaIdCard, FaCodeBranch, FaKey } from 'react-icons/fa';
 
 const EditProfile = () => {
   const [user, setUser] = useState(null);
@@ -23,7 +24,6 @@ const EditProfile = () => {
   const [bankSuccess, setBankSuccess] = useState('');
   const [bankError, setBankError] = useState('');
 
-  // Fetch user data on component mount
   useEffect(() => {
     const fetchUserData = async () => {
       try {
@@ -73,13 +73,11 @@ const EditProfile = () => {
     fetchUserData();
   }, []);
 
-  // Handle form input changes
   const handleChange = (e) => {
     const { id, value } = e.target;
     setFormData((prev) => ({ ...prev, [id]: value }));
   };
 
-  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
@@ -109,7 +107,6 @@ const EditProfile = () => {
 
       if (response.ok) {
         setSuccess(data.message);
-        // Update localStorage with the new user data
         const updatedUser = { ...storedUser, ...data.user };
         localStorage.setItem('user', JSON.stringify(updatedUser));
         setUser(data.user);
@@ -121,13 +118,11 @@ const EditProfile = () => {
     }
   };
 
-  // Handle bank details input changes
   const handleBankChange = (e) => {
     const { name, value } = e.target;
     setBankDetails((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Handle bank details submission
   const handleBankSubmit = async (e) => {
     e.preventDefault();
     setBankError('');
@@ -157,7 +152,7 @@ const EditProfile = () => {
     return (
       <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 flex">
         <SidebarUser />
-        <div className="flex-1">
+        <div style={{ marginLeft: 'var(--sidebar-width, 16rem)' }} className="flex-1">
           <HeaderUser />
           <div className="p-6 md:p-10 flex items-center justify-center">
             <p className="text-gray-600">Loading...</p>
@@ -171,7 +166,7 @@ const EditProfile = () => {
     return (
       <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 flex">
         <SidebarUser />
-        <div className="flex-1">
+        <div style={{ marginLeft: 'var(--sidebar-width, 16rem)' }} className="flex-1">
           <HeaderUser />
           <div className="p-6 md:p-10 flex items-center justify-center">
             <p className="text-red-500">{error}</p>
@@ -182,161 +177,187 @@ const EditProfile = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 flex">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 flex">
       <SidebarUser />
-      <div className="flex-1">
+      <div style={{ marginLeft: 'var(--sidebar-width, 16rem)' }} className="flex-1 flex flex-col">
         <HeaderUser />
-        <div className="p-6 md:p-10">
-          <h1 className="text-4xl font-bold text-gray-900 mb-10">Edit Profile</h1>
-          <div className="max-w-lg mx-auto bg-white rounded-2xl shadow-lg p-8">
-            {success && <p className="text-green-600 mb-4">{success}</p>}
-            {error && <p className="text-red-500 mb-4">{error}</p>}
-            <form onSubmit={handleSubmit}>
-              <div className="mb-4">
+        <div className="flex flex-1 items-center justify-center py-8">
+          <div className="w-full max-w-2xl bg-white rounded-3xl shadow-2xl p-10 border border-blue-100">
+            <h1 className="text-3xl font-extrabold text-blue-900 mb-8 text-center">Edit Profile</h1>
+            {success && <p className="text-green-600 mb-4 text-center">{success}</p>}
+            {error && <p className="text-red-500 mb-4 text-center">{error}</p>}
+            <form onSubmit={handleSubmit} className="space-y-5">
+              <div className="relative">
                 <label className="block text-gray-700 font-semibold mb-2" htmlFor="username">
                   Username
                 </label>
-                <input
-                  type="text"
-                  id="username"
-                  value={user.username}
-                  className="w-full p-3 border rounded-lg bg-gray-100 text-gray-500 cursor-not-allowed"
-                  disabled
-                />
+                <div className="flex items-center">
+                  <FaUser className="absolute ml-3 text-gray-400" />
+                  <input
+                    type="text"
+                    id="username"
+                    value={user.username}
+                    className="w-full pl-10 p-3 border rounded-lg bg-gray-100 text-gray-500 cursor-not-allowed"
+                    disabled
+                  />
+                </div>
               </div>
-              <div className="mb-4">
+              <div className="relative">
                 <label className="block text-gray-700 font-semibold mb-2" htmlFor="email">
                   Email
                 </label>
-                <input
-                  type="email"
-                  id="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
-                  required
-                />
+                <div className="flex items-center">
+                  <FaEnvelope className="absolute ml-3 text-gray-400" />
+                  <input
+                    type="email"
+                    id="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    className="w-full pl-10 p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+                    required
+                  />
+                </div>
               </div>
-              <div className="mb-4">
+              <div className="relative">
                 <label className="block text-gray-700 font-semibold mb-2" htmlFor="phoneNumber">
                   Phone
                 </label>
-                <input
-                  type="text"
-                  id="phoneNumber"
-                  value={formData.phoneNumber}
-                  onChange={handleChange}
-                  className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
-                  required
-                />
+                <div className="flex items-center">
+                  <FaPhone className="absolute ml-3 text-gray-400" />
+                  <input
+                    type="text"
+                    id="phoneNumber"
+                    value={formData.phoneNumber}
+                    onChange={handleChange}
+                    className="w-full pl-10 p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+                    required
+                  />
+                </div>
               </div>
-              <div className="mb-4">
+              <div className="relative">
                 <label className="block text-gray-700 font-semibold mb-2" htmlFor="country">
                   Country
                 </label>
-                <input
-                  type="text"
-                  id="country"
-                  value={formData.country}
-                  onChange={handleChange}
-                  className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
-                  required
-                />
+                <div className="flex items-center">
+                  <FaGlobe className="absolute ml-3 text-gray-400" />
+                  <input
+                    type="text"
+                    id="country"
+                    value={formData.country}
+                    onChange={handleChange}
+                    className="w-full pl-10 p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+                    required
+                  />
+                </div>
               </div>
-              <div className="mb-4">
+              <div className="relative">
                 <label className="block text-gray-700 font-semibold mb-2" htmlFor="address">
                   Address
                 </label>
-                <textarea
-                  id="address"
-                  value={formData.address}
-                  onChange={handleChange}
-                  className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
-                />
+                <div className="flex items-center">
+                  <FaMapMarkerAlt className="absolute ml-3 text-gray-400 mt-2" />
+                  <textarea
+                    id="address"
+                    value={formData.address}
+                    onChange={handleChange}
+                    className="w-full pl-10 p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 min-h-[60px]"
+                  />
+                </div>
               </div>
               <button
                 type="submit"
-                className="w-full bg-gradient-to-r from-blue-600 to-blue-800 text-white py-3 rounded-lg hover:from-blue-700 hover:to-blue-900 transition-all shadow-md"
+                className="w-full bg-gradient-to-r from-blue-600 to-blue-800 text-white py-3 rounded-lg font-bold text-lg hover:from-blue-700 hover:to-blue-900 transition-all shadow-md mt-2"
               >
                 Save Changes
               </button>
             </form>
-            {/* Bank Details Section */}
-            <div className="mt-10">
-              <h2 className="text-2xl font-bold text-gray-800 mb-4">Bank Details</h2>
-              {bankSuccess && <p className="text-green-600 mb-2">{bankSuccess}</p>}
-              {bankError && <p className="text-red-500 mb-2">{bankError}</p>}
-              {bankDetails.accountHolderName ? (
-                <form onSubmit={handleBankSubmit}>
-                  <div className="mb-4">
-                    <label className="block text-gray-700 font-semibold mb-2" htmlFor="accountHolderName">Account Holder Name</label>
-                    <input
-                      type="text"
-                      id="accountHolderName"
-                      name="accountHolderName"
-                      value={bankDetails.accountHolderName}
-                      onChange={handleBankChange}
-                      className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
-                      required
-                    />
-                  </div>
-                  <div className="mb-4">
-                    <label className="block text-gray-700 font-semibold mb-2" htmlFor="bankName">Bank Name</label>
-                    <input
-                      type="text"
-                      id="bankName"
-                      name="bankName"
-                      value={bankDetails.bankName}
-                      onChange={handleBankChange}
-                      className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
-                      required
-                    />
-                  </div>
-                  <div className="mb-4">
-                    <label className="block text-gray-700 font-semibold mb-2" htmlFor="accountNumber">Account Number</label>
-                    <input
-                      type="text"
-                      id="accountNumber"
-                      name="accountNumber"
-                      value={bankDetails.accountNumber}
-                      onChange={handleBankChange}
-                      className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
-                      required
-                    />
-                  </div>
-                  <div className="mb-4">
-                    <label className="block text-gray-700 font-semibold mb-2" htmlFor="branch">Branch</label>
-                    <input
-                      type="text"
-                      id="branch"
-                      name="branch"
-                      value={bankDetails.branch}
-                      onChange={handleBankChange}
-                      className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
-                    />
-                  </div>
-                  <div className="mb-6">
-                    <label className="block text-gray-700 font-semibold mb-2" htmlFor="swiftCode">SWIFT Code</label>
-                    <input
-                      type="text"
-                      id="swiftCode"
-                      name="swiftCode"
-                      value={bankDetails.swiftCode}
-                      onChange={handleBankChange}
-                      className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
-                    />
-                  </div>
-                  <button
-                    type="submit"
-                    className="w-full bg-gradient-to-r from-blue-600 to-blue-800 text-white py-3 rounded-lg hover:from-blue-700 hover:to-blue-900 transition-all shadow-md"
-                  >
-                    Update Bank Details
-                  </button>
-                </form>
-              ) : (
-                <div className="text-gray-500">No bank details added yet.</div>
-              )}
-            </div>
+            <div className="my-10 border-t border-blue-100"></div>
+            <h2 className="text-2xl font-bold text-blue-800 mb-6 text-center">Bank Details</h2>
+            {bankSuccess && <p className="text-green-600 mb-2 text-center">{bankSuccess}</p>}
+            {bankError && <p className="text-red-500 mb-2 text-center">{bankError}</p>}
+            <form onSubmit={handleBankSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div className="relative">
+                <label className="block text-gray-700 font-semibold mb-2" htmlFor="accountHolderName">Account Holder Name</label>
+                <div className="flex items-center">
+                  <FaIdCard className="absolute ml-3 text-gray-400" />
+                  <input
+                    type="text"
+                    id="accountHolderName"
+                    name="accountHolderName"
+                    value={bankDetails.accountHolderName}
+                    onChange={handleBankChange}
+                    className="w-full pl-10 p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+                    required
+                  />
+                </div>
+              </div>
+              <div className="relative">
+                <label className="block text-gray-700 font-semibold mb-2" htmlFor="bankName">Bank Name</label>
+                <div className="flex items-center">
+                  <FaUniversity className="absolute ml-3 text-gray-400" />
+                  <input
+                    type="text"
+                    id="bankName"
+                    name="bankName"
+                    value={bankDetails.bankName}
+                    onChange={handleBankChange}
+                    className="w-full pl-10 p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+                    required
+                  />
+                </div>
+              </div>
+              <div className="relative">
+                <label className="block text-gray-700 font-semibold mb-2" htmlFor="accountNumber">Account Number</label>
+                <div className="flex items-center">
+                  <FaKey className="absolute ml-3 text-gray-400" />
+                  <input
+                    type="text"
+                    id="accountNumber"
+                    name="accountNumber"
+                    value={bankDetails.accountNumber}
+                    onChange={handleBankChange}
+                    className="w-full pl-10 p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+                    required
+                  />
+                </div>
+              </div>
+              <div className="relative">
+                <label className="block text-gray-700 font-semibold mb-2" htmlFor="branch">Branch</label>
+                <div className="flex items-center">
+                  <FaCodeBranch className="absolute ml-3 text-gray-400" />
+                  <input
+                    type="text"
+                    id="branch"
+                    name="branch"
+                    value={bankDetails.branch}
+                    onChange={handleBankChange}
+                    className="w-full pl-10 p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+                  />
+                </div>
+              </div>
+              <div className="relative md:col-span-2">
+                <label className="block text-gray-700 font-semibold mb-2" htmlFor="swiftCode">SWIFT Code</label>
+                <div className="flex items-center">
+                  <FaKey className="absolute ml-3 text-gray-400" />
+                  <input
+                    type="text"
+                    id="swiftCode"
+                    name="swiftCode"
+                    value={bankDetails.swiftCode}
+                    onChange={handleBankChange}
+                    className="w-full pl-10 p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+                  />
+                </div>
+              </div>
+              <div className="md:col-span-2">
+                <button
+                  type="submit"
+                  className="w-full bg-gradient-to-r from-blue-600 to-blue-800 text-white py-3 rounded-lg font-bold text-lg hover:from-blue-700 hover:to-blue-900 transition-all shadow-md mt-2"
+                >
+                  {bankDetails.accountHolderName ? 'Update Bank Details' : 'Add Bank Details'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       </div>

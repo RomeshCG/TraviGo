@@ -54,6 +54,7 @@ import UserTopBar from './components/UserTopBar';
 import TourGuideBookings from './pages/user/TourGuideBookings';
 import ReviewManagement from './pages/Admin/ReviewManagement';
 import ContactInquiries from './pages/Admin/ContactInquiries';
+import Reviews from './pages/user/Reviews';
 
 // Load Stripe
 const stripePromise = loadStripe(import.meta.env.VITE_REACT_APP_STRIPE_PUBLISHABLE_KEY);
@@ -322,6 +323,14 @@ function AppContent() {
                     element={
                         <ProtectedRoute>
                             <TravelPackages />
+                        </ProtectedRoute>
+                    }
+                />
+                <Route
+                    path="/user/reviews"
+                    element={
+                        <ProtectedRoute>
+                            <Reviews />
                         </ProtectedRoute>
                     }
                 />

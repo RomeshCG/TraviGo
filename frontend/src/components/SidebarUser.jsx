@@ -106,18 +106,6 @@ const SidebarUser = ({ children }) => {
             </li>
             <li className="mb-2">
               <NavLink
-                to="/user/profile"
-                className={({ isActive }) =>
-                  `flex items-center p-3 rounded-lg text-gray-300 hover:bg-blue-700/50 hover:text-white transition-all duration-300 ${
-                    isActive ? 'bg-gradient-to-r from-blue-600 to-blue-800 text-white' : ''
-                  }`
-                }
-              >
-                <FaUserEdit className="mr-3" /> {!collapsed && 'Profile'}
-              </NavLink>
-            </li>
-            <li className="mb-2">
-              <NavLink
                 to="/user/reviews"
                 className={({ isActive }) =>
                   `flex items-center p-3 rounded-lg text-gray-300 hover:bg-blue-700/50 hover:text-white transition-all duration-300 ${
@@ -125,19 +113,7 @@ const SidebarUser = ({ children }) => {
                   }`
                 }
               >
-                <FaBook className="mr-3" /> {!collapsed && 'My Reviews'}
-              </NavLink>
-            </li>
-            <li className="mb-2">
-              <NavLink
-                to="/user/settings"
-                className={({ isActive }) =>
-                  `flex items-center p-3 rounded-lg text-gray-300 hover:bg-blue-700/50 hover:text-white transition-all duration-300 ${
-                    isActive ? 'bg-gradient-to-r from-blue-600 to-blue-800 text-white' : ''
-                  }`
-                }
-              >
-                <FaCog className="mr-3" /> {!collapsed && 'Settings'}
+                <FaBook className="mr-3" /> {!collapsed && 'Reviews'}
               </NavLink>
             </li>
             <li className="mb-2">
