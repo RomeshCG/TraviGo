@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { FaStar, FaCheckCircle, FaTimesCircle } from 'react-icons/fa';
 import SidebarUser from '../../components/SidebarUser';
 import HeaderUser from '../../components/HeaderUser';
+import * as XLSX from 'xlsx';
+import { saveAs } from 'file-saver';
 
 const TourGuideBookings = () => {
   const [bookings, setBookings] = useState([]);
@@ -121,15 +123,43 @@ const TourGuideBookings = () => {
     }
   };
 
+  // Export to Excel function
+  const exportToExcel = () => {
+    const exportData = bookings.map(b => ({
+      'Guide Name': b.guideId && typeof b.guideId === 'object' ? b.guideId.name : String(b.guideId),
+      'Package': b.packageId && typeof b.packageId === 'object' ? b.packageId.title : String(b.packageId),
+      'Travel Date': b.travelDate ? new Date(b.travelDate).toLocaleDateString() : '-',
+      'Travelers': b.travelersCount ?? '-',
+      'Country': b.country ?? '-',
+      'Status': b.bookingStatus || b.status,
+      'Total Price': b.totalPrice !== undefined ? `$${Number(b.totalPrice).toFixed(2)}` : '-',
+    }));
+    const ws = XLSX.utils.json_to_sheet(exportData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Bookings');
+    const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+    saveAs(new Blob([wbout], { type: 'application/octet-stream' }), 'tour_guide_bookings.xlsx');
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-100 flex">
       <SidebarUser />
       <div style={{ marginLeft: 'var(--sidebar-width, 16rem)' }} className="flex-1">
         <HeaderUser />
         <div className="p-6 md:p-10">
-          <h1 className="text-3xl font-extrabold text-blue-800 mb-8 flex items-center gap-3">
-            <FaCheckCircle className="text-blue-400" /> My Tour Guide Bookings
-          </h1>
+          <div className="flex items-center justify-between mb-8">
+            <h1 className="text-3xl font-extrabold text-blue-800 flex items-center gap-3">
+              <FaCheckCircle className="text-blue-400" /> My Tour Guide Bookings
+            </h1>
+            {bookings.length > 0 && (
+              <button
+                onClick={exportToExcel}
+                className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-semibold shadow transition"
+              >
+                Export to Excel
+              </button>
+            )}
+          </div>
           {loading ? (
             <div className="text-center text-lg text-gray-600">Loading...</div>
           ) : error ? (
