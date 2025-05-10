@@ -263,6 +263,46 @@ router.put('/user/update-profile-picture', upload.single('profilePicture'), asyn
   }
 });
 
+// Update user bank details
+router.put('/user/update-bank-details', async (req, res) => {
+  try {
+    const { userId, bankDetails } = req.body;
+    if (!userId || !bankDetails) {
+      return res.status(400).json({ message: 'User ID and bank details are required' });
+    }
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    user.bankDetails = bankDetails;
+    await user.save();
+    res.status(200).json({ message: 'Bank details updated successfully', bankDetails: user.bankDetails });
+  } catch (error) {
+    console.error('Update user bank details error:', error.stack);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Update tour guide bank details
+router.put('/tour-guide/update-bank-details', async (req, res) => {
+  try {
+    const { tourGuideId, bankDetails } = req.body;
+    if (!tourGuideId || !bankDetails) {
+      return res.status(400).json({ message: 'Tour guide ID and bank details are required' });
+    }
+    const tourGuide = await TourGuide.findById(tourGuideId);
+    if (!tourGuide) {
+      return res.status(404).json({ message: 'Tour guide not found' });
+    }
+    tourGuide.bankDetails = bankDetails;
+    await tourGuide.save();
+    res.status(200).json({ message: 'Bank details updated successfully', bankDetails: tourGuide.bankDetails });
+  } catch (error) {
+    console.error('Update tour guide bank details error:', error.stack);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 // Route to handle contact form submission
 router.post('/contact', async (req, res) => {
   try {
@@ -286,6 +326,19 @@ router.get('/admin/contact-inquiries', isAdmin, async (req, res) => {
     res.status(200).json(inquiries);
   } catch (error) {
     console.error('Error fetching contact inquiries:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// ADMIN: Mark a contact inquiry as replied
+router.patch('/admin/contact-inquiries/:id/reply', isAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const inquiry = await ContactMessage.findByIdAndUpdate(id, { replied: true }, { new: true });
+    if (!inquiry) return res.status(404).json({ message: 'Inquiry not found' });
+    res.status(200).json({ message: 'Inquiry marked as replied', inquiry });
+  } catch (error) {
+    console.error('Error marking inquiry as replied:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });
@@ -835,6 +888,7 @@ router.get('/user/:id', async (req, res) => {
       country: user.country,
       createdAt: user.createdAt,
       profilePicture: user.profilePicture || 'https://via.placeholder.com/150',
+      bankDetails: user.bankDetails || null, // Add bankDetails to response
     };
     res.status(200).json(userResponse);
   } catch (error) {

@@ -103,6 +103,8 @@ function TourGuideEarnings({ tourGuide }) {
   if (error) return <div className="text-center text-red-600">{error}</div>;
   if (!summary) return null;
 
+  const recentSorted = summary?.recent ? [...summary.recent].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)) : [];
+
   return (
     <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
       <h2 className="text-2xl font-bold mb-6">Earnings Overview</h2>
@@ -132,7 +134,7 @@ function TourGuideEarnings({ tourGuide }) {
         Request Cashout
       </button>
       {showModal && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
+        <div className="fixed inset-0 flex items-center justify-center z-50" style={{ background: "rgba(30, 41, 59, 0.15)", backdropFilter: "blur(2px)" }}>
           <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-sm">
             <h3 className="text-xl font-bold mb-4">Request Cashout</h3>
             {cashoutLoading ? (
@@ -189,7 +191,7 @@ function TourGuideEarnings({ tourGuide }) {
             </tr>
           </thead>
           <tbody>
-            {summary.recent.map(tx => (
+            {recentSorted.map(tx => (
               <tr key={tx._id} className="border-b hover:bg-gray-50">
                 <td className="p-2">{tx.createdAt ? new Date(tx.createdAt).toLocaleDateString() : '-'}</td>
                 <td className="p-2">{tx.packageId?.title || String(tx.packageId)}</td>
@@ -258,6 +260,15 @@ const TourGuideDashboard = () => {
   const [reviewed, setReviewed] = useState(false);
   const [completing, setCompleting] = useState(false);
   const [showReviewForm, setShowReviewForm] = useState(false);
+  const [bankDetails, setBankDetails] = useState({
+    accountHolderName: '',
+    bankName: '',
+    accountNumber: '',
+    branch: '',
+    swiftCode: '',
+  });
+  const [bankSuccess, setBankSuccess] = useState('');
+  const [bankError, setBankError] = useState('');
 
   const navigate = useNavigate();
   const BASE_URL = 'http://localhost:5000';
@@ -334,8 +345,12 @@ const TourGuideDashboard = () => {
       let bookingsData = [];
       if (bookingsResponse.ok) {
         bookingsData = await bookingsResponse.json();
+        // Sort bookings by createdAt descending
+        const sorted = bookingsData.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        setTourBookings(sorted);
+      } else {
+        setTourBookings([]);
       }
-      setTourBookings(bookingsData || []);
 
       setFormData({
         name: guideData.name || '',
@@ -355,6 +370,26 @@ const TourGuideDashboard = () => {
   useEffect(() => {
     fetchTourGuideData();
   }, [fetchTourGuideData]);
+
+  useEffect(() => {
+    if (tourGuide && tourGuide.bankDetails && tourGuide.bankDetails.accountHolderName) {
+      setBankDetails({
+        accountHolderName: tourGuide.bankDetails.accountHolderName || '',
+        bankName: tourGuide.bankDetails.bankName || '',
+        accountNumber: tourGuide.bankDetails.accountNumber || '',
+        branch: tourGuide.bankDetails.branch || '',
+        swiftCode: tourGuide.bankDetails.swiftCode || '',
+      });
+    } else {
+      setBankDetails({
+        accountHolderName: '',
+        bankName: '',
+        accountNumber: '',
+        branch: '',
+        swiftCode: '',
+      });
+    }
+  }, [tourGuide]);
 
   const handleBookingStatusUpdate = async (bookingId, newStatus) => {
     try {
@@ -556,6 +591,37 @@ const TourGuideDashboard = () => {
       }
     } catch (err) {
       setError(`Failed to update profile: ${err.message}`);
+    }
+  };
+
+  const handleBankChange = (e) => {
+    const { name, value } = e.target;
+    setBankDetails((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleBankSubmit = async (e) => {
+    e.preventDefault();
+    setBankError('');
+    setBankSuccess('');
+    try {
+      const token = localStorage.getItem('providerToken');
+      if (!token) throw new Error('No token found. Please log in again.');
+      const response = await fetch(`${BASE_URL}/api/tour-guide/update-bank-details`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ tourGuideId: tourGuide._id, bankDetails }),
+      });
+      const data = await response.json();
+      if (response.ok) {
+        setBankSuccess('Bank details updated successfully');
+      } else {
+        throw new Error(data.message || 'Failed to update bank details');
+      }
+    } catch (err) {
+      setBankError(err.message || 'An error occurred while updating bank details');
     }
   };
 
@@ -1051,6 +1117,83 @@ const TourGuideDashboard = () => {
                       </button>
                     </div>
                   </form>
+
+                  {/* Bank Details Section */}
+                  <div className="mt-10">
+                    <h3 className="text-xl font-bold text-gray-800 mb-4">Bank Details</h3>
+                    {bankSuccess && <p className="text-green-600 mb-2">{bankSuccess}</p>}
+                    {bankError && <p className="text-red-500 mb-2">{bankError}</p>}
+                    {bankDetails.accountHolderName ? (
+                      <form onSubmit={handleBankSubmit}>
+                        <div className="mb-4">
+                          <label className="block text-gray-700 font-semibold mb-2" htmlFor="accountHolderName">Account Holder Name</label>
+                          <input
+                            type="text"
+                            id="accountHolderName"
+                            name="accountHolderName"
+                            value={bankDetails.accountHolderName}
+                            onChange={handleBankChange}
+                            className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                            required
+                          />
+                        </div>
+                        <div className="mb-4">
+                          <label className="block text-gray-700 font-semibold mb-2" htmlFor="bankName">Bank Name</label>
+                          <input
+                            type="text"
+                            id="bankName"
+                            name="bankName"
+                            value={bankDetails.bankName}
+                            onChange={handleBankChange}
+                            className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                            required
+                          />
+                        </div>
+                        <div className="mb-4">
+                          <label className="block text-gray-700 font-semibold mb-2" htmlFor="accountNumber">Account Number</label>
+                          <input
+                            type="text"
+                            id="accountNumber"
+                            name="accountNumber"
+                            value={bankDetails.accountNumber}
+                            onChange={handleBankChange}
+                            className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                            required
+                          />
+                        </div>
+                        <div className="mb-4">
+                          <label className="block text-gray-700 font-semibold mb-2" htmlFor="branch">Branch</label>
+                          <input
+                            type="text"
+                            id="branch"
+                            name="branch"
+                            value={bankDetails.branch}
+                            onChange={handleBankChange}
+                            className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                          />
+                        </div>
+                        <div className="mb-6">
+                          <label className="block text-gray-700 font-semibold mb-2" htmlFor="swiftCode">SWIFT Code</label>
+                          <input
+                            type="text"
+                            id="swiftCode"
+                            name="swiftCode"
+                            value={bankDetails.swiftCode}
+                            onChange={handleBankChange}
+                            className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                          />
+                        </div>
+                        <button
+                          type="submit"
+                          className="w-full bg-gradient-to-r from-green-600 to-green-800 text-white py-3 rounded-lg hover:from-green-700 hover:to-green-900 transition-all shadow-md"
+                        >
+                          Update Bank Details
+                        </button>
+                      </form>
+                    ) : (
+                      <div className="text-gray-500">No bank details added yet.</div>
+                    )}
+                  </div>
                 </div>
               )}
 
@@ -1072,10 +1215,11 @@ const TourGuideDashboard = () => {
         onRequestClose={() => { setSelectedBooking(null); setReviewed(false); setReview({ rating: 5, comment: '' }); setModalError(''); setShowReviewForm(false); }}
         ariaHideApp={false}
         className="fixed inset-0 flex items-center justify-center z-50"
-        overlayClassName="fixed inset-0 bg-black bg-opacity-40 z-40"
+        overlayClassName="fixed inset-0 z-40"
+        style={{ overlay: { background: "rgba(30, 41, 59, 0.15)", backdropFilter: "blur(2px)" } }}
       >
         <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-lg relative">
-          <button className="absolute top-2 right-2 text-gray-400 hover:text-gray-700" onClick={() => { setSelectedBooking(null); setReviewed(false); setReview({ rating: 5, comment: '' }); setModalError(''); setShowReviewForm(false); }}>&times;</button>
+          <button className="absolute top-2 right-2 text-gray-400 hover:text-gray-700 text-2xl" onClick={() => { setSelectedBooking(null); setReviewed(false); setReview({ rating: 5, comment: '' }); setModalError(''); setShowReviewForm(false); }}>&times;</button>
           {modalLoading ? (
             <div>Loading...</div>
           ) : modalError ? (

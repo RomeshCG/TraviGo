@@ -43,7 +43,9 @@ const TourGuideBookings = () => {
           setBookings([]);
           return;
         }
-        setBookings(data);
+        // Sort bookings by createdAt descending
+        const sorted = data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        setBookings(sorted);
         // Fetch reviews for these bookings to prevent duplicate reviews
         try {
           const userStr = localStorage.getItem('user');

@@ -255,7 +255,7 @@ function UserDashboard() {
                       )}
                       {/* Modal or expandable section for all reviews */}
                       {showAllReviews && (
-                        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+                        <div className="fixed inset-0 flex items-center justify-center z-50" style={{ background: "rgba(30, 41, 59, 0.15)", backdropFilter: "blur(2px)" }}>
                           <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-lg w-full max-h-[80vh] overflow-y-auto relative border-2 border-blue-200">
                             <button
                               className="absolute top-2 right-2 text-gray-400 hover:text-gray-700 text-2xl"

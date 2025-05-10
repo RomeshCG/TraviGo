@@ -2,11 +2,14 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import AdminSidebar from "../../components/SidebarAdmin";
 import AdminHeader from "../../components/AdminHeader";
+import BankDetailsModal from "../../components/BankDetailsModal";
 import axios from "axios";
 
 const Users = () => {
   const [users, setUsers] = useState([]);
   const [error, setError] = useState(null);
+  const [selectedBankDetails, setSelectedBankDetails] = useState(null);
+  const [showBankModal, setShowBankModal] = useState(false);
   const navigate = useNavigate();
 
   // Set axios default headers with admin token
@@ -41,23 +44,6 @@ const Users = () => {
     fetchUsers();
   }, [navigate]);
 
-  // Ban/Unban user
-  const handleBanUnban = async (id, isCurrentlyBanned) => {
-    try {
-      const endpoint = isCurrentlyBanned ? `/api/users/unban/${id}` : `/api/users/ban/${id}`;
-      const response = await axios.put(endpoint);
-      setUsers((prev) =>
-        prev.map((user) =>
-          user._id === id ? { ...user, ...response.data } : user
-        )
-      );
-      setError(null);
-    } catch (error) {
-      console.error("Error banning/unbanning user:", error);
-      setError(error.response?.data?.message || "Failed to update ban status. Please try again.");
-    }
-  };
-
   // Delete user
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this user?")) {
@@ -75,10 +61,9 @@ const Users = () => {
     }
   };
 
-  // Placeholder for update functionality (can be implemented later)
-  const handleUpdate = (id) => {
-    console.log(`Update user ${id}`);
-    // Example: navigate(`/admin/users/edit/${id}`);
+  const handleViewBank = (user) => {
+    setSelectedBankDetails(user.bankDetails || null);
+    setShowBankModal(true);
   };
 
   return (
@@ -117,20 +102,10 @@ const Users = () => {
                     </div>
                     <div className="space-x-2 flex items-center">
                       <button
-                        onClick={() => handleUpdate(user._id)}
+                        onClick={() => handleViewBank(user)}
                         className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 text-sm"
                       >
-                        Update
-                      </button>
-                      <button
-                        onClick={() => handleBanUnban(user._id, user.isBanned)}
-                        className={`px-4 py-2 rounded-lg text-sm text-white ${
-                          user.isBanned
-                            ? "bg-gray-500 hover:bg-gray-600"
-                            : "bg-orange-500 hover:bg-orange-600"
-                        }`}
-                      >
-                        {user.isBanned ? "Unban" : "Ban"}
+                        View Bank Account
                       </button>
                       <button
                         onClick={() => handleDelete(user._id)}
@@ -143,6 +118,12 @@ const Users = () => {
                 ))
               )}
             </div>
+            {showBankModal && (
+              <BankDetailsModal
+                bankDetails={selectedBankDetails}
+                onClose={() => setShowBankModal(false)}
+              />
+            )}
           </div>
         </div>
       </div>

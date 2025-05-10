@@ -13,6 +13,15 @@ const EditProfile = () => {
     country: '',
     address: '',
   });
+  const [bankDetails, setBankDetails] = useState({
+    accountHolderName: '',
+    bankName: '',
+    accountNumber: '',
+    branch: '',
+    swiftCode: '',
+  });
+  const [bankSuccess, setBankSuccess] = useState('');
+  const [bankError, setBankError] = useState('');
 
   // Fetch user data on component mount
   useEffect(() => {
@@ -34,6 +43,23 @@ const EditProfile = () => {
             country: data.country,
             address: data.address || '',
           });
+          if (data.bankDetails && data.bankDetails.accountHolderName) {
+            setBankDetails({
+              accountHolderName: data.bankDetails.accountHolderName || '',
+              bankName: data.bankDetails.bankName || '',
+              accountNumber: data.bankDetails.accountNumber || '',
+              branch: data.bankDetails.branch || '',
+              swiftCode: data.bankDetails.swiftCode || '',
+            });
+          } else {
+            setBankDetails({
+              accountHolderName: '',
+              bankName: '',
+              accountNumber: '',
+              branch: '',
+              swiftCode: '',
+            });
+          }
         } else {
           throw new Error(data.message || 'Failed to fetch user data');
         }
@@ -92,6 +118,38 @@ const EditProfile = () => {
       }
     } catch (err) {
       setError(err.message || 'An error occurred while updating the profile');
+    }
+  };
+
+  // Handle bank details input changes
+  const handleBankChange = (e) => {
+    const { name, value } = e.target;
+    setBankDetails((prev) => ({ ...prev, [name]: value }));
+  };
+
+  // Handle bank details submission
+  const handleBankSubmit = async (e) => {
+    e.preventDefault();
+    setBankError('');
+    setBankSuccess('');
+    try {
+      const storedUser = JSON.parse(localStorage.getItem('user'));
+      if (!storedUser || !storedUser._id) {
+        throw new Error('User not found in local storage');
+      }
+      const response = await fetch('/api/user/update-bank-details', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: storedUser._id, bankDetails }),
+      });
+      const data = await response.json();
+      if (response.ok) {
+        setBankSuccess('Bank details updated successfully');
+      } else {
+        throw new Error(data.message || 'Failed to update bank details');
+      }
+    } catch (err) {
+      setBankError(err.message || 'An error occurred while updating bank details');
     }
   };
 
@@ -203,6 +261,82 @@ const EditProfile = () => {
                 Save Changes
               </button>
             </form>
+            {/* Bank Details Section */}
+            <div className="mt-10">
+              <h2 className="text-2xl font-bold text-gray-800 mb-4">Bank Details</h2>
+              {bankSuccess && <p className="text-green-600 mb-2">{bankSuccess}</p>}
+              {bankError && <p className="text-red-500 mb-2">{bankError}</p>}
+              {bankDetails.accountHolderName ? (
+                <form onSubmit={handleBankSubmit}>
+                  <div className="mb-4">
+                    <label className="block text-gray-700 font-semibold mb-2" htmlFor="accountHolderName">Account Holder Name</label>
+                    <input
+                      type="text"
+                      id="accountHolderName"
+                      name="accountHolderName"
+                      value={bankDetails.accountHolderName}
+                      onChange={handleBankChange}
+                      className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+                      required
+                    />
+                  </div>
+                  <div className="mb-4">
+                    <label className="block text-gray-700 font-semibold mb-2" htmlFor="bankName">Bank Name</label>
+                    <input
+                      type="text"
+                      id="bankName"
+                      name="bankName"
+                      value={bankDetails.bankName}
+                      onChange={handleBankChange}
+                      className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+                      required
+                    />
+                  </div>
+                  <div className="mb-4">
+                    <label className="block text-gray-700 font-semibold mb-2" htmlFor="accountNumber">Account Number</label>
+                    <input
+                      type="text"
+                      id="accountNumber"
+                      name="accountNumber"
+                      value={bankDetails.accountNumber}
+                      onChange={handleBankChange}
+                      className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+                      required
+                    />
+                  </div>
+                  <div className="mb-4">
+                    <label className="block text-gray-700 font-semibold mb-2" htmlFor="branch">Branch</label>
+                    <input
+                      type="text"
+                      id="branch"
+                      name="branch"
+                      value={bankDetails.branch}
+                      onChange={handleBankChange}
+                      className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+                    />
+                  </div>
+                  <div className="mb-6">
+                    <label className="block text-gray-700 font-semibold mb-2" htmlFor="swiftCode">SWIFT Code</label>
+                    <input
+                      type="text"
+                      id="swiftCode"
+                      name="swiftCode"
+                      value={bankDetails.swiftCode}
+                      onChange={handleBankChange}
+                      className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    className="w-full bg-gradient-to-r from-blue-600 to-blue-800 text-white py-3 rounded-lg hover:from-blue-700 hover:to-blue-900 transition-all shadow-md"
+                  >
+                    Update Bank Details
+                  </button>
+                </form>
+              ) : (
+                <div className="text-gray-500">No bank details added yet.</div>
+              )}
+            </div>
           </div>
         </div>
       </div>

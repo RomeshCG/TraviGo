@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { FaSearch, FaSyncAlt, FaInfoCircle, FaMoneyCheckAlt, FaUndoAlt } from "react-icons/fa";
 import AdminSidebar from "../../components/SidebarAdmin";
 import AdminHeader from "../../components/AdminHeader";
+import BankDetailsModal from "../../components/BankDetailsModal";
 import axios from "axios";
 
 const TourGuidePayments = () => {
@@ -14,7 +15,10 @@ const TourGuidePayments = () => {
   const [selectedBooking, setSelectedBooking] = useState(null);
   const [cashoutRequests, setCashoutRequests] = useState([]);
   const [cashoutLoading, setCashoutLoading] = useState(true);
+  const [selectedBankDetails, setSelectedBankDetails] = useState(null);
+  const [showBankModal, setShowBankModal] = useState(false);
   const searchInput = useRef();
+  const [bankLoading, setBankLoading] = useState(false);
 
   // Set axios default headers with admin token
   const token = localStorage.getItem('adminToken');
@@ -26,7 +30,9 @@ const TourGuidePayments = () => {
     const fetchBookings = async () => {
       try {
         const response = await axios.get("/api/admin/tour-guide-bookings");
-        setBookings(response.data);
+        // Sort bookings by createdAt descending
+        const sorted = response.data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        setBookings(sorted);
         setError(null);
       } catch (error) {
         setError(error.response?.data?.message || "Failed to fetch bookings.");
@@ -40,7 +46,9 @@ const TourGuidePayments = () => {
     const fetchCashoutRequests = async () => {
       try {
         const response = await axios.get("/api/admin/cashout-requests");
-        setCashoutRequests(response.data);
+        // Sort cashout requests by createdAt descending
+        const sorted = response.data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        setCashoutRequests(sorted);
       } catch {
         // Optionally handle error
       } finally {
@@ -128,6 +136,25 @@ const TourGuidePayments = () => {
     }
   };
 
+  const handleViewBank = async (tourGuide) => {
+    if (tourGuide?.bankDetails) {
+      setSelectedBankDetails(tourGuide.bankDetails);
+      setShowBankModal(true);
+    } else if (tourGuide?._id) {
+      setBankLoading(true);
+      try {
+        const res = await axios.get(`/api/tourguides/${tourGuide._id}`);
+        setSelectedBankDetails(res.data.bankDetails || null);
+        setShowBankModal(true);
+      } catch {
+        setSelectedBankDetails(null);
+        setShowBankModal(true);
+      } finally {
+        setBankLoading(false);
+      }
+    }
+  };
+
   const statusBadge = (status) => {
     const color = {
       pending: "bg-yellow-100 text-yellow-800",
@@ -207,6 +234,7 @@ const TourGuidePayments = () => {
                           <td className="p-2 space-x-2">
                             <button onClick={() => handleApproveCashoutRequest(req._id)} className="bg-green-500 text-white px-2 py-1 rounded hover:bg-green-600 text-xs" title="Approve Cashout">Approve</button>
                             <button onClick={() => handleRejectCashoutRequest(req._id)} className="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600 text-xs" title="Reject Cashout">Reject</button>
+                            <button onClick={() => handleViewBank(req.tourGuideId)} className="bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600 text-xs" title="View Bank Details">Bank</button>
                           </td>
                         </tr>
                       ))}
@@ -343,6 +371,19 @@ const TourGuidePayments = () => {
                   </div>
                 </div>
               </div>
+            )}
+            {/* Modal for bank details */}
+            {showBankModal && (
+              <BankDetailsModal
+                bankDetails={selectedBankDetails}
+                onClose={() => setShowBankModal(false)}
+              >
+                {bankLoading && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-60 z-10 rounded-2xl">
+                    <span className="text-blue-600 font-semibold text-lg">Loading bank details...</span>
+                  </div>
+                )}
+              </BankDetailsModal>
             )}
           </div>
         </div>
