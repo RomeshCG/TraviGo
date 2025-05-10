@@ -263,6 +263,46 @@ router.put('/user/update-profile-picture', upload.single('profilePicture'), asyn
   }
 });
 
+// Update user bank details
+router.put('/user/update-bank-details', async (req, res) => {
+  try {
+    const { userId, bankDetails } = req.body;
+    if (!userId || !bankDetails) {
+      return res.status(400).json({ message: 'User ID and bank details are required' });
+    }
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    user.bankDetails = bankDetails;
+    await user.save();
+    res.status(200).json({ message: 'Bank details updated successfully', bankDetails: user.bankDetails });
+  } catch (error) {
+    console.error('Update user bank details error:', error.stack);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Update tour guide bank details
+router.put('/tour-guide/update-bank-details', async (req, res) => {
+  try {
+    const { tourGuideId, bankDetails } = req.body;
+    if (!tourGuideId || !bankDetails) {
+      return res.status(400).json({ message: 'Tour guide ID and bank details are required' });
+    }
+    const tourGuide = await TourGuide.findById(tourGuideId);
+    if (!tourGuide) {
+      return res.status(404).json({ message: 'Tour guide not found' });
+    }
+    tourGuide.bankDetails = bankDetails;
+    await tourGuide.save();
+    res.status(200).json({ message: 'Bank details updated successfully', bankDetails: tourGuide.bankDetails });
+  } catch (error) {
+    console.error('Update tour guide bank details error:', error.stack);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 // Route to handle contact form submission
 router.post('/contact', async (req, res) => {
   try {
@@ -276,6 +316,30 @@ router.post('/contact', async (req, res) => {
   } catch (error) {
     console.error('Contact form submission error:', error.stack);
     res.status(500).json({ message: 'Server error. Please try again later.' });
+  }
+});
+
+// ADMIN: Get all contact form inquiries
+router.get('/admin/contact-inquiries', isAdmin, async (req, res) => {
+  try {
+    const inquiries = await ContactMessage.find().sort({ createdAt: -1 });
+    res.status(200).json(inquiries);
+  } catch (error) {
+    console.error('Error fetching contact inquiries:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// ADMIN: Mark a contact inquiry as replied
+router.patch('/admin/contact-inquiries/:id/reply', isAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const inquiry = await ContactMessage.findByIdAndUpdate(id, { replied: true }, { new: true });
+    if (!inquiry) return res.status(404).json({ message: 'Inquiry not found' });
+    res.status(200).json({ message: 'Inquiry marked as replied', inquiry });
+  } catch (error) {
+    console.error('Error marking inquiry as replied:', error);
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
@@ -824,6 +888,7 @@ router.get('/user/:id', async (req, res) => {
       country: user.country,
       createdAt: user.createdAt,
       profilePicture: user.profilePicture || 'https://via.placeholder.com/150',
+      bankDetails: user.bankDetails || null, // Add bankDetails to response
     };
     res.status(200).json(userResponse);
   } catch (error) {
@@ -965,6 +1030,8 @@ router.post('/tour-bookings/:id/review', async (req, res) => {
       reviewData.tourGuideId = booking.guideId;
       reviewData.touristId = booking.userId;
     }
+    // Add bookingId to reviewData to satisfy Review model
+    reviewData.bookingId = id;
     // Prevent duplicate review by same party for this booking
     const existing = await Review.findOne({
       tourGuideId: booking.guideId,
@@ -1052,7 +1119,7 @@ router.post('/admin/tour-guide-bookings/:id/payout', isAdmin, async (req, res) =
   }
 });
 
-// Tour guide reviews
+// Tour guide reviews (only reviews from tourists to guide)
 router.get('/tour-guide/:tourGuideId/reviews', async (req, res) => {
   try {
     const { tourGuideId } = req.params;
@@ -1063,7 +1130,8 @@ router.get('/tour-guide/:tourGuideId/reviews', async (req, res) => {
     if (!tourGuide) {
       return res.status(404).json({ message: 'Tour guide not found' });
     }
-    const reviews = await Review.find({ tourGuideId }).populate('touristId', 'username');
+    // Only fetch reviews written by tourists about this guide
+    const reviews = await Review.find({ tourGuideId, reviewerType: 'tourist' }).populate('touristId', 'username');
     const averageRating = reviews.length
       ? reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length
       : 0;
@@ -1203,6 +1271,30 @@ router.get('/tour-guides', async (req, res) => {
   } catch (error) {
     console.error('Error fetching tour guides:', error.stack);
     res.status(500).json({ message: 'Error fetching tour guides', error });
+  }
+});
+
+// Get average ratings for all tour guides
+router.get('/tour-guides/ratings', async (req, res) => {
+  try {
+    const ratings = await Review.aggregate([
+      { $group: {
+        _id: "$tourGuideId",
+        avgRating: { $avg: "$rating" },
+        reviewCount: { $sum: 1 }
+      }}
+    ]);
+    // Convert to map for easier frontend use
+    const result = {};
+    ratings.forEach(r => {
+      result[r._id] = {
+        avgRating: r.avgRating,
+        reviewCount: r.reviewCount
+      };
+    });
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to fetch ratings', error: error.message });
   }
 });
 

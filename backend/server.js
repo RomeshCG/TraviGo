@@ -36,10 +36,20 @@ app.use('/api', adminRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/hotels', hotelRoutes);
 app.use('/api/payments', paymentRoutes);
+<<<<<<< HEAD
 app.use('/api/rentals', rentalRoutes);
 app.use('/api/vehicles', vehicleRoutes);
 app.use('/api/emails', emailRoutes);
 app.use('/api/tour-guides', tourGuideBookingRoutes);
+=======
+app.use('/api/rentals', rentalRoutes); // Adjusted for clarity
+app.use('/api/vehicles', vehicleRoutes); // Adjusted for clarity
+app.use('/api/tour-guides', tourGuideBookingRoutes); // Adjusted for clarity
+app.use('/api', rentalRoutes);
+app.use('/api', vehicleRoutes);
+app.use('/api', emailRoutes);
+app.use('/api', tourGuideBookingRoutes);
+>>>>>>> 3dfc4821c2878211e6201fc41199736b464b37f3
 
 app.listen(port, () => {
     console.log(`Server running on port ${port}`);

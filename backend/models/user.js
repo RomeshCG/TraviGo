@@ -8,6 +8,13 @@ const userSchema = new mongoose.Schema({
   country: { type: String, required: true },
   createdAt: { type: Date, default: Date.now },
   profilePicture: { type: String, default: 'https://via.placeholder.com/150' },
+  bankDetails: {
+    accountHolderName: { type: String },
+    bankName: { type: String },
+    accountNumber: { type: String },
+    branch: { type: String },
+    swiftCode: { type: String },
+  },
 });
 
 // Prevent OverwriteModelError by checking if model is already compiled

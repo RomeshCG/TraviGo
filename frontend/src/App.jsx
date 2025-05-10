@@ -53,6 +53,7 @@ import TourGuideReports from './pages/Admin/TourGuideReports';
 import UserTopBar from './components/UserTopBar';
 import TourGuideBookings from './pages/user/TourGuideBookings';
 import ReviewManagement from './pages/Admin/ReviewManagement';
+import ContactInquiries from './pages/Admin/ContactInquiries';
 
 // Load Stripe
 const stripePromise = loadStripe(import.meta.env.VITE_REACT_APP_STRIPE_PUBLISHABLE_KEY);
@@ -207,7 +208,16 @@ function AppContent() {
     };
 
     const publicRoutes = ['/login', '/signin', '/service-provider/login', '/admin/login'];
-    const hideUserTopBar = publicRoutes.includes(location.pathname);
+    // Hide UserTopBar on dashboard and user dashboard and ALL /user/ pages
+    const dashboardRoutes = [
+        '/dashboard',
+        '/user/dashboard',
+        '/admin/dashboard',
+        '/pages/hotel/dashboard',
+        '/pages/vehicle/dashboard',
+    ];
+    const userRoutes = location.pathname.startsWith('/user/');
+    const hideUserTopBar = publicRoutes.includes(location.pathname) || dashboardRoutes.includes(location.pathname) || userRoutes;
 
     return (
         <>
@@ -403,6 +413,14 @@ function AppContent() {
                     element={
                         <ProtectedAdminRoute>
                             <ReviewManagement />
+                        </ProtectedAdminRoute>
+                    }
+                />
+                <Route
+                    path="/admin/contact-inquiries"
+                    element={
+                        <ProtectedAdminRoute>
+                            <ContactInquiries />
                         </ProtectedAdminRoute>
                     }
                 />
