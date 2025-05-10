@@ -11,6 +11,7 @@ const TourGuideProfile = () => {
   const [tourPackages, setTourPackages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [ratingInfo, setRatingInfo] = useState({ avgRating: 0, reviewCount: 0 });
   const navigate = useNavigate();
 
   const BASE_URL = 'http://localhost:5000';
@@ -31,6 +32,18 @@ console.log('Provider ID from URL:', providerId); // Log the providerId for debu
         }
         const guideData = await guideResponse.json();
         setTourGuide(guideData);
+
+        // Fetch average rating and review count for this guide
+        const ratingRes = await fetch(`${BASE_URL}/api/tour-guides/ratings`);
+        if (ratingRes.ok) {
+          const ratings = await ratingRes.json();
+          if (ratings[guideData._id]) {
+            setRatingInfo({
+              avgRating: ratings[guideData._id].avgRating,
+              reviewCount: ratings[guideData._id].reviewCount,
+            });
+          }
+        }
 
         // Fetch tour guide's published packages
         const packagesResponse = await fetch(`${BASE_URL}/api/tour-guide/${guideData._id}/tour-packages`, {
@@ -96,11 +109,21 @@ console.log('Provider ID from URL:', providerId); // Log the providerId for debu
                   />
                   <div className="text-white">
                     <h1 className="text-2xl md:text-4xl font-bold">{tourGuide.name}</h1>
-                    {tourGuide.verifiedBadge && (
-                      <span className="inline-flex items-center bg-green-500 text-white text-sm px-3 py-1 rounded-full mt-2 shadow-md">
-                        Verified <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
-                      </span>
-                    )}
+                    <div className="flex items-center gap-2 mt-2">
+                      {/* Star rating UI */}
+                      <div className="flex items-center bg-white/90 rounded-full px-3 py-1 shadow text-yellow-500 font-semibold text-base">
+                        {Array.from({ length: 5 }).map((_, i) => (
+                          <svg key={i} className={`w-5 h-5 ${i < Math.round(ratingInfo.avgRating) ? 'text-yellow-400' : 'text-gray-300'}`} fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.967a1 1 0 00.95.69h4.175c.969 0 1.371 1.24.588 1.81l-3.38 2.455a1 1 0 00-.364 1.118l1.287 3.966c.3.922-.755 1.688-1.54 1.118l-3.38-2.454a1 1 0 00-1.175 0l-3.38 2.454c-.784.57-1.838-.196-1.54-1.118l1.287-3.966a1 1 0 00-.364-1.118L2.05 9.394c-.783-.57-.38-1.81.588-1.81h4.175a1 1 0 00.95-.69l1.286-3.967z" /></svg>
+                        ))}
+                        <span className="ml-2 text-gray-700">{ratingInfo.avgRating ? ratingInfo.avgRating.toFixed(1) : 'No ratings'}</span>
+                        <span className="ml-1 text-gray-400">({ratingInfo.reviewCount})</span>
+                      </div>
+                      {tourGuide.verifiedBadge && (
+                        <span className="inline-flex items-center bg-green-500 text-white text-sm px-3 py-1 rounded-full shadow-md">
+                          Verified <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>

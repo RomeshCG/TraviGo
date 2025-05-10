@@ -1217,6 +1217,30 @@ router.get('/tour-guides', async (req, res) => {
   }
 });
 
+// Get average ratings for all tour guides
+router.get('/tour-guides/ratings', async (req, res) => {
+  try {
+    const ratings = await Review.aggregate([
+      { $group: {
+        _id: "$tourGuideId",
+        avgRating: { $avg: "$rating" },
+        reviewCount: { $sum: 1 }
+      }}
+    ]);
+    // Convert to map for easier frontend use
+    const result = {};
+    ratings.forEach(r => {
+      result[r._id] = {
+        avgRating: r.avgRating,
+        reviewCount: r.reviewCount
+      };
+    });
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to fetch ratings', error: error.message });
+  }
+});
+
 // Admin Registration Route
 router.post('/admin/register', isAdmin, async (req, res) => {
   const { username, email, password } = req.body;
