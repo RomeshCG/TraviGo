@@ -169,13 +169,21 @@ const ReviewManagement = () => {
                     </div>
                     
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div>
+                      <div className="flex flex-col items-center">
                         <h3 className="text-lg font-medium mb-2 text-center">Rating Distribution</h3>
-                        {pieChartData && <Pie data={pieChartData} />}
+                        {pieChartData && (
+                          <div style={{ maxWidth: 220 }}>
+                            <Pie data={pieChartData} width={200} height={200} />
+                          </div>
+                        )}
                       </div>
-                      <div>
+                      <div className="flex flex-col items-center">
                         <h3 className="text-lg font-medium mb-2 text-center">Review Sentiment</h3>
-                        {barChartData && <Bar data={barChartData} options={barChartOptions} />}
+                        {barChartData && (
+                          <div style={{ maxWidth: 260 }}>
+                            <Bar data={barChartData} options={barChartOptions} width={240} height={200} />
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>

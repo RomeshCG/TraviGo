@@ -16,6 +16,8 @@ import {
   Legend,
   ArcElement
 } from 'chart.js';
+import * as XLSX from 'xlsx';
+import { saveAs } from 'file-saver';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement);
 
@@ -118,6 +120,27 @@ function TourGuideEarnings({ tourGuide }) {
 
   const recentSorted = summary?.recent ? [...summary.recent].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)) : [];
 
+  const handleExportEarnings = () => {
+    if (!recentSorted || recentSorted.length === 0) {
+      toast.error('No earnings/transactions to export.');
+      return;
+    }
+    const data = recentSorted.map(tx => ({
+      'Transaction ID': tx._id,
+      'Date': tx.createdAt ? new Date(tx.createdAt).toLocaleDateString() : '',
+      'Package': tx.packageId?.title || String(tx.packageId),
+      'Amount': tx.totalPrice,
+      'Booking Status': tx.bookingStatus,
+      'Payment Status': tx.paymentStatus,
+      'Refunded': tx.refundRequested || tx.bookingStatus === 'cancelled' ? 'Yes' : 'No',
+    }));
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Earnings');
+    const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+    saveAs(new Blob([excelBuffer], { type: 'application/octet-stream' }), 'TourGuide_Earnings.xlsx');
+  };
+
   return (
     <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
       <h2 className="text-2xl font-bold mb-6">Earnings Overview</h2>
@@ -138,6 +161,9 @@ function TourGuideEarnings({ tourGuide }) {
           <div className="text-lg text-gray-600 mb-2">Refunded/Cancelled</div>
           <div className="text-3xl font-bold text-red-700">${summary.refunded.toFixed(2)}</div>
         </div>
+      </div>
+      <div className="flex gap-4 mb-4">
+        <button onClick={handleExportEarnings} className="bg-gradient-to-r from-green-500 to-teal-500 text-white px-4 py-2 rounded-lg shadow hover:from-green-600 hover:to-teal-600 transition">Export Earnings</button>
       </div>
       <button
         onClick={handleOpenCashoutModal}
@@ -463,6 +489,37 @@ const TourGuideDashboard = () => {
     }
   };
 
+  const handleUnpublish = async (packageId) => {
+    setError('');
+    try {
+      const token = localStorage.getItem('providerToken');
+      if (!token) {
+        setError('No token found. Please log in again.');
+        setTimeout(() => navigate('/service-provider/login'), 2000);
+        return;
+      }
+      const response = await fetch(`${BASE_URL}/api/tour-guide/tour-package/${packageId}/publish`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ status: 'draft' })
+      });
+      const data = await response.json();
+      if (response.ok) {
+        setTourPackages(tourPackages.map(pkg =>
+          pkg._id === packageId ? { ...pkg, status: 'draft' } : pkg
+        ));
+        toast.success('Tour package unpublished (drafted) successfully!');
+      } else {
+        setError(data.message || 'Failed to unpublish tour package');
+      }
+    } catch (err) {
+      setError(`Failed to unpublish tour package: ${err.message}`);
+    }
+  };
+
   const handleDelete = async (packageId) => {
     setError('');
     try {
@@ -715,6 +772,29 @@ const TourGuideDashboard = () => {
     }
   };
 
+  // Export Bookings as Excel
+  const handleExportBookings = () => {
+    if (!tourBookings || tourBookings.length === 0) {
+      toast.error('No bookings to export.');
+      return;
+    }
+    const data = tourBookings.map(b => ({
+      'Booking ID': b._id,
+      'Tourist Name': b.touristId?.name || b.touristId?.email || '',
+      'Package': b.packageId?.title || '',
+      'Travel Date': b.travelDate ? new Date(b.travelDate).toLocaleDateString() : '',
+      'Total Price': b.totalPrice,
+      'Booking Status': b.bookingStatus,
+      'Payment Status': b.paymentStatus,
+      'Created At': b.createdAt ? new Date(b.createdAt).toLocaleString() : '',
+    }));
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Bookings');
+    const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+    saveAs(new Blob([excelBuffer], { type: 'application/octet-stream' }), 'TourGuide_Bookings.xlsx');
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-b from-gray-100 to-gray-200">
       <TourGuideHeader />
@@ -734,6 +814,7 @@ const TourGuideDashboard = () => {
           <div className="grid grid-cols-12 gap-6">
             {/* Sidebar */}
             <div className="col-span-12 md:col-span-3 lg:col-span-2">
+
               <div className="bg-white rounded-2xl shadow-xl p-4 flex flex-col items-center sticky top-24 min-h-[400px]">
                 <div className="w-full flex flex-col gap-2">
                   {[
@@ -832,6 +913,14 @@ const TourGuideDashboard = () => {
               {/* Bookings Tab */}
               {activeTab === 'bookings' && (
                 <div className="bg-white rounded-2xl shadow-xl p-8">
+                  <div className="mb-6 flex justify-end">
+                    <button
+                      onClick={handleExportBookings}
+                      className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white px-5 py-2 rounded-lg shadow-md hover:from-blue-600 hover:to-indigo-600 transition font-semibold mr-2"
+                    >
+                      Export Bookings
+                    </button>
+                  </div>
                   <h2 className="text-2xl font-bold mb-6 flex items-center gap-2"><svg className="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>Tour Bookings</h2>
                   <div className="overflow-x-auto rounded-xl">
                     <table className="min-w-full text-sm">
@@ -939,6 +1028,14 @@ const TourGuideDashboard = () => {
                                 className="text-green-600 hover:text-green-800 font-semibold"
                               >
                                 Publish
+                              </button>
+                            )}
+                            {pkg.status === 'published' && (
+                              <button
+                                onClick={() => handleUnpublish(pkg._id)}
+                                className="text-yellow-600 hover:text-yellow-800 font-semibold"
+                              >
+                                Unpublish
                               </button>
                             )}
                             <button

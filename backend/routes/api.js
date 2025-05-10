@@ -343,6 +343,127 @@ router.patch('/admin/contact-inquiries/:id/reply', isAdmin, async (req, res) => 
   }
 });
 
+// ADMIN: System Reports Summary
+router.get('/admin/reports/summary', isAdmin, async (req, res) => {
+  try {
+    // Models
+    const User = require('../models/user');
+    const Booking = require('../models/Booking');
+    const TourBooking = require('../models/TourBookings');
+    // If you have a VehicleBooking model, require it here
+    let VehicleBooking;
+    try {
+      VehicleBooking = require('../models/VehicleBooking');
+    } catch { VehicleBooking = null; }
+
+    // Total users
+    const totalUsers = await User.countDocuments();
+
+    // Hotel bookings
+    const hotelBookings = await Booking.find();
+    const totalHotelBookings = hotelBookings.length;
+    const hotelIncome = hotelBookings.reduce((sum, b) => sum + (b.totalPrice || 0), 0);
+
+    // Tour bookings
+    const tourBookings = await TourBooking.find();
+    const totalTourBookings = tourBookings.length;
+    const tourIncome = tourBookings.reduce((sum, b) => sum + (b.totalPrice || 0), 0);
+
+    // Vehicle bookings (optional)
+    let totalVehicleBookings = 0;
+    let vehicleIncome = 0;
+    if (VehicleBooking) {
+      const vehicleBookings = await VehicleBooking.find();
+      totalVehicleBookings = vehicleBookings.length;
+      vehicleIncome = vehicleBookings.reduce((sum, b) => sum + (b.totalPrice || 0), 0);
+    }
+
+    // System income
+    const systemIncome = hotelIncome + tourIncome + vehicleIncome;
+
+    // Daily income (last 14 days)
+    const today = new Date();
+    const days = 14;
+    const dailyIncome = [];
+    for (let i = days - 1; i >= 0; i--) {
+      const day = new Date(today);
+      day.setDate(today.getDate() - i);
+      const start = new Date(day.setHours(0,0,0,0));
+      const end = new Date(day.setHours(23,59,59,999));
+      const hotelDay = hotelBookings.filter(b => b.createdAt >= start && b.createdAt <= end).reduce((sum, b) => sum + (b.totalPrice || 0), 0);
+      const tourDay = tourBookings.filter(b => b.createdAt >= start && b.createdAt <= end).reduce((sum, b) => sum + (b.totalPrice || 0), 0);
+      const vehicleDay = VehicleBooking ? (await VehicleBooking.find({ createdAt: { $gte: start, $lte: end } })).reduce((sum, b) => sum + (b.totalPrice || 0), 0) : 0;
+      dailyIncome.push({
+        date: start.toISOString().slice(0, 10),
+        hotel: hotelDay,
+        tour: tourDay,
+        vehicle: vehicleDay,
+        total: hotelDay + tourDay + vehicleDay
+      });
+    }
+
+    // User registrations (last 14 days)
+    const dailyUsers = [];
+    for (let i = days - 1; i >= 0; i--) {
+      const day = new Date(today);
+      day.setDate(today.getDate() - i);
+      const start = new Date(day.setHours(0,0,0,0));
+      const end = new Date(day.setHours(23,59,59,999));
+      const count = await User.countDocuments({ createdAt: { $gte: start, $lte: end } });
+      dailyUsers.push({ date: start.toISOString().slice(0, 10), count });
+    }
+
+    res.json({
+      totalUsers,
+      totalHotelBookings,
+      totalTourBookings,
+      totalVehicleBookings,
+      hotelIncome,
+      tourIncome,
+      vehicleIncome,
+      systemIncome,
+      dailyIncome,
+      dailyUsers
+    });
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to fetch admin reports', error: err.message });
+  }
+});
+
+// ADMIN: Get all hotels with owner info
+router.get('/admin/hotels', isAdmin, async (req, res) => {
+  try {
+    const Hotel = require('../models/Hotel');
+    const HotelOwner = require('../models/HotelOwner');
+    // Fetch all hotels
+    const hotels = await Hotel.find().lean();
+    // Fetch all owners
+    const owners = await HotelOwner.find().lean();
+    // Map ownerId to owner
+    const ownerMap = {};
+    owners.forEach(owner => {
+      ownerMap[String(owner._id)] = owner;
+    });
+    // Attach owner info to each hotel (if available)
+    const hotelsWithOwner = hotels.map(hotel => {
+      // Try to find owner by matching hotel name/address/license
+      const owner = owners.find(o => o.hotelName === hotel.name) || null;
+      return {
+        ...hotel,
+        owner: owner ? {
+          hotelName: owner.hotelName,
+          hotelAddress: owner.hotelAddress,
+          hotelLicenseNumber: owner.hotelLicenseNumber,
+          numberOfRooms: owner.numberOfRooms,
+        } : null
+      };
+    });
+    res.json(hotelsWithOwner);
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to fetch hotels', error: err.message });
+  }
+});
+
 // Service provider registration
 router.post('/service-provider/register', async (req, res) => {
   const { name, email, password, providerType } = req.body;

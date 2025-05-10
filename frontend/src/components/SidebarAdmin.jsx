@@ -194,18 +194,6 @@ const SidebarAdmin = () => {
                       <span>Payment Manager</span>
                     </NavLink>
                   </li>
-                  <li>
-                    <NavLink
-                      to="/admin/tour-guide-reports"
-                      className={({ isActive }) =>
-                        `flex items-center space-x-2 p-2 hover:bg-pink-100 hover:text-black rounded-md ${isActive ? "bg-pink-100 text-black" : ""}`
-                      }
-                      onClick={() => setIsOpen(false)}
-                    >
-                      <FaFileAlt className="w-4 h-4" />
-                      <span>Tour Guide Reports</span>
-                    </NavLink>
-                  </li>
                 </ul>
               )}
             </li>
@@ -235,20 +223,6 @@ const SidebarAdmin = () => {
               >
                 <FaChartBar className="w-5 h-5" />
                 <span>Reports</span>
-              </NavLink>
-            </li>
-            <li>
-              <NavLink
-                to="/admin/ui-manager"
-                className={({ isActive }) =>
-                  `flex items-center space-x-2 p-4 hover:bg-pink-100 hover:text-black ${
-                    isActive ? "bg-pink-100 text-black" : ""
-                  }`
-                }
-                onClick={() => setIsOpen(false)}
-              >
-                <FaPaintBrush className="w-5 h-5" />
-                <span>UI Manager</span>
               </NavLink>
             </li>
             <li>
