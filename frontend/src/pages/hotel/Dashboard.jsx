@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import Sidebar from "./Sidebar";
 import Home from "./Home";
 import IncomingBookings from "./IncomingBookings";
@@ -7,7 +7,6 @@ import PreviousBookings from "./PreviousBookings";
 import HotelDetails from "./HotelDetails";
 import AddHotel from "./AddHotel";
 import Reports from "./Reports";
-import { useNavigate } from "react-router-dom";
 
 function Dashboard() {
   const [activeSection, setActiveSection] = useState("home");
@@ -41,27 +40,37 @@ function Dashboard() {
         }
 
         // Verify token
-        const verifyResponse = await fetch("/api/verify-provider-token", {
+        const verifyResponse = await fetch("http://localhost:5000/api/verify-provider-token", {
           headers: { Authorization: `Bearer ${token}` },
         });
-        if (!verifyResponse.ok) {
-          throw new Error("Invalid or expired token");
+        const verifyData = await verifyResponse.json();
+        console.log("Token verification response:", verifyData);
+
+        if (!verifyResponse.ok || verifyData.message !== "Token is valid" || !verifyData.provider) {
+          throw new Error(verifyData.message || "Invalid or expired token");
         }
 
         setProvider(providerData);
 
-        // Fetch provider-specific hotels
+        // Attempt to fetch hotels, but handle the backend TypeError gracefully
         setLoading(true);
-        const hotelsResponse = await fetch("http://localhost:5000/api/hotels/provider", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (!hotelsResponse.ok) {
-          throw new Error(`Failed to fetch hotels (status: ${hotelsResponse.status})`);
+        try {
+          const hotelsResponse = await fetch("http://localhost:5000/api/hotels/provider", {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          if (hotelsResponse.ok) {
+            const hotelsData = await hotelsResponse.json();
+            setHotels(hotelsData);
+          } else {
+            console.warn("Failed to fetch hotels, falling back to local data:", hotelsResponse.status);
+            setHotels([]); // Fallback to empty list if fetch fails
+          }
+        } catch (fetchError) {
+          console.error("Hotel fetch error:", fetchError.message);
+          setHotels([]); // Avoid crashing the dashboard
         }
-        const hotelsData = await hotelsResponse.json();
-        setHotels(hotelsData);
       } catch (err) {
-        console.error("Initialization error:", err);
+        console.error("Initialization error:", err.message);
         setError(err.message || "Session expired. Please log in again.");
         localStorage.removeItem("providerToken");
         localStorage.removeItem("provider");
@@ -100,7 +109,7 @@ function Dashboard() {
           <div className="bg-white rounded-xl shadow-lg p-6">
             <h2 className="text-2xl font-bold text-gray-900 mb-6">Manage Hotels</h2>
             {hotels.length === 0 ? (
-              <p className="text-gray-600">No hotels available.</p>
+              <p className="text-gray-600">No hotels available or failed to load. Try adding a hotel.</p>
             ) : (
               <ul className="space-y-4">
                 {hotels.map((hotel) => (
@@ -141,8 +150,8 @@ function Dashboard() {
           {provider && (
             <div className="flex items-center space-x-4">
               <div className="text-gray-700">
-                <p className="font-semibold">{provider.name}</p>
-                <p className="text-sm">{provider.email}</p>
+                <p className="font-semibold">{provider.name || "Hotel Manager"}</p>
+                <p className="text-sm">{provider.email || "No email"}</p>
               </div>
               <button
                 onClick={handleLogout}
@@ -156,7 +165,7 @@ function Dashboard() {
         <main className="flex-1 p-8 overflow-auto">
           <div className="mb-8">
             <h2 className="text-3xl font-bold text-gray-900">
-              Welcome, {provider ? provider.name : "Hotel Manager"}!
+              Welcome, {provider ? provider.name || "Hotel Manager" : "Hotel Manager"}!
             </h2>
             <p className="text-gray-600 mt-2">Manage your bookings, hotels, and generate reports with ease.</p>
           </div>
