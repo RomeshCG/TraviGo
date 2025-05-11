@@ -116,18 +116,6 @@ const SidebarUser = ({ children }) => {
                 <FaBook className="mr-3" /> {!collapsed && 'Reviews'}
               </NavLink>
             </li>
-            <li className="mb-2">
-              <NavLink
-                to="/user/explore"
-                className={({ isActive }) =>
-                  `flex items-center p-3 rounded-lg text-gray-300 hover:bg-blue-700/50 hover:text-white transition-all duration-300 ${
-                    isActive ? 'bg-gradient-to-r from-blue-600 to-blue-800 text-white' : ''
-                  }`
-                }
-              >
-                <FaGlobe className="mr-3" /> {!collapsed && 'Explore Destinations'}
-              </NavLink>
-            </li>
             {/* My Booking Section with Sub-Items */}
             <li className="mb-2">
               <div className={`flex items-center p-3 rounded-lg text-gray-300 bg-blue-900/60 font-semibold ${collapsed ? 'justify-center' : ''}`}>

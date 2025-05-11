@@ -110,7 +110,7 @@ function Home() {
               Where Your Dream Vacation Becomes a Reality. Customize your travel
               experience with our exclusive packages.
             </p>
-            <button className="mt-8 bg-blue-600 px-6 py-3 rounded-lg shadow-md hover:bg-blue-700 transition">
+            <button className="mt-8 bg-blue-600 px-6 py-3 rounded-lg shadow-md hover:bg-blue-700 transition" onClick={() => navigate('/about')}>
               More About <FaArrowRight className="ml-2 inline" />
             </button>
           </div>
