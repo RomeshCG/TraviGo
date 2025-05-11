@@ -56,7 +56,7 @@ const AddVehicle = ({ providerId, setError }) => {
         description: '',
         images: [],
       });
-    } catch (err) {
+    } catch {
       setError('Failed to add vehicle. Please try again.');
     } finally {
       setLoading(false);
