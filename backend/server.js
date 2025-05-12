@@ -33,6 +33,7 @@ const rentingVehicleRoutes = require('./routes/rentingVehicleRoutes');
 const orderRoutes = require('./routes/orderRoutes');
 const vehicleReviewRoutes = require('./routes/vehicleReviewRoutes'); // Added vehicle review routes
 const hotelPaymentRoutes = require('./routes/hotelPaymentRoutes');
+const vehicleOrderReviewRoutes = require('./routes/vehicleOrderReviewRoutes'); // Vehicle order review routes
 
 app.use('/api', adminRoutes);
 app.use('/api/bookings', bookingRoutes);
@@ -44,6 +45,7 @@ app.use('/api/renting-vehicles', rentingVehicleRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/reviews', vehicleReviewRoutes); // Added vehicle review routes
 app.use('/api/hotel-payments', hotelPaymentRoutes);
+app.use('/api/vehicle-order-reviews', vehicleOrderReviewRoutes); // Vehicle order review endpoints
 
 app.listen(port, () => {
     console.log(`Server running on port ${port}`);

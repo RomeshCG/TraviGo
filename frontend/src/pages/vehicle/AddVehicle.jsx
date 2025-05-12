@@ -78,7 +78,7 @@ const AddVehicle = () => {
             } else {
                 setErrors({ api: data.message || 'Failed to add vehicle' });
             }
-        } catch (err) {
+        } catch {
             setErrors({ api: 'Server error. Please try again.' });
         }
         setLoading(false);

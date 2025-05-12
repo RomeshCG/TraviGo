@@ -25,7 +25,7 @@ const placeOrder = async (req, res) => {
 // Get all orders
 const getAllOrders = async (req, res) => {
   try {
-    const orders = await Order.find().populate('vehicleId'); // Ensure 'vehicleId' references RentingVehicle
+    const orders = await Order.find().populate('vehicleId').populate('userId'); // Populate userId for contact info
     res.status(200).json(orders);
   } catch (err) {
     res.status(500).json({ message: 'Failed to fetch orders', error: err.message });
@@ -65,7 +65,7 @@ const getOrdersByUserName = async (req, res) => {
 const getOrdersByUserId = async (req, res) => {
   const { userId } = req.params;
   try {
-    const orders = await Order.find({ userId }).populate('vehicleId');
+    const orders = await Order.find({ userId }).populate('vehicleId').populate('userId'); // Populate userId for contact info
     res.status(200).json(orders);
   } catch (err) {
     res.status(500).json({ message: 'Failed to fetch user orders', error: err.message });

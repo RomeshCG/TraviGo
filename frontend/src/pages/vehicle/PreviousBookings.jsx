@@ -11,7 +11,7 @@ const PreviousBookings = ({ providerId, setError }) => {
         const response = await axios.get(`http://localhost:5000/api/rentals/provider/${providerId}`);
         const bookings = response.data;
         setBookings(bookings.filter((booking) => booking.status !== 'pending'));
-      } catch (err) {
+      } catch {
         setError('Failed to fetch previous bookings. Please try again.');
       } finally {
         setLoading(false);

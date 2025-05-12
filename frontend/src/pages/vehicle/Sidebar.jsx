@@ -55,6 +55,19 @@ const Sidebar = ({ setActiveSection, navigate }) => {
               Add Vehicle
             </button>
           </li>
+          <li>
+            <button
+              onClick={() => {
+                navigate('/vehicle/dashboard');
+                setActiveSection && setActiveSection('home');
+                // Optionally, set a flag in localStorage to trigger edit mode
+                localStorage.setItem('vehicleEditProfile', 'true');
+              }}
+              className="w-full text-left p-3 rounded-lg hover:bg-blue-600 bg-blue-700 text-white transition mt-2"
+            >
+              Edit Profile
+            </button>
+          </li>
         </ul>
       </nav>
 

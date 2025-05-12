@@ -34,7 +34,7 @@ const ManageVehicles = () => {
                 } else {
                     setError(data.message || 'Failed to fetch vehicles');
                 }
-            } catch (err) {
+            } catch {
                 setError('Server error. Please try again.');
             }
             setLoading(false);
@@ -85,7 +85,7 @@ const ManageVehicles = () => {
             } else {
                 alert(data.message || 'Failed to update vehicle');
             }
-        } catch (err) {
+        } catch {
             alert('Server error. Please try again.');
         }
     };

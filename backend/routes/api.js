@@ -18,6 +18,7 @@ const fs = require('fs');
 const TourGuideBooking = require('../models/TourBookings'); // Model name is 'TourBooking'
 const ContactMessage = require('../models/ContactMessage');
 const CashoutRequest = require('../models/CashoutRequest');
+const vehicleOrderReviewRoutes = require('./vehicleOrderReviewRoutes');
 
 // Load environment variables
 require('dotenv').config();
@@ -1952,5 +1953,41 @@ router.get('/service-providers/:id', async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 });
+
+// Update vehicle provider profile (for vehicle providers only)
+const auth = require('../Middleware/auth');
+router.put('/vehicle-provider/update-profile', auth, upload.single('profilePic'), async (req, res) => {
+  const { name, email, phone, address } = req.body;
+  const providerId = req.user._id;
+
+  try {
+    // Update ServiceProvider
+    const provider = await ServiceProvider.findById(providerId);
+    if (!provider || provider.providerType !== 'VehicleProvider') {
+      return res.status(404).json({ message: 'Vehicle provider not found' });
+    }
+    provider.name = name || provider.name;
+    provider.email = email || provider.email;
+    if (req.file) {
+      provider.profilePic = `/uploads/${req.file.filename}`;
+    }
+    await provider.save();
+
+    // Update VehicleProvider
+    let vehicleProvider = await VehicleProvider.findOne({ providerId });
+    if (vehicleProvider) {
+      vehicleProvider.phoneNumber = phone || vehicleProvider.phoneNumber;
+      vehicleProvider.address = address || vehicleProvider.address;
+      await vehicleProvider.save();
+    }
+
+    res.status(200).json({ message: 'Profile updated successfully', provider });
+  } catch (error) {
+    console.error('Error updating vehicle provider profile:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+router.use('/vehicle-order-reviews', vehicleOrderReviewRoutes);
 
 module.exports = router;
