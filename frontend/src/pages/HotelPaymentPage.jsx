@@ -11,6 +11,7 @@ const CheckoutForm = ({ bookingData }) => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [successMessage, setSuccessMessage] = useState('');
   const [nameOnCard, setNameOnCard] = useState('');
 
   const handleSubmit = async (e) => {
@@ -43,18 +44,21 @@ const CheckoutForm = ({ bookingData }) => {
       if (result.error) {
         setError(result.error.message);
       } else if (result.paymentIntent.status === 'succeeded') {
-        // Redirect to ReceiptPage with receipt data
-        navigate('/receipt', {
-          state: {
-            bookingId: bookingData.bookingId,
-            totalPrice: bookingData.amount,
-            firstName: bookingData.firstName,
-            lastName: bookingData.lastName,
-            email: bookingData.email,
-            checkInDate: bookingData.checkInDate,
-            checkOutDate: bookingData.checkOutDate,
-          },
-        });
+        setSuccessMessage('Payment successful! Redirecting to receipt...');
+        setTimeout(() => {
+          // Redirect to ReceiptPage with receipt data
+          navigate('/receipt', {
+            state: {
+              bookingId: bookingData.bookingId,
+              totalPrice: bookingData.amount,
+              firstName: bookingData.firstName,
+              lastName: bookingData.lastName,
+              email: bookingData.email,
+              checkInDate: bookingData.checkInDate,
+              checkOutDate: bookingData.checkOutDate,
+            },
+          });
+        }, 3000); // Redirect after 3 seconds
       }
     } catch (err) {
       setError('Payment failed. Please try again.');
@@ -66,6 +70,11 @@ const CheckoutForm = ({ bookingData }) => {
   return (
     <form onSubmit={handleSubmit} className="max-w-lg mx-auto bg-white p-6 rounded shadow">
       <h2 className="text-2xl font-bold mb-4">Complete Your Payment</h2>
+      {successMessage && (
+        <div className="bg-green-100 text-green-800 text-center py-2 px-4 rounded mb-4">
+          {successMessage}
+        </div>
+      )}
       <div className="mb-4">
         <label className="block text-gray-700 font-medium mb-2">Name on Card</label>
         <input
