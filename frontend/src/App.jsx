@@ -5,7 +5,6 @@ import { loadStripe } from '@stripe/stripe-js';
 import VehicleProviderRegister from './pages/VehicleProviderRegister';
 import ServiceProviderLogin from './pages/ServiceProviderLogin';
 import Dashboard from './pages/hotel/Dashboard';
-import VehicleProviderDashboard from './pages/vehicle/VehicleProviderDashboard';
 import TourGuideDashboard from './pages/tourguide/TourGuideDashboard';
 import TourGuideCreatePackage from './pages/tourguide/TourGuideCreatePackage';
 import AboutUs from './pages/AboutUs';
@@ -15,7 +14,6 @@ import EditProfile from './pages/user/EditProfile';
 import ExploreDestinations from './pages/user/ExploreDestinations';
 import MyBooking from './pages/user/MyBooking';
 import AccountSettings from './pages/user/AccountSettings';
-import VehicleRental from './pages/user/VehicleRental';
 import TourGuides from './pages/user/TourGuide';
 import TourGuidess from './pages/TourGuides';
 import TravelPackages from './pages/user/TravelPackages';
@@ -33,7 +31,6 @@ import Reports from './pages/admin/Reports';
 import TourGuide from './pages/admin/TourGuide';
 import UIManager from './pages/Admin/UIManage';
 import Users from './pages/admin/Users';
-import VehicleListing from './pages/admin/VehicleListing';
 import HotelListingsService from './pages/HotelListingsService';
 import TourGuidesService from './pages/TourGuidesService';
 import VehicleListingsService from './pages/VehicleListingsService';
@@ -42,9 +39,6 @@ import HotelCollection from './pages/HotelCollection';
 import HotelDetails from './pages/HotelDetails';
 import BookingPage from './pages/BookingPage';
 import PaymentPage from './pages/PaymentPage';
-import VehiclesPage from './pages/VehiclesPage';
-import VehicleDetailPage from './pages/VehicleDetailPage';
-import VehicleRentPage from './pages/VehicleRentPage';
 import TourGuideBookingForm from './pages/tourguide/TourGuideBookingForm';
 import TourGuidePaymentPage from './pages/tourguide/TourGuidePaymentPage';
 import TourGuideBookingConfirmation from './pages/tourguide/TourGuideBookingConfirmation';
@@ -53,6 +47,16 @@ import TourGuideReports from './pages/Admin/TourGuideReports';
 import UserTopBar from './components/UserTopBar';
 import TourGuideBookings from './pages/user/TourGuideBookings';
 import ReviewManagement from './pages/Admin/ReviewManagement';
+import VehicleAdminDashboard from './pages/vehicle/VehicleAdminDashboard';
+import DashboardHome from './pages/vehicle/DashboardHome';
+import AddVehicle from './pages/vehicle/AddVehicle';
+import ManageVehicles from './pages/vehicle/ManageVehicles';
+import Bookings from './pages/vehicle/Bookings';
+import VehiclesPage from './pages/VehiclesPage';
+import VehicleDetailPage from './pages/VehicleDetailPage';
+import RentVehiclePage from './pages/RentVehiclePage';
+import RentingPaymentPage from './pages/RentingPaymentPage';
+import RentOrderSummaryPage from './pages/RentOrderSummaryPage';
 
 // Load Stripe
 const stripePromise = loadStripe(import.meta.env.VITE_REACT_APP_STRIPE_PUBLISHABLE_KEY);
@@ -222,7 +226,6 @@ function AppContent() {
                 <Route path="/services/hotel-listings" element={<HotelListingsService />} />
                 <Route path="/services/tour-guides" element={<TourGuidesService />} />
                 <Route path="/tour-guide/:providerId" element={<TourGuideProfile />} />
-                <Route path="/services/vehicle-listings" element={<VehicleListingsService />} />
                 <Route path="/hotels" element={<HotelCollection />} />
                 <Route path="/hotels/:id" element={<HotelDetails />} />
                 <Route
@@ -292,14 +295,6 @@ function AppContent() {
                     }
                 />
                 <Route
-                    path="/user/vehicles"
-                    element={
-                        <ProtectedRoute>
-                            <VehicleRental />
-                        </ProtectedRoute>
-                    }
-                />
-                <Route
                     path="/user/guides"
                     element={
                         <ProtectedRoute>
@@ -312,16 +307,6 @@ function AppContent() {
                     element={
                         <ProtectedRoute>
                             <TravelPackages />
-                        </ProtectedRoute>
-                    }
-                />
-                <Route path="/vehicles" element={<VehiclesPage />} />
-                <Route path="/vehicles/:id" element={<VehicleDetailPage />} />
-                <Route
-                    path="/rent"
-                    element={
-                        <ProtectedRoute>
-                            <VehicleRentPage />
                         </ProtectedRoute>
                     }
                 />
@@ -371,14 +356,6 @@ function AppContent() {
                     element={
                         <ProtectedAdminRoute>
                             <Users />
-                        </ProtectedAdminRoute>
-                    }
-                />
-                <Route
-                    path="/admin/vehicle-listing"
-                    element={
-                        <ProtectedAdminRoute>
-                            <VehicleListing />
                         </ProtectedAdminRoute>
                     }
                 />
@@ -445,14 +422,6 @@ function AppContent() {
                         </ProtectedProviderRoute>
                     }
                 />
-                <Route
-                    path="/pages/vehicle/dashboard"
-                    element={
-                        <ProtectedProviderRoute allowedProviderType="VehicleProvider">
-                            <VehicleProviderDashboard />
-                        </ProtectedProviderRoute>
-                    }
-                />
                 <Route path="/tour-guides" element={<TourGuidess />} />
                 <Route
                     path="/book-tour-package/:guideId/:packageId"
@@ -477,6 +446,21 @@ function AppContent() {
                             <TourGuideBookingConfirmation />
                         </ProtectedRoute>
                     }
+                />
+                <Route path="/vehicle" element={<VehicleAdminDashboard />}>
+                    <Route path="dashboard" element={<DashboardHome />} />
+                    <Route path="add" element={<AddVehicle />} />
+                    <Route path="manage" element={<ManageVehicles />} />
+                    <Route path="bookings" element={<Bookings />} />
+                    <Route index element={<DashboardHome />} />
+                </Route>
+                <Route path="/user/vehicles" element={<VehiclesPage />} />
+                <Route path="/user/vehicles/:id" element={<VehicleDetailPage />} />
+                <Route path="/user/vehicles/rent" element={<RentVehiclePage />} />
+                <Route path="/user/vehicles/payment" element={<RentingPaymentPage />} />
+                <Route
+                    path="/user/vehicles/order-summary"
+                    element={<RentOrderSummaryPage />}
                 />
                 <Route path="*" element={<div>404 - Page Not Found</div>} />
             </Routes>

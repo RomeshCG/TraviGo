@@ -1,65 +1,79 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import VehicleCard from '../components/VehicleCard';
-import Header from '../components/Header';
+import SimpleHeader from '../components/SimpleHeader';
 
 const VehiclesPage = () => {
   const [vehicles, setVehicles] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState('');
 
-  // Fetch vehicles from the backend
   useEffect(() => {
     const fetchVehicles = async () => {
+      setLoading(true);
+      setError('');
       try {
-        const response = await fetch('/api/vehicles');
-        if (!response.ok) throw new Error('Failed to fetch vehicles');
-        const data = await response.json();
-        setVehicles(data);
-        setLoading(false);
-      } catch (err) {
-        setError('Failed to load vehicles. Please try again later.');
-        setLoading(false);
+        const res = await fetch('http://localhost:5000/api/renting-vehicles');
+        const data = await res.json();
+        if (res.ok) {
+          setVehicles(data.vehicles || []);
+        } else {
+          setError(data.message || 'Failed to fetch vehicles');
+        }
+      } catch {
+        setError('Server error. Please try again.');
       }
+      setLoading(false);
     };
     fetchVehicles();
   }, []);
 
   return (
-    <div className="min-h-screen bg-gray-800">
-      {/* Header */}
-      <Header />
+    <>
+      <SimpleHeader />
+      <div className="pt-28 pb-12 min-h-screen bg-gradient-to-br from-blue-50 to-white">
+        <div className="max-w-7xl mx-auto px-4">
+          
+          {/* Loading Spinner */}
+          {loading && (
+            <div className="flex justify-center items-center h-40">
+              <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-600 border-opacity-50"></div>
+              <span className="ml-4 text-lg text-blue-700 font-medium">Loading vehicles...</span>
+            </div>
+          )}
 
-      {/* Main Content */}
-      <div className="pt-28 pb-12 px-4 sm:px-6 lg:px-8">
-        <h1 className="text-4xl font-extrabold text-center text-white mb-12 tracking-tight">
-          Our Vehicles
-        </h1>
-
-        {loading ? (
-          <div className="flex items-center justify-center min-h-[50vh]">
-            <p className="text-xl font-semibold text-gray-300 animate-pulse">
-              Loading vehicles...
-            </p>
-          </div>
-        ) : error ? (
-          <div className="flex items-center justify-center min-h-[50vh]">
-            <p className="text-xl font-semibold text-red-400 bg-red-50 px-6 py-3 rounded-lg shadow-sm">
+          {/* Error Message */}
+          {error && (
+            <div className="bg-red-100 border border-red-400 text-red-700 px-6 py-4 rounded mb-6 text-center font-semibold">
               {error}
-            </p>
-          </div>
-        ) : vehicles.length === 0 ? (
-          <div className="flex items-center justify-center min-h-[50vh]">
-            <p className="text-lg text-gray-400">No vehicles available at the moment.</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 max-w-7xl mx-auto">
-            {vehicles.map((vehicle) => (
-              <VehicleCard key={vehicle._id} vehicle={vehicle} />
+            </div>
+          )}
+
+          {/* Vehicle Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+            {vehicles.map(vehicle => (
+              <VehicleCard
+                key={vehicle._id}
+                vehicle={{
+                  ...vehicle,
+                  name: vehicle.vehicleName,
+                  price: vehicle.pricePerDay,
+                  fuel: vehicle.fuelType,
+                  image: vehicle.images && vehicle.images.length > 0 ? vehicle.images[0] : undefined,
+                  imageArray: vehicle.images || [],
+                }}
+              />
             ))}
           </div>
-        )}
+
+          {/* No Vehicles Found */}
+          {!loading && vehicles.length === 0 && !error && (
+            <div className="text-gray-500 mt-16 text-center text-xl font-medium">
+              No vehicles available at the moment. Please check back later.
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 
