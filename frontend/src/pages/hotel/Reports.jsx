@@ -17,26 +17,36 @@ function Reports() {
   useEffect(() => {
     const fetchReportData = async () => {
       try {
-        // Fetch bookings for revenue and total bookings
-        const bookingsResponse = await fetch("http://localhost:5000/api/bookings");
-        if (!bookingsResponse.ok) throw new Error("Failed to fetch bookings");
-        const bookings = await bookingsResponse.json();
+        const token = localStorage.getItem("providerToken");
 
-        // Fetch hotels for performance metrics
-        const hotelsResponse = await fetch("http://localhost:5000/api/hotels");
+        // Fetch hotels owned by the provider
+        const hotelsResponse = await fetch("http://localhost:5000/api/hotels/provider", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
         if (!hotelsResponse.ok) throw new Error("Failed to fetch hotels");
         const hotels = await hotelsResponse.json();
+        const hotelIds = hotels.map((hotel) => hotel._id);
+
+        // Fetch bookings
+        const bookingsResponse = await fetch("http://localhost:5000/api/bookings", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!bookingsResponse.ok) throw new Error("Failed to fetch bookings");
+        const allBookings = await bookingsResponse.json();
+
+        // Filter bookings for the provider's hotels
+        const filteredBookings = allBookings.filter((booking) => hotelIds.includes(booking.hotelId));
 
         // Calculate metrics
-        const totalBookings = bookings.length;
-        const totalRevenue = bookings.reduce((sum, booking) => {
+        const totalBookings = filteredBookings.length;
+        const totalRevenue = filteredBookings.reduce((sum, booking) => {
           const price = Number(booking.bookingPrice) || 0;
           return sum + price;
         }, 0);
 
         // Calculate hotel performance (e.g., bookings per hotel)
         const hotelPerformance = hotels.map((hotel) => {
-          const hotelBookings = bookings.filter((b) => b.hotelId === hotel._id);
+          const hotelBookings = filteredBookings.filter((b) => b.hotelId === hotel._id);
           return {
             name: hotel.name,
             bookingsCount: hotelBookings.length,

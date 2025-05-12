@@ -19,20 +19,26 @@ function Home() {
   useEffect(() => {
     const fetchData = async () => {
       try {
+        const token = localStorage.getItem("providerToken");
+
         // Fetch bookings
-        const bookingsResponse = await fetch("http://localhost:5000/api/bookings");
+        const bookingsResponse = await fetch("http://localhost:5000/api/bookings", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
         if (!bookingsResponse.ok) throw new Error("Failed to fetch bookings");
         const bookings = await bookingsResponse.json();
 
-        // Fetch hotels
-        const hotelsResponse = await fetch("http://localhost:5000/api/hotels");
+        // Fetch hotels owned by the provider
+        const hotelsResponse = await fetch("http://localhost:5000/api/hotels/provider", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
         if (!hotelsResponse.ok) throw new Error("Failed to fetch hotels");
         const hotels = await hotelsResponse.json();
 
         // Calculate summary metrics
         const totalBookings = bookings.length;
         const totalRevenue = bookings.reduce((sum, booking) => {
-          const price = Number(booking.bookingPrice) || 0;
+          const price = Number(booking.totalPrice) || 0;
           return sum + price;
         }, 0);
         const totalHotels = hotels.length;

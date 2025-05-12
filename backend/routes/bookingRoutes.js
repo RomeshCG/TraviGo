@@ -169,4 +169,15 @@ router.post(
   }
 );
 
+// filepath: c:\Users\wmpra\Documents\TraviGo-1\backend\routes\bookingRoutes.js
+router.get('/', async (req, res) => {
+    try {
+        const bookings = await Booking.find().populate('userId', 'name email'); // Populate user details if needed
+        res.status(200).json(bookings);
+    } catch (error) {
+        console.error('Error fetching bookings:', error);
+        res.status(500).json({ message: 'Failed to fetch bookings', error: error.message });
+    }
+});
+
 module.exports = router;

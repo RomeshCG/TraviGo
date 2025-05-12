@@ -38,9 +38,9 @@ import TourGuideProfile from './pages/TourGuideProfile';
 import HotelCollection from './pages/HotelCollection';
 import HotelDetails from './pages/HotelDetails';
 import BookingPage from './pages/BookingPage';
-import PaymentPage from './pages/PaymentPage';
+import HotelPaymentPage from './pages/HotelPaymentPage'; // Use the new payment page
 import TourGuideBookingForm from './pages/tourguide/TourGuideBookingForm';
-import TourGuidePaymentPage from './pages/tourguide/TourGuidePaymentPage';
+import TourGuidePaymentPage from './pages/tourguide/TourGuidePaymentPage'; // Tour guide payment
 import TourGuideBookingConfirmation from './pages/tourguide/TourGuideBookingConfirmation';
 import TourGuidePayments from './pages/Admin/TourGuidePayments';
 import TourGuideReports from './pages/Admin/TourGuideReports';
@@ -55,11 +55,12 @@ import Bookings from './pages/vehicle/Bookings';
 import VehiclesPage from './pages/VehiclesPage';
 import VehicleDetailPage from './pages/VehicleDetailPage';
 import RentVehiclePage from './pages/RentVehiclePage';
-import RentingPaymentPage from './pages/RentingPaymentPage';
+import RentingPaymentPage from './pages/RentingPaymentPage'; // Vehicle payment
 import RentOrderSummaryPage from './pages/RentOrderSummaryPage';
 import ContactInquiries from './pages/Admin/ContactInquiries';
 import Reviews from './pages/user/Reviews';
 import VehicleRental from './pages/user/VehicleRental';
+import ReceiptPage from './pages/ReceiptPage'; // Import the new receipt page
 
 // Load Stripe
 const stripePromise = loadStripe(import.meta.env.VITE_REACT_APP_STRIPE_PUBLISHABLE_KEY);
@@ -252,7 +253,7 @@ function AppContent() {
                     element={
                         <ProtectedRoute>
                             <Elements stripe={stripePromise}>
-                                <PaymentPage />
+                                <HotelPaymentPage />
                             </Elements>
                         </ProtectedRoute>
                     }
@@ -502,10 +503,25 @@ function AppContent() {
                 <Route path="/user/vehicles" element={<VehiclesPage />} />
                 <Route path="/user/vehicles/:id" element={<VehicleDetailPage />} />
                 <Route path="/user/vehicles/rent" element={<RentVehiclePage />} />
-                <Route path="/user/vehicles/payment" element={<RentingPaymentPage />} />
+                <Route
+                    path="/user/vehicles/payment"
+                    element={
+                        <ProtectedRoute>
+                            <RentingPaymentPage />
+                        </ProtectedRoute>
+                    }
+                />
                 <Route
                     path="/user/vehicles/order-summary"
                     element={<RentOrderSummaryPage />}
+                />
+                <Route
+                    path="/receipt"
+                    element={
+                        <ProtectedRoute>
+                            <ReceiptPage />
+                        </ProtectedRoute>
+                    }
                 />
                 <Route path="*" element={<div>404 - Page Not Found</div>} />
             </Routes>

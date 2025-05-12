@@ -26,7 +26,7 @@ function Sidebar({ setActiveSection, handleLogout }) {
           className="w-full flex items-center gap-3 p-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition"
         >
           <FaHistory className="text-blue-600" />
-          Previous Bookings
+          Accepted Bookings
         </button>
         <button
           onClick={() => setActiveSection("details")}

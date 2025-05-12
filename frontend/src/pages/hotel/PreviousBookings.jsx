@@ -32,7 +32,7 @@ function PreviousBookings() {
 
   return (
     <div className="bg-white rounded-xl shadow-lg p-6">
-      <h2 className="text-3xl font-bold text-gray-800 mb-4">Previous Bookings</h2>
+      <h2 className="text-3xl font-bold text-gray-800 mb-4">Accepted Bookings</h2>
       {bookings.length === 0 ? (
         <p className="text-gray-600 text-center">No accepted bookings available.</p>
       ) : (
