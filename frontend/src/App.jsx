@@ -61,6 +61,7 @@ import ContactInquiries from './pages/Admin/ContactInquiries';
 import Reviews from './pages/user/Reviews';
 import VehicleRental from './pages/user/VehicleRental';
 import ReceiptPage from './pages/ReceiptPage'; // Import the new receipt page
+import HotelBooking from './pages/user/HotelBooking'; // Import HotelBooking.jsx
 
 // Load Stripe
 const stripePromise = loadStripe(import.meta.env.VITE_REACT_APP_STRIPE_PUBLISHABLE_KEY);
@@ -295,6 +296,14 @@ function AppContent() {
                     element={
                         <ProtectedRoute>
                             <VehicleRental />
+                        </ProtectedRoute>
+                    }
+                />
+                <Route
+                    path="/user/my-booking/hotels"
+                    element={
+                        <ProtectedRoute>
+                            <HotelBooking />
                         </ProtectedRoute>
                     }
                 />

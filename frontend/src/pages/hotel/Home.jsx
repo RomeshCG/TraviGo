@@ -7,7 +7,8 @@ ChartJS.register(ArcElement, BarElement, CategoryScale, LinearScale, Tooltip, Le
 
 function Home() {
   const [summary, setSummary] = useState({
-    totalBookings: 0,
+    acceptedBookings: 0,
+    incomingBookings: 0,
     totalRevenue: 0,
     totalHotels: 0,
     bookingStatus: { pending: 0, accepted: 0, cancelled: 0 },
@@ -35,9 +36,12 @@ function Home() {
         if (!hotelsResponse.ok) throw new Error("Failed to fetch hotels");
         const hotels = await hotelsResponse.json();
 
+        // Filter bookings by status
+        const acceptedBookings = bookings.filter((booking) => booking.status === "accepted");
+        const incomingBookings = bookings.filter((booking) => !booking.status || booking.status === "pending");
+
         // Calculate summary metrics
-        const totalBookings = bookings.length;
-        const totalRevenue = bookings.reduce((sum, booking) => {
+        const totalRevenue = acceptedBookings.reduce((sum, booking) => {
           const price = Number(booking.totalPrice) || 0;
           return sum + price;
         }, 0);
@@ -59,7 +63,14 @@ function Home() {
           bookingsCount: bookings.filter((b) => b.hotelId === hotel._id).length,
         }));
 
-        setSummary({ totalBookings, totalRevenue, totalHotels, bookingStatus, hotelPerformance });
+        setSummary({
+          acceptedBookings: acceptedBookings.length,
+          incomingBookings: incomingBookings.length,
+          totalRevenue,
+          totalHotels,
+          bookingStatus,
+          hotelPerformance,
+        });
       } catch (err) {
         console.error("Fetch error:", err);
         setError(err.message);
@@ -105,16 +116,16 @@ function Home() {
       <h2 className="text-2xl font-bold text-gray-900 mb-6">Dashboard Overview</h2>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <div className="bg-blue-50 p-4 rounded-lg">
-          <h3 className="text-lg font-semibold text-gray-900">Total Bookings</h3>
-          <p className="text-2xl font-bold text-blue-600">{summary.totalBookings}</p>
+          <h3 className="text-lg font-semibold text-gray-900">Accepted Bookings</h3>
+          <p className="text-2xl font-bold text-blue-600">{summary.acceptedBookings}</p>
+        </div>
+        <div className="bg-yellow-50 p-4 rounded-lg">
+          <h3 className="text-lg font-semibold text-gray-900">Incoming Bookings</h3>
+          <p className="text-2xl font-bold text-yellow-600">{summary.incomingBookings}</p>
         </div>
         <div className="bg-green-50 p-4 rounded-lg">
           <h3 className="text-lg font-semibold text-gray-900">Total Revenue</h3>
           <p className="text-2xl font-bold text-green-600">${summary.totalRevenue.toFixed(2)}</p>
-        </div>
-        <div className="bg-purple-50 p-4 rounded-lg">
-          <h3 className="text-lg font-semibold text-gray-900">Owned Hotels</h3>
-          <p className="text-2xl font-bold text-purple-600">{summary.totalHotels}</p>
         </div>
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

@@ -1,54 +1,121 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import SidebarUser from '../../components/SidebarUser';
 import HeaderUser from '../../components/HeaderUser';
 
-// Placeholder images for hotels
-const hotelImages = {
-  'Hotel A': 'https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80',
-  'Hotel B': 'https://images.unsplash.com/photo-1611892440504-42a792e24c48?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80',
-  'Hotel C': 'https://images.unsplash.com/photo-1596436889106-be35e843f974?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80',
-};
-
 const HotelBooking = () => {
-  const hotels = [
-    { id: 1, name: 'Hotel A', location: 'City X', price: 100, rating: 4.5 },
-    { id: 2, name: 'Hotel B', location: 'City Y', price: 150, rating: 4.0 },
-    { id: 3, name: 'Hotel C', location: 'City Z', price: 80, rating: 3.8 },
-  ];
+  const [bookings, setBookings] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchBookings = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const user = JSON.parse(localStorage.getItem('user'));
+        if (!user || !user._id) {
+          setError('User not logged in');
+          return;
+        }
+
+        const response = await fetch(`http://localhost:5000/api/bookings/user/${user._id}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        if (!response.ok) {
+          throw new Error(`Failed to fetch bookings: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        setBookings(data);
+      } catch (err) {
+        console.error('Fetch error:', err);
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBookings();
+  }, []);
+
+  const exportToExcel = () => {
+    const exportData = bookings.map((b) => ({
+      'Room Type': b.roomType,
+      'Check-In Date': new Date(b.checkInDate).toLocaleDateString(),
+      'Check-Out Date': new Date(b.checkOutDate).toLocaleDateString(),
+      'Nights': b.nights || '-',
+      'Status': b.status || 'Pending',
+      'Total Price': `$${b.totalPrice.toFixed(2)}`,
+    }));
+    const ws = XLSX.utils.json_to_sheet(exportData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Hotel Bookings');
+    const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+    saveAs(new Blob([wbout], { type: 'application/octet-stream' }), 'hotel_bookings.xlsx');
+  };
+
+  if (loading) return <div className="text-center text-gray-600 text-xl font-semibold py-10">Loading...</div>;
+  if (error) return <div className="text-center text-red-600 text-xl font-semibold py-10">{error}</div>;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 flex">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-100 flex">
       <SidebarUser />
-      <div className="flex-1">
+      <div style={{ marginLeft: 'var(--sidebar-width, 16rem)' }} className="flex-1">
         <HeaderUser />
         <div className="p-6 md:p-10">
-          <h1 className="text-4xl font-bold text-gray-900 mb-10">Hotel Booking</h1>
-          <div className="grid md:grid-cols-3 gap-8">
-            {hotels.map((hotel) => (
-              <div
-                key={hotel.id}
-                className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden"
+          <div className="flex items-center justify-between mb-8">
+            <h1 className="text-3xl font-extrabold text-blue-800 flex items-center gap-3">
+              My Hotel Bookings
+            </h1>
+            {bookings.length > 0 && (
+              <button
+                onClick={exportToExcel}
+                className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-semibold shadow transition"
               >
-                <div className="relative">
-                  <img
-                    src={hotelImages[hotel.name] || 'https://via.placeholder.com/400x200?text=No+Image'}
-                    alt={hotel.name}
-                    className="w-full h-56 object-cover rounded-t-2xl"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent rounded-t-2xl"></div>
-                  <h2 className="absolute bottom-4 left-4 text-2xl font-semibold text-white">{hotel.name}</h2>
-                </div>
-                <div className="p-6">
-                  <p className="text-gray-600">Location: {hotel.location}</p>
-                  <p className="text-gray-600">Price: ${hotel.price}/night</p>
-                  <p className="text-gray-600">Rating: {hotel.rating}/5</p>
-                  <button className="mt-4 w-full bg-gradient-to-r from-blue-600 to-blue-800 text-white px-4 py-3 rounded-lg hover:from-blue-700 hover:to-blue-900 transition-all shadow-md">
-                    Book Now
-                  </button>
-                </div>
-              </div>
-            ))}
+                Export to Excel
+              </button>
+            )}
           </div>
+          {bookings.length === 0 ? (
+            <div className="text-center text-gray-600">No hotel bookings found.</div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="min-w-full bg-white rounded-3xl shadow-xl border border-blue-100">
+                <thead>
+                  <tr className="bg-gradient-to-r from-blue-100 to-blue-50">
+                    <th className="p-3 text-left font-semibold text-blue-700">Room Type</th>
+                    <th className="p-3 text-left font-semibold text-blue-700">Check-In Date</th>
+                    <th className="p-3 text-left font-semibold text-blue-700">Check-Out Date</th>
+                    <th className="p-3 text-left font-semibold text-blue-700">Nights</th>
+                    <th className="p-3 text-left font-semibold text-blue-700">Status</th>
+                    <th className="p-3 text-left font-semibold text-blue-700">Total Price</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {bookings.map((booking) => (
+                    <tr key={booking._id} className="border-b hover:bg-blue-50 transition">
+                      <td className="p-3 font-medium text-gray-800">{booking.roomType}</td>
+                      <td className="p-3">{new Date(booking.checkInDate).toLocaleDateString()}</td>
+                      <td className="p-3">{new Date(booking.checkOutDate).toLocaleDateString()}</td>
+                      <td className="p-3">{booking.nights || '-'}</td>
+                      <td className="p-3">
+                        <span
+                          className={`px-2 py-1 rounded text-xs font-semibold flex items-center gap-1 ${
+                            booking.status === 'completed'
+                              ? 'bg-green-100 text-green-800'
+                              : 'bg-blue-100 text-blue-800'
+                          }`}
+                        >
+                          {booking.status === 'completed' ? 'Completed' : 'Accepted'}
+                        </span>
+                      </td>
+                      <td className="p-3">{`$${booking.totalPrice.toFixed(2)}`}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -180,4 +180,59 @@ router.get('/', async (req, res) => {
     }
 });
 
+// Get bookings for a specific user
+router.get('/user/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const bookings = await Booking.find({ userId }).sort({ createdAt: -1 });
+    res.status(200).json(bookings);
+  } catch (error) {
+    console.error('Error fetching user bookings:', error);
+    res.status(500).json({ message: 'Failed to fetch user bookings', error: error.message });
+  }
+});
+
+router.delete('/:id', async (req, res) => {
+  try {
+    const bookingId = req.params.id;
+    const deletedBooking = await Booking.findByIdAndDelete(bookingId);
+
+    if (!deletedBooking) {
+      return res.status(404).json({ message: 'Booking not found' });
+    }
+
+    res.status(200).json({ message: 'Booking deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting booking:', error);
+    res.status(500).json({ message: 'Failed to delete booking', error: error.message });
+  }
+});
+
+// Update booking status
+router.patch('/:id', async (req, res) => {
+  try {
+    const bookingId = req.params.id;
+    const { status } = req.body;
+
+    if (!status) {
+      return res.status(400).json({ message: 'Status is required' });
+    }
+
+    const updatedBooking = await Booking.findByIdAndUpdate(
+      bookingId,
+      { status },
+      { new: true }
+    );
+
+    if (!updatedBooking) {
+      return res.status(404).json({ message: 'Booking not found' });
+    }
+
+    res.status(200).json({ message: 'Booking updated successfully', booking: updatedBooking });
+  } catch (error) {
+    console.error('Error updating booking:', error);
+    res.status(500).json({ message: 'Failed to update booking', error: error.message });
+  }
+});
+
 module.exports = router;

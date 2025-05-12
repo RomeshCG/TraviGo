@@ -5,7 +5,7 @@ import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import HotelDetails from './pages/HotelDetails'; // Import your HotelDetails component
 import RentOrderSummaryPage from './pages/RentOrderSummaryPage'; // Import your RentOrderSummaryPage component
-import HotelPaymentPage from './pages/HotelPaymentPage'; // New payment page
+import HotelPaymentPage from './pages/HotelPaymentPage';
 import { useAuth } from './context/AuthContext';
 
 function App() {

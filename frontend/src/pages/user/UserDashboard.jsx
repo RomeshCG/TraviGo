@@ -439,6 +439,46 @@ function UserDashboard() {
                 </div>
               </div>
             </div>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              {/* Hotel Bookings Section */}
+              <div
+                className="bg-white p-8 rounded-3xl shadow-2xl border border-blue-100 hover:shadow-blue-200 transition-shadow duration-300 cursor-pointer"
+                onClick={() => navigate('/user/my-booking/hotels')} // Correct route
+              >
+                <h2 className="text-2xl font-bold text-blue-700 mb-4 flex items-center gap-2">
+                  <FaHotel className="text-blue-400" /> Hotel Bookings
+                </h2>
+                <p className="text-gray-600">
+                  View and manage your hotel bookings.
+                </p>
+              </div>
+
+              {/* Tour Guide Bookings Section */}
+              <div
+                className="bg-white p-8 rounded-3xl shadow-2xl border border-blue-100 hover:shadow-blue-200 transition-shadow duration-300 cursor-pointer"
+                onClick={() => navigate('/user/my-booking/tour-guides')}
+              >
+                <h2 className="text-2xl font-bold text-blue-700 mb-4 flex items-center gap-2">
+                  <FaMapMarkedAlt className="text-blue-400" /> Tour Guide Bookings
+                </h2>
+                <p className="text-gray-600">
+                  View and manage your tour guide bookings.
+                </p>
+              </div>
+
+              {/* Vehicle Bookings Section */}
+              <div
+                className="bg-white p-8 rounded-3xl shadow-2xl border border-blue-100 hover:shadow-blue-200 transition-shadow duration-300 cursor-pointer"
+                onClick={() => navigate('/user/my-booking/vehicles')}
+              >
+                <h2 className="text-2xl font-bold text-blue-700 mb-4 flex items-center gap-2">
+                  <FaCar className="text-blue-400" /> Vehicle Bookings
+                </h2>
+                <p className="text-gray-600">
+                  View and manage your vehicle bookings.
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </div>
