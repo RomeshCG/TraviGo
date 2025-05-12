@@ -1,11 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import SidebarUser from '../../components/SidebarUser';
 import HeaderUser from '../../components/HeaderUser';
+import { FaStar } from 'react-icons/fa';
 
 const HotelBooking = () => {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [reviewingId, setReviewingId] = useState(null);
+  const [review, setReview] = useState({ rating: 5, comment: '' });
+  const [reviewSuccess, setReviewSuccess] = useState('');
+  const [reviewError, setReviewError] = useState('');
 
   useEffect(() => {
     const fetchBookings = async () => {
@@ -52,6 +57,42 @@ const HotelBooking = () => {
     XLSX.utils.book_append_sheet(wb, ws, 'Hotel Bookings');
     const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
     saveAs(new Blob([wbout], { type: 'application/octet-stream' }), 'hotel_bookings.xlsx');
+  };
+
+  const handleReviewSubmit = async (booking) => {
+    setReviewError('');
+    setReviewSuccess('');
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setReviewError('You must be logged in to submit a review.');
+        return;
+      }
+      const res = await fetch('/api/hotel-reviews', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          bookingId: booking._id,
+          hotelId: booking.hotelId,
+          userId: booking.userId,
+          rating: review.rating,
+          comment: review.comment,
+        }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        setReviewError(data.message || 'Failed to submit review');
+        return;
+      }
+      setReviewSuccess('Thank you for your review!');
+      setReviewingId(null);
+      setReview({ rating: 5, comment: '' });
+    } catch {
+      setReviewError('Failed to submit review');
+    }
   };
 
   if (loading) return <div className="text-center text-gray-600 text-xl font-semibold py-10">Loading...</div>;
@@ -110,6 +151,41 @@ const HotelBooking = () => {
                         </span>
                       </td>
                       <td className="p-3">{`$${booking.totalPrice.toFixed(2)}`}</td>
+                      {booking.status === 'completed' && (
+                        <td className="p-3">
+                          {reviewingId === booking._id ? (
+                            <form
+                              onSubmit={(e) => {
+                                e.preventDefault();
+                                handleReviewSubmit(booking);
+                              }}
+                            >
+                              <div>
+                                {[1, 2, 3, 4, 5].map((star) => (
+                                  <button
+                                    key={star}
+                                    type="button"
+                                    onClick={() => setReview({ ...review, rating: star })}
+                                  >
+                                    <FaStar className={star <= review.rating ? 'text-yellow-400' : 'text-gray-300'} />
+                                  </button>
+                                ))}
+                              </div>
+                              <textarea
+                                value={review.comment}
+                                onChange={(e) => setReview({ ...review, comment: e.target.value })}
+                                placeholder="Write your review..."
+                              />
+                              <button type="submit">Submit</button>
+                              <button type="button" onClick={() => setReviewingId(null)}>
+                                Cancel
+                              </button>
+                            </form>
+                          ) : (
+                            <button onClick={() => setReviewingId(booking._id)}>Leave a Review</button>
+                          )}
+                        </td>
+                      )}
                     </tr>
                   ))}
                 </tbody>

@@ -13,6 +13,7 @@ function HotelDetails() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedRoomIndex, setSelectedRoomIndex] = useState(null);
+  const [reviews, setReviews] = useState([]);
 
   useEffect(() => {
     const fetchAccommodation = async () => {
@@ -31,6 +32,20 @@ function HotelDetails() {
       }
     };
     fetchAccommodation();
+  }, [id]);
+
+  useEffect(() => {
+    const fetchReviews = async () => {
+      try {
+        const response = await fetch(`/api/hotel-reviews/hotel/${id}`);
+        if (!response.ok) throw new Error('Failed to fetch reviews');
+        const data = await response.json();
+        setReviews(data);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    fetchReviews();
   }, [id]);
 
   const handleRoomSelect = (roomIndex) => {
@@ -162,6 +177,20 @@ function HotelDetails() {
                 </div>
               ))}
             </div>
+
+            {/* User Reviews */}
+            <h2 className="text-2xl font-semibold text-gray-800 mt-10 mb-6">User Reviews</h2>
+            {reviews.length === 0 ? (
+              <p>No reviews yet.</p>
+            ) : (
+              reviews.map((review) => (
+                <div key={review._id} className="bg-gray-50 p-6 rounded-lg shadow-md mb-4">
+                  <p className="text-gray-800 font-semibold">{review.userId.name}</p>
+                  <p className="text-yellow-500">{'⭐'.repeat(review.rating)}</p>
+                  <p className="text-gray-600">{review.comment}</p>
+                </div>
+              ))
+            )}
 
             {/* Back Button */}
             <button
