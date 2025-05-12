@@ -11,22 +11,41 @@
     "dev": "nodemon server.js"
   },
   "dependencies": {
+<<<<<<< HEAD
+=======
+    "@stripe/react-stripe-js": "^3.7.0",
+    "@stripe/stripe-js": "^7.3.0",
+    "@tailwindcss/vite": "^4.1.6",
+>>>>>>> 5b99cf354ee2fc09fa1883909b905f8304b58100
     "axios": "^1.9.0",
     "bcrypt": "^5.1.1",
     "bcryptjs": "^3.0.2",
+    "chart.js": "^4.4.9",
     "cloudinary": "^1.41.3",
     "cors": "^2.8.5",
     "dotenv": "^16.5.0",
     "express": "^4.21.2",
     "express-validator": "^7.2.1",
+    "file-saver": "^2.0.5",
     "jsonwebtoken": "^9.0.2",
-    "mongodb": "^6.15.0",
-    "mongoose": "^8.14.0",
+    "lucide-react": "^0.509.0",
+    "mongodb": "^6.16.0",
+    "mongoose": "^8.14.2",
     "multer": "^1.4.5-lts.1",
     "multer-storage-cloudinary": "^4.0.0",
-    "nodemailer": "^7.0.0",
-    "nodemon": "^3.1.9",
+    "nodemailer": "^7.0.3",
+    "nodemon": "^3.1.10",
+    "react": "^19.1.0",
+    "react-chartjs-2": "^5.3.0",
+    "react-dom": "^19.1.0",
+    "react-icons": "^5.5.0",
+    "react-modal": "^3.16.3",
+    "react-router-dom": "^7.6.0",
+    "react-slick": "^0.30.3",
+    "react-toastify": "^11.0.5",
     "sib-api-v3-sdk": "^8.5.0",
-    "stripe": "^18.0.0"
+    "slick-carousel": "^1.8.1",
+    "stripe": "^18.1.0",
+    "xlsx": "^0.18.5"
   }
 }

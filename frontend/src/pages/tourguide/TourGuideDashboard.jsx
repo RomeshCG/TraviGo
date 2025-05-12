@@ -5,6 +5,21 @@ import Footer from '../../components/Footer';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Modal from 'react-modal';
+import { Bar, Pie, Doughnut } from 'react-chartjs-2';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+  ArcElement
+} from 'chart.js';
+import * as XLSX from 'xlsx';
+import { saveAs } from 'file-saver';
+
+ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement);
 
 function TourGuideEarnings({ tourGuide }) {
   const [summary, setSummary] = useState(null);
@@ -103,6 +118,29 @@ function TourGuideEarnings({ tourGuide }) {
   if (error) return <div className="text-center text-red-600">{error}</div>;
   if (!summary) return null;
 
+  const recentSorted = summary?.recent ? [...summary.recent].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)) : [];
+
+  const handleExportEarnings = () => {
+    if (!recentSorted || recentSorted.length === 0) {
+      toast.error('No earnings/transactions to export.');
+      return;
+    }
+    const data = recentSorted.map(tx => ({
+      'Transaction ID': tx._id,
+      'Date': tx.createdAt ? new Date(tx.createdAt).toLocaleDateString() : '',
+      'Package': tx.packageId?.title || String(tx.packageId),
+      'Amount': tx.totalPrice,
+      'Booking Status': tx.bookingStatus,
+      'Payment Status': tx.paymentStatus,
+      'Refunded': tx.refundRequested || tx.bookingStatus === 'cancelled' ? 'Yes' : 'No',
+    }));
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Earnings');
+    const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+    saveAs(new Blob([excelBuffer], { type: 'application/octet-stream' }), 'TourGuide_Earnings.xlsx');
+  };
+
   return (
     <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
       <h2 className="text-2xl font-bold mb-6">Earnings Overview</h2>
@@ -124,6 +162,9 @@ function TourGuideEarnings({ tourGuide }) {
           <div className="text-3xl font-bold text-red-700">${summary.refunded.toFixed(2)}</div>
         </div>
       </div>
+      <div className="flex gap-4 mb-4">
+        <button onClick={handleExportEarnings} className="bg-gradient-to-r from-green-500 to-teal-500 text-white px-4 py-2 rounded-lg shadow hover:from-green-600 hover:to-teal-600 transition">Export Earnings</button>
+      </div>
       <button
         onClick={handleOpenCashoutModal}
         disabled={cashoutLoading || cashoutRequested}
@@ -132,7 +173,7 @@ function TourGuideEarnings({ tourGuide }) {
         Request Cashout
       </button>
       {showModal && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
+        <div className="fixed inset-0 flex items-center justify-center z-50" style={{ background: "rgba(30, 41, 59, 0.15)", backdropFilter: "blur(2px)" }}>
           <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-sm">
             <h3 className="text-xl font-bold mb-4">Request Cashout</h3>
             {cashoutLoading ? (
@@ -189,7 +230,7 @@ function TourGuideEarnings({ tourGuide }) {
             </tr>
           </thead>
           <tbody>
-            {summary.recent.map(tx => (
+            {recentSorted.map(tx => (
               <tr key={tx._id} className="border-b hover:bg-gray-50">
                 <td className="p-2">{tx.createdAt ? new Date(tx.createdAt).toLocaleDateString() : '-'}</td>
                 <td className="p-2">{tx.packageId?.title || String(tx.packageId)}</td>
@@ -258,6 +299,16 @@ const TourGuideDashboard = () => {
   const [reviewed, setReviewed] = useState(false);
   const [completing, setCompleting] = useState(false);
   const [showReviewForm, setShowReviewForm] = useState(false);
+  const [bankDetails, setBankDetails] = useState({
+    accountHolderName: '',
+    bankName: '',
+    accountNumber: '',
+    branch: '',
+    swiftCode: '',
+  });
+  const [bankSuccess, setBankSuccess] = useState('');
+  const [bankError, setBankError] = useState('');
+  const [reviewFilter, setReviewFilter] = useState(0); // 0 = all, 1-5 = star rating
 
   const navigate = useNavigate();
   const BASE_URL = 'http://localhost:5000';
@@ -334,8 +385,12 @@ const TourGuideDashboard = () => {
       let bookingsData = [];
       if (bookingsResponse.ok) {
         bookingsData = await bookingsResponse.json();
+        // Sort bookings by createdAt descending
+        const sorted = bookingsData.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        setTourBookings(sorted);
+      } else {
+        setTourBookings([]);
       }
-      setTourBookings(bookingsData || []);
 
       setFormData({
         name: guideData.name || '',
@@ -355,6 +410,26 @@ const TourGuideDashboard = () => {
   useEffect(() => {
     fetchTourGuideData();
   }, [fetchTourGuideData]);
+
+  useEffect(() => {
+    if (tourGuide && tourGuide.bankDetails && tourGuide.bankDetails.accountHolderName) {
+      setBankDetails({
+        accountHolderName: tourGuide.bankDetails.accountHolderName || '',
+        bankName: tourGuide.bankDetails.bankName || '',
+        accountNumber: tourGuide.bankDetails.accountNumber || '',
+        branch: tourGuide.bankDetails.branch || '',
+        swiftCode: tourGuide.bankDetails.swiftCode || '',
+      });
+    } else {
+      setBankDetails({
+        accountHolderName: '',
+        bankName: '',
+        accountNumber: '',
+        branch: '',
+        swiftCode: '',
+      });
+    }
+  }, [tourGuide]);
 
   const handleBookingStatusUpdate = async (bookingId, newStatus) => {
     try {
@@ -411,6 +486,37 @@ const TourGuideDashboard = () => {
       }
     } catch (err) {
       setError(`Failed to publish tour package: ${err.message}`);
+    }
+  };
+
+  const handleUnpublish = async (packageId) => {
+    setError('');
+    try {
+      const token = localStorage.getItem('providerToken');
+      if (!token) {
+        setError('No token found. Please log in again.');
+        setTimeout(() => navigate('/service-provider/login'), 2000);
+        return;
+      }
+      const response = await fetch(`${BASE_URL}/api/tour-guide/tour-package/${packageId}/publish`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ status: 'draft' })
+      });
+      const data = await response.json();
+      if (response.ok) {
+        setTourPackages(tourPackages.map(pkg =>
+          pkg._id === packageId ? { ...pkg, status: 'draft' } : pkg
+        ));
+        toast.success('Tour package unpublished (drafted) successfully!');
+      } else {
+        setError(data.message || 'Failed to unpublish tour package');
+      }
+    } catch (err) {
+      setError(`Failed to unpublish tour package: ${err.message}`);
     }
   };
 
@@ -559,6 +665,37 @@ const TourGuideDashboard = () => {
     }
   };
 
+  const handleBankChange = (e) => {
+    const { name, value } = e.target;
+    setBankDetails((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleBankSubmit = async (e) => {
+    e.preventDefault();
+    setBankError('');
+    setBankSuccess('');
+    try {
+      const token = localStorage.getItem('providerToken');
+      if (!token) throw new Error('No token found. Please log in again.');
+      const response = await fetch(`${BASE_URL}/api/tour-guide/update-bank-details`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ tourGuideId: tourGuide._id, bankDetails }),
+      });
+      const data = await response.json();
+      if (response.ok) {
+        setBankSuccess('Bank details updated successfully');
+      } else {
+        throw new Error(data.message || 'Failed to update bank details');
+      }
+    } catch (err) {
+      setBankError(err.message || 'An error occurred while updating bank details');
+    }
+  };
+
   const handleLogout = () => {
     localStorage.removeItem('providerToken');
     localStorage.removeItem('provider');
@@ -635,6 +772,29 @@ const TourGuideDashboard = () => {
     }
   };
 
+  // Export Bookings as Excel
+  const handleExportBookings = () => {
+    if (!tourBookings || tourBookings.length === 0) {
+      toast.error('No bookings to export.');
+      return;
+    }
+    const data = tourBookings.map(b => ({
+      'Booking ID': b._id,
+      'Tourist Name': b.touristId?.name || b.touristId?.email || '',
+      'Package': b.packageId?.title || '',
+      'Travel Date': b.travelDate ? new Date(b.travelDate).toLocaleDateString() : '',
+      'Total Price': b.totalPrice,
+      'Booking Status': b.bookingStatus,
+      'Payment Status': b.paymentStatus,
+      'Created At': b.createdAt ? new Date(b.createdAt).toLocaleString() : '',
+    }));
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Bookings');
+    const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+    saveAs(new Blob([excelBuffer], { type: 'application/octet-stream' }), 'TourGuide_Bookings.xlsx');
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-b from-gray-100 to-gray-200">
       <TourGuideHeader />
@@ -654,72 +814,35 @@ const TourGuideDashboard = () => {
           <div className="grid grid-cols-12 gap-6">
             {/* Sidebar */}
             <div className="col-span-12 md:col-span-3 lg:col-span-2">
-              <div className="bg-white rounded-xl shadow-lg p-4">
-                <div className="flex flex-col space-y-2">
-                  <button
-                    onClick={() => setActiveTab('overview')}
-                    className={`px-4 py-2 rounded-lg text-left ${
-                      activeTab === 'overview'
-                        ? 'bg-gradient-to-r from-green-500 to-teal-500 text-white'
-                        : 'hover:bg-gray-100'
-                    }`}
-                  >
-                    Overview
-                  </button>
-                  <button
-                    onClick={() => setActiveTab('bookings')}
-                    className={`px-4 py-2 rounded-lg text-left ${
-                      activeTab === 'bookings'
-                        ? 'bg-gradient-to-r from-green-500 to-teal-500 text-white'
-                        : 'hover:bg-gray-100'
-                    }`}
-                  >
-                    Bookings
-                  </button>
-                  <button
-                    onClick={() => setActiveTab('packages')}
-                    className={`px-4 py-2 rounded-lg text-left ${
-                      activeTab === 'packages'
-                        ? 'bg-gradient-to-r from-green-500 to-teal-500 text-white'
-                        : 'hover:bg-gray-100'
-                    }`}
-                  >
-                    Tour Packages
-                  </button>
-                  <button
-                    onClick={() => setActiveTab('reviews')}
-                    className={`px-4 py-2 rounded-lg text-left ${
-                      activeTab === 'reviews'
-                        ? 'bg-gradient-to-r from-green-500 to-teal-500 text-white'
-                        : 'hover:bg-gray-100'
-                    }`}
-                  >
-                    Reviews
-                  </button>
-                  <button
-                    onClick={() => setActiveTab('profile')}
-                    className={`px-4 py-2 rounded-lg text-left ${
-                      activeTab === 'profile'
-                        ? 'bg-gradient-to-r from-green-500 to-teal-500 text-white'
-                        : 'hover:bg-gray-100'
-                    }`}
-                  >
-                    Profile Settings
-                  </button>
-                  <button
-                    onClick={() => setActiveTab('payments')}
-                    className={`px-4 py-2 rounded-lg text-left ${
-                      activeTab === 'payments'
-                        ? 'bg-gradient-to-r from-green-500 to-teal-500 text-white'
-                        : 'hover:bg-gray-100'
-                    }`}
-                  >
-                    Earnings
-                  </button>
+
+              <div className="bg-white rounded-2xl shadow-xl p-4 flex flex-col items-center sticky top-24 min-h-[400px]">
+                <div className="w-full flex flex-col gap-2">
+                  {[
+                    { key: 'overview', label: 'Overview', icon: <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M13 5v6h6m-6 0v6m0 0H7m6 0h6" /></svg> },
+                    { key: 'bookings', label: 'Bookings', icon: <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg> },
+                    { key: 'packages', label: 'Tour Packages', icon: <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M20 13V7a2 2 0 00-2-2H6a2 2 0 00-2 2v6m16 0v6a2 2 0 01-2 2H6a2 2 0 01-2-2v-6m16 0H4" /></svg> },
+                    { key: 'reviews', label: 'Reviews', icon: <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.95-.69l1.07-3.292z" /></svg> },
+                    { key: 'profile', label: 'Profile Settings', icon: <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5.121 17.804A13.937 13.937 0 0112 15c2.5 0 4.847.655 6.879 1.804M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg> },
+                    { key: 'payments', label: 'Earnings', icon: <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 1.343-3 3s1.343 3 3 3 3-1.343 3-3-1.343-3-3-3zm0 0V4m0 12v4m8-8h-4m-8 0H4" /></svg> },
+                  ].map(tab => (
+                    <button
+                      key={tab.key}
+                      onClick={() => setActiveTab(tab.key)}
+                      className={`flex items-center px-4 py-2 rounded-xl transition-all duration-200 text-left font-semibold text-gray-700 group ${
+                        activeTab === tab.key
+                          ? 'bg-gradient-to-r from-green-500 to-teal-500 text-white shadow-lg scale-105'
+                          : 'hover:bg-gray-100 hover:scale-105'
+                      }`}
+                    >
+                      {tab.icon}
+                      {tab.label}
+                    </button>
+                  ))}
                   <button
                     onClick={handleLogout}
-                    className="px-4 py-2 rounded-lg text-left text-red-600 hover:bg-red-50 mt-4"
+                    className="flex items-center px-4 py-2 rounded-xl text-left text-red-600 hover:bg-red-50 mt-6 font-semibold group transition-all duration-200"
                   >
+                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 01-2 2H7a2 2 0 01-2-2V7a2 2 0 012-2h4a2 2 0 012 2v1" /></svg>
                     Logout
                   </button>
                 </div>
@@ -730,80 +853,130 @@ const TourGuideDashboard = () => {
             <div className="col-span-12 md:col-span-9 lg:col-span-10 space-y-6">
               {/* Overview Tab */}
               {activeTab === 'overview' && (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div className="bg-white rounded-xl shadow-lg p-6">
-                    <h3 className="text-xl font-semibold mb-4">Recent Bookings</h3>
-                    <div className="text-3xl font-bold text-green-600">{tourBookings.length}</div>
-                    <p className="text-gray-600">Total Bookings</p>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                  <div className="bg-gradient-to-br from-green-50 to-white rounded-2xl shadow-lg p-6 flex flex-col items-center">
+                    <h3 className="text-lg font-semibold mb-2 text-gray-700 flex items-center gap-2"><svg className="w-6 h-6 text-green-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M13 5v6h6m-6 0v6m0 0H7m6 0h6" /></svg>Recent Bookings</h3>
+                    <div className="text-4xl font-extrabold text-green-600">{tourBookings.length}</div>
+                    <p className="text-gray-500">Total Bookings</p>
                   </div>
-                  <div className="bg-white rounded-xl shadow-lg p-6">
-                    <h3 className="text-xl font-semibold mb-4">Tour Packages</h3>
-                    <div className="text-3xl font-bold text-blue-600">{tourPackages.length}</div>
-                    <p className="text-gray-600">Active Packages</p>
+                  <div className="bg-gradient-to-br from-blue-50 to-white rounded-2xl shadow-lg p-6 flex flex-col items-center">
+                    <h3 className="text-lg font-semibold mb-2 text-gray-700 flex items-center gap-2"><svg className="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M20 13V7a2 2 0 00-2-2H6a2 2 0 00-2 2v6m16 0v6a2 2 0 01-2 2H6a2 2 0 01-2-2v-6m16 0H4" /></svg>Tour Packages</h3>
+                    <div className="text-4xl font-extrabold text-blue-600">{tourPackages.length}</div>
+                    <p className="text-gray-500">Active Packages</p>
                   </div>
-                  <div className="bg-white rounded-xl shadow-lg p-6">
-                    <h3 className="text-xl font-semibold mb-4">Rating</h3>
-                    <div className="text-3xl font-bold text-yellow-600">{averageRating.toFixed(1)}/5.0</div>
-                    <p className="text-gray-600">{reviews.length} Reviews</p>
+                  <div className="bg-gradient-to-br from-yellow-50 to-white rounded-2xl shadow-lg p-6 flex flex-col items-center">
+                    <h3 className="text-lg font-semibold mb-2 text-gray-700 flex items-center gap-2"><svg className="w-6 h-6 text-yellow-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.95-.69l1.07-3.292z" /></svg>Rating</h3>
+                    <div className="text-4xl font-extrabold text-yellow-600">{averageRating.toFixed(1)}/5.0</div>
+                    <p className="text-gray-500">{reviews.length} Reviews</p>
                   </div>
+                </div>
+              )}
+              {activeTab === 'overview' && (
+                <div className="bg-white rounded-xl shadow-lg p-6 mt-6">
+                  <h3 className="text-lg font-semibold mb-4">Bookings by Status</h3>
+                  <Bar
+                    data={{
+                      labels: ['Pending', 'Confirmed', 'Completed', 'Cancelled', 'Approved', 'Rejected'],
+                      datasets: [
+                        {
+                          label: 'Bookings',
+                          data: [
+                            tourBookings.filter(b => b.bookingStatus === 'pending' || b.status === 'pending').length,
+                            tourBookings.filter(b => b.bookingStatus === 'confirmed' || b.status === 'confirmed').length,
+                            tourBookings.filter(b => b.bookingStatus === 'completed' || b.status === 'completed').length,
+                            tourBookings.filter(b => b.bookingStatus === 'cancelled' || b.status === 'cancelled').length,
+                            tourBookings.filter(b => b.bookingStatus === 'approved' || b.status === 'approved').length,
+                            tourBookings.filter(b => b.bookingStatus === 'rejected' || b.status === 'rejected').length,
+                          ],
+                          backgroundColor: [
+                            '#fde68a', '#bbf7d0', '#93c5fd', '#e5e7eb', '#a5b4fc', '#fecaca'
+                          ],
+                          borderRadius: 8,
+                        },
+                      ],
+                    }}
+                    options={{
+                      responsive: true,
+                      plugins: {
+                        legend: { display: false },
+                        title: { display: false },
+                      },
+                      scales: {
+                        y: { beginAtZero: true, ticks: { stepSize: 1 } },
+                      },
+                    }}
+                    height={120}
+                  />
                 </div>
               )}
 
               {/* Bookings Tab */}
               {activeTab === 'bookings' && (
-                <div className="bg-white rounded-xl shadow-lg p-6">
-                  <h2 className="text-2xl font-bold mb-6">Tour Bookings</h2>
-                  <div className="overflow-x-auto">
-                    <table className="min-w-full">
+                <div className="bg-white rounded-2xl shadow-xl p-8">
+                  <div className="mb-6 flex justify-end">
+                    <button
+                      onClick={handleExportBookings}
+                      className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white px-5 py-2 rounded-lg shadow-md hover:from-blue-600 hover:to-indigo-600 transition font-semibold mr-2"
+                    >
+                      Export Bookings
+                    </button>
+                  </div>
+                  <h2 className="text-2xl font-bold mb-6 flex items-center gap-2"><svg className="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>Tour Bookings</h2>
+                  <div className="overflow-x-auto rounded-xl">
+                    <table className="min-w-full text-sm">
                       <thead>
-                        <tr className="bg-gray-50">
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tourist</th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Package</th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Travel Date</th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                        <tr className="bg-gradient-to-r from-blue-50 to-blue-100">
+                          <th className="px-6 py-3 text-left font-semibold text-blue-700">Tourist</th>
+                          <th className="px-6 py-3 text-left font-semibold text-blue-700">Package</th>
+                          <th className="px-6 py-3 text-left font-semibold text-blue-700">Travel Date</th>
+                          <th className="px-6 py-3 text-left font-semibold text-blue-700">Status</th>
+                          <th className="px-6 py-3 text-left font-semibold text-blue-700">Actions</th>
                         </tr>
                       </thead>
                       <tbody className="bg-white divide-y divide-gray-200">
                         {tourBookings.map((booking) => (
-                          <tr key={booking._id} onClick={() => handleViewBooking(booking._id)} style={{ cursor: 'pointer' }}>
+                          <tr key={booking._id} onClick={() => handleViewBooking(booking._id)} className="hover:bg-blue-50 transition cursor-pointer">
                             <td className="px-6 py-4">
-                              <div className="text-sm font-medium text-gray-900">{booking.email}</div>
-                              <div className="text-sm text-gray-500">{booking.phone}</div>
+                              <div className="text-base font-medium text-gray-900">{booking.email}</div>
+                              <div className="text-xs text-gray-500">{booking.phone}</div>
                             </td>
                             <td className="px-6 py-4">
-                              <div className="text-sm text-gray-900">{booking.packageId?.title || 'N/A'}</div>
-                              <div className="text-sm text-gray-500">{booking.travelersCount} travelers</div>
+                              <div className="text-base text-gray-900">{booking.packageId?.title || 'N/A'}</div>
+                              <div className="text-xs text-gray-500">{booking.travelersCount} travelers</div>
                             </td>
                             <td className="px-6 py-4">
-                              <div className="text-sm text-gray-900">
-                                {new Date(booking.travelDate).toLocaleDateString()}
-                              </div>
+                              <div className="text-base text-gray-900">{new Date(booking.travelDate).toLocaleDateString()}</div>
                             </td>
                             <td className="px-6 py-4">
                               <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                                ${booking.bookingStatus === 'pending' ? 'bg-yellow-100 text-yellow-800' : 
-                                  booking.bookingStatus === 'confirmed' ? 'bg-green-100 text-green-800' : 
-                                  booking.bookingStatus === 'cancelled' ? 'bg-gray-200 text-gray-600' :
-                                  booking.bookingStatus === 'approved' ? 'bg-blue-100 text-blue-800' :
-                                  booking.bookingStatus === 'rejected' ? 'bg-red-100 text-red-800' :
-                                  booking.bookingStatus === 'completed' ? 'bg-blue-100 text-blue-800' :
+                                ${(booking.bookingStatus === 'pending' || booking.status === 'pending') ? 'bg-yellow-100 text-yellow-800' : 
+                                  (booking.bookingStatus === 'confirmed' || booking.status === 'confirmed') ? 'bg-green-100 text-green-800' : 
+                                  (booking.bookingStatus === 'cancelled' || booking.status === 'cancelled') ? 'bg-gray-200 text-gray-600' :
+                                  (booking.bookingStatus === 'approved' || booking.status === 'approved') ? 'bg-blue-100 text-blue-800' :
+                                  (booking.bookingStatus === 'rejected' || booking.status === 'rejected') ? 'bg-red-100 text-red-800' :
+                                  (booking.bookingStatus === 'completed' || booking.status === 'completed') ? 'bg-blue-100 text-blue-800' :
                                   'bg-gray-100 text-gray-800'}`}>
-                                {booking.bookingStatus}
+                                {(booking.bookingStatus === 'completed' || booking.status === 'completed') && (booking.bookingStatus !== 'rejected' && booking.status !== 'rejected') ? (
+                                  'Completed'
+                                ) : (booking.bookingStatus === 'rejected' || booking.status === 'rejected') ? (
+                                  'Rejected'
+                                ) : (
+                                  booking.bookingStatus || booking.status
+                                )}
                               </span>
                             </td>
                             <td className="px-6 py-4">
                               {booking.bookingStatus === 'pending' && (
-                                <div className="space-x-2">
+                                <div className="space-x-2 flex">
                                   <button
                                     onClick={e => { e.stopPropagation(); handleBookingStatusUpdate(booking._id, 'approved'); }}
-                                    className="bg-blue-500 text-white px-3 py-1 rounded-lg text-sm hover:bg-blue-600"
+                                    className="bg-gradient-to-r from-blue-500 to-teal-400 text-white px-3 py-1 rounded-lg text-xs font-semibold shadow hover:from-blue-600 hover:to-teal-500 transition"
                                   >
                                     Approve
                                   </button>
                                   <button
                                     onClick={e => { e.stopPropagation(); handleBookingStatusUpdate(booking._id, 'rejected'); }}
-                                    className="bg-red-500 text-white px-3 py-1 rounded-lg text-sm hover:bg-red-600"
+                                    className="bg-gradient-to-r from-red-500 to-pink-400 text-white px-3 py-1 rounded-lg text-xs font-semibold shadow hover:from-red-600 hover:to-pink-500 transition"
                                   >
                                     Reject
                                   </button>
@@ -820,28 +993,30 @@ const TourGuideDashboard = () => {
 
               {/* Packages Tab */}
               {activeTab === 'packages' && (
-                <div className="bg-white rounded-xl shadow-lg p-6">
+                <div className="bg-white rounded-2xl shadow-xl p-8">
                   <div className="flex justify-between items-center mb-6">
-                    <h2 className="text-2xl font-bold">Tour Packages</h2>
+                    <h2 className="text-2xl font-bold flex items-center gap-2"><svg className="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M20 13V7a2 2 0 00-2-2H6a2 2 0 00-2 2v6m16 0v6a2 2 0 01-2 2H6a2 2 0 01-2-2v-6m16 0H4" /></svg>Tour Packages</h2>
                     {tourGuide.verificationStatus === 'verified' && (
                       <Link
                         to="/tour-guide/create-package"
-                        className="bg-gradient-to-r from-green-500 to-teal-500 text-white px-4 py-2 rounded-lg hover:from-green-600 hover:to-teal-600"
+                        className="bg-gradient-to-r from-green-500 to-teal-500 text-white px-4 py-2 rounded-xl font-semibold shadow hover:from-green-600 hover:to-teal-600 transition"
                       >
-                        Create New Package
+                        + Create New Package
                       </Link>
                     )}
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {tourPackages.map((pkg) => (
-                      <div key={pkg._id} className="border rounded-xl p-4 hover:shadow-lg transition-shadow">
-                        <h3 className="text-xl font-semibold mb-2">{pkg.title}</h3>
-                        <p className="text-gray-600 mb-2">{pkg.description}</p>
-                        <div className="flex justify-between items-center text-sm text-gray-500 mb-4">
-                          <span>Price: ${pkg.price}</span>
-                          <span>Duration: {pkg.duration}</span>
+                      <div key={pkg._id} className="border rounded-2xl p-6 bg-gradient-to-br from-blue-50 to-white hover:shadow-2xl transition-shadow flex flex-col justify-between min-h-[220px]">
+                        <div>
+                          <h3 className="text-xl font-bold mb-2 text-blue-700">{pkg.title}</h3>
+                          <p className="text-gray-600 mb-2 line-clamp-2">{pkg.description}</p>
+                          <div className="flex justify-between items-center text-sm text-gray-500 mb-4">
+                            <span>Price: <span className="font-semibold text-green-600">${pkg.price}</span></span>
+                            <span>Duration: <span className="font-semibold text-blue-600">{pkg.duration}</span></span>
+                          </div>
                         </div>
-                        <div className="flex justify-between items-center">
+                        <div className="flex justify-between items-center mt-2">
                           <span className={`px-2 py-1 rounded-full text-xs font-medium
                             ${pkg.status === 'published' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
                             {pkg.status}
@@ -850,14 +1025,22 @@ const TourGuideDashboard = () => {
                             {pkg.status === 'draft' && (
                               <button
                                 onClick={() => handlePublish(pkg._id)}
-                                className="text-green-600 hover:text-green-800"
+                                className="text-green-600 hover:text-green-800 font-semibold"
                               >
                                 Publish
                               </button>
                             )}
+                            {pkg.status === 'published' && (
+                              <button
+                                onClick={() => handleUnpublish(pkg._id)}
+                                className="text-yellow-600 hover:text-yellow-800 font-semibold"
+                              >
+                                Unpublish
+                              </button>
+                            )}
                             <button
                               onClick={() => handleDelete(pkg._id)}
-                              className="text-red-600 hover:text-red-800"
+                              className="text-red-600 hover:text-red-800 font-semibold"
                             >
                               Delete
                             </button>
@@ -871,17 +1054,58 @@ const TourGuideDashboard = () => {
 
               {/* Reviews Tab */}
               {activeTab === 'reviews' && (
-                <div className="bg-white rounded-xl shadow-lg p-6">
-                  <h2 className="text-2xl font-bold mb-6">Reviews</h2>
+                <div className="bg-white rounded-2xl shadow-xl p-8">
+                  <h2 className="text-2xl font-bold mb-6 flex items-center gap-2"><svg className="w-6 h-6 text-yellow-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.95-.69l1.07-3.292z" /></svg>Reviews</h2>
+                  <div className="mb-8 flex flex-col items-center justify-center">
+                    <h3 className="text-lg font-semibold mb-4">Ratings Distribution</h3>
+                    <Doughnut
+                      data={{
+                        labels: ['5 Stars', '4 Stars', '3 Stars', '2 Stars', '1 Star'],
+                        datasets: [
+                          {
+                            label: 'Reviews',
+                            data: [
+                              reviews.filter(r => r.rating === 5).length,
+                              reviews.filter(r => r.rating === 4).length,
+                              reviews.filter(r => r.rating === 3).length,
+                              reviews.filter(r => r.rating === 2).length,
+                              reviews.filter(r => r.rating === 1).length,
+                            ],
+                            backgroundColor: [
+                              '#facc15', '#fde68a', '#a3e635', '#38bdf8', '#f87171'
+                            ],
+                            borderWidth: 2,
+                          },
+                        ],
+                      }}
+                      options={{
+                        responsive: true,
+                        plugins: {
+                          legend: { position: 'bottom' },
+                          title: { display: false },
+                        },
+                        maintainAspectRatio: false,
+                      }}
+                      height={180}
+                      width={180}
+                      style={{ maxHeight: 180, maxWidth: 180, margin: '0 auto' }}
+                    />
+                  </div>
+                  <div className="flex flex-wrap gap-2 mb-4 justify-center">
+                    <button onClick={() => setReviewFilter(0)} className={`px-3 py-1 rounded-full font-semibold shadow ${reviewFilter === 0 ? 'bg-green-500 text-white' : 'bg-gray-100 text-gray-700'}`}>All</button>
+                    {[5,4,3,2,1].map(star => (
+                      <button key={star} onClick={() => setReviewFilter(star)} className={`px-3 py-1 rounded-full font-semibold shadow ${reviewFilter === star ? 'bg-yellow-400 text-white' : 'bg-gray-100 text-gray-700'}`}>{star} Star</button>
+                    ))}
+                  </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {reviews.map((review) => (
-                      <div key={review._id} className="border rounded-xl p-4 hover:shadow-lg transition-shadow">
+                    {reviews.filter(r => reviewFilter === 0 || r.rating === reviewFilter).map((review) => (
+                      <div key={review._id} className="border rounded-2xl p-4 bg-gradient-to-br from-yellow-50 to-white hover:shadow-2xl transition-shadow">
                         <div className="flex items-center mb-2">
-                          <div className="bg-gray-100 rounded-full w-10 h-10 flex items-center justify-center mr-3">
+                          <div className="bg-gray-100 rounded-full w-10 h-10 flex items-center justify-center mr-3 text-lg font-bold text-yellow-600">
                             {review.touristId?.username?.[0]?.toUpperCase() || 'A'}
                           </div>
                           <div>
-                            <h4 className="font-medium">{review.touristId?.username || 'Anonymous'}</h4>
+                            <h4 className="font-semibold">{review.touristId?.username || 'Anonymous'}</h4>
                             <div className="flex items-center">
                               {[...Array(5)].map((_, i) => (
                                 <svg
@@ -896,8 +1120,8 @@ const TourGuideDashboard = () => {
                             </div>
                           </div>
                         </div>
-                        <p className="text-gray-600">{review.comment}</p>
-                        <p className="text-sm text-gray-500 mt-2">
+                        <p className="text-gray-600 mt-2">{review.comment}</p>
+                        <p className="text-xs text-gray-500 mt-2">
                           {new Date(review.createdAt).toLocaleDateString()}
                         </p>
                       </div>
@@ -908,16 +1132,16 @@ const TourGuideDashboard = () => {
 
               {/* Profile Settings Tab */}
               {activeTab === 'profile' && (
-                <div className="bg-white rounded-xl shadow-lg p-6">
-                  <h2 className="text-2xl font-bold mb-6">Profile Settings</h2>
+                <div className="bg-white rounded-2xl shadow-xl p-8">
+                  <h2 className="text-2xl font-bold mb-6 flex items-center gap-2"><svg className="w-6 h-6 text-teal-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5.121 17.804A13.937 13.937 0 0112 15c2.5 0 4.847.655 6.879 1.804M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>Profile Settings</h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                       <h3 className="text-lg font-semibold mb-4">Profile Picture</h3>
-                      <div className="mb-4">
+                      <div className="mb-4 flex flex-col items-center">
                         <img
                           src={tourGuide.profilePicture ? `${BASE_URL}${tourGuide.profilePicture}` : 'https://via.placeholder.com/150'}
                           alt="Profile"
-                          className="w-32 h-32 rounded-full object-cover"
+                          className="w-32 h-32 rounded-full object-cover border-4 border-teal-200 shadow"
                         />
                       </div>
                       <input
@@ -935,20 +1159,19 @@ const TourGuideDashboard = () => {
                       {profilePictureFile && (
                         <button
                           onClick={handleUpdateProfilePicture}
-                          className="ml-4 bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600"
+                          className="ml-4 bg-gradient-to-r from-green-500 to-teal-500 text-white px-4 py-2 rounded-lg hover:from-green-600 hover:to-teal-600 shadow"
                         >
                           Upload
                         </button>
                       )}
                     </div>
-                    
                     <div>
                       <h3 className="text-lg font-semibold mb-4">Banner Image</h3>
-                      <div className="mb-4">
+                      <div className="mb-4 flex flex-col items-center">
                         <img
                           src={tourGuide.banner ? `${BASE_URL}${tourGuide.banner}` : 'https://via.placeholder.com/800x200'}
                           alt="Banner"
-                          className="w-full h-32 object-cover rounded-lg"
+                          className="w-full h-32 object-cover rounded-lg border-2 border-teal-100 shadow"
                         />
                       </div>
                       <input
@@ -966,14 +1189,13 @@ const TourGuideDashboard = () => {
                       {bannerFile && (
                         <button
                           onClick={handleUpdateBanner}
-                          className="ml-4 bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600"
+                          className="ml-4 bg-gradient-to-r from-green-500 to-teal-500 text-white px-4 py-2 rounded-lg hover:from-green-600 hover:to-teal-600 shadow"
                         >
                           Upload
                         </button>
                       )}
                     </div>
                   </div>
-
                   <form onSubmit={handleUpdateProfile} className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">Name</label>
@@ -1039,12 +1261,90 @@ const TourGuideDashboard = () => {
                     <div className="md:col-span-2">
                       <button
                         type="submit"
-                        className="w-full bg-gradient-to-r from-green-500 to-teal-500 text-white py-2 rounded-lg hover:from-green-600 hover:to-teal-600"
+                        className="w-full bg-gradient-to-r from-green-500 to-teal-500 text-white py-2 rounded-lg hover:from-green-600 hover:to-teal-600 font-semibold shadow"
                       >
                         Save Changes
                       </button>
                     </div>
                   </form>
+                  {/* Bank Details Section */}
+                  <div className="mt-10">
+                    <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2"><svg className="w-5 h-5 text-green-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 1.343-3 3s1.343 3 3 3 3-1.343 3-3-1.343-3-3-3zm0 0V4m0 12v4m8-8h-4m-8 0H4" /></svg>Bank Details</h3>
+                    {bankSuccess && <p className="text-green-600 mb-2">{bankSuccess}</p>}
+                    {bankError && <p className="text-red-500 mb-2">{bankError}</p>}
+                    {bankDetails.accountHolderName ? (
+                      <form onSubmit={handleBankSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-gray-700 font-semibold mb-2" htmlFor="accountHolderName">Account Holder Name</label>
+                          <input
+                            type="text"
+                            id="accountHolderName"
+                            name="accountHolderName"
+                            value={bankDetails.accountHolderName}
+                            onChange={handleBankChange}
+                            className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                            required
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-gray-700 font-semibold mb-2" htmlFor="bankName">Bank Name</label>
+                          <input
+                            type="text"
+                            id="bankName"
+                            name="bankName"
+                            value={bankDetails.bankName}
+                            onChange={handleBankChange}
+                            className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                            required
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-gray-700 font-semibold mb-2" htmlFor="accountNumber">Account Number</label>
+                          <input
+                            type="text"
+                            id="accountNumber"
+                            name="accountNumber"
+                            value={bankDetails.accountNumber}
+                            onChange={handleBankChange}
+                            className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                            required
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-gray-700 font-semibold mb-2" htmlFor="branch">Branch</label>
+                          <input
+                            type="text"
+                            id="branch"
+                            name="branch"
+                            value={bankDetails.branch}
+                            onChange={handleBankChange}
+                            className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-gray-700 font-semibold mb-2" htmlFor="swiftCode">SWIFT Code</label>
+                          <input
+                            type="text"
+                            id="swiftCode"
+                            name="swiftCode"
+                            value={bankDetails.swiftCode}
+                            onChange={handleBankChange}
+                            className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                          />
+                        </div>
+                        <div className="md:col-span-2">
+                          <button
+                            type="submit"
+                            className="w-full bg-gradient-to-r from-green-600 to-green-800 text-white py-3 rounded-lg hover:from-green-700 hover:to-green-900 font-semibold shadow-md transition-all"
+                          >
+                            Update Bank Details
+                          </button>
+                        </div>
+                      </form>
+                    ) : (
+                      <div className="text-gray-500">No bank details added yet.</div>
+                    )}
+                  </div>
                 </div>
               )}
 
@@ -1066,10 +1366,11 @@ const TourGuideDashboard = () => {
         onRequestClose={() => { setSelectedBooking(null); setReviewed(false); setReview({ rating: 5, comment: '' }); setModalError(''); setShowReviewForm(false); }}
         ariaHideApp={false}
         className="fixed inset-0 flex items-center justify-center z-50"
-        overlayClassName="fixed inset-0 bg-black bg-opacity-40 z-40"
+        overlayClassName="fixed inset-0 z-40"
+        style={{ overlay: { background: "rgba(30, 41, 59, 0.15)", backdropFilter: "blur(2px)" } }}
       >
         <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-lg relative">
-          <button className="absolute top-2 right-2 text-gray-400 hover:text-gray-700" onClick={() => { setSelectedBooking(null); setReviewed(false); setReview({ rating: 5, comment: '' }); setModalError(''); setShowReviewForm(false); }}>&times;</button>
+          <button className="absolute top-2 right-2 text-gray-400 hover:text-gray-700 text-2xl" onClick={() => { setSelectedBooking(null); setReviewed(false); setReview({ rating: 5, comment: '' }); setModalError(''); setShowReviewForm(false); }}>&times;</button>
           {modalLoading ? (
             <div>Loading...</div>
           ) : modalError ? (

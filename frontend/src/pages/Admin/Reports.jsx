@@ -1,4 +1,5 @@
-import { Bar } from "react-chartjs-2";
+import React, { useEffect, useState } from "react";
+import { Bar, Line, Pie } from "react-chartjs-2";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -9,11 +10,13 @@ import {
   Title,
   Tooltip,
   Legend,
+  ArcElement,
 } from "chart.js";
 import AdminSidebar from "../../components/SidebarAdmin";
 import AdminHeader from "../../components/AdminHeader";
+import * as XLSX from "xlsx";
+import { saveAs } from "file-saver";
 
-// Register Chart.js components
 ChartJS.register(
   CategoryScale,
   LinearScale,
@@ -22,44 +25,193 @@ ChartJS.register(
   PointElement,
   Title,
   Tooltip,
-  Legend
+  Legend,
+  ArcElement
 );
 
 const Reports = () => {
-  const chartData = {
-    labels: [
-      "01 Mar",
-      "02 Mar",
-      "03 Mar",
-      "04 Mar",
-      "05 Mar",
-      "06 Mar",
-      "07 Mar",
-      "08 Mar",
-      "09 Mar",
-      "10 Mar",
-      "11 Mar",
-      "12 Mar",
-    ],
+  const [summary, setSummary] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    const fetchSummary = async () => {
+      setLoading(true);
+      setError("");
+      try {
+        const token = localStorage.getItem("adminToken");
+        const res = await fetch("/api/admin/reports/summary", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok) throw new Error("Failed to fetch reports");
+        const data = await res.json();
+        setSummary(data);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchSummary();
+  }, []);
+
+  const exportSystemReport = () => {
+    if (!summary) return;
+    const data = [
+      {
+        "System Income": summary.systemIncome,
+        "Total Users": summary.totalUsers,
+        "Hotel Bookings": summary.totalHotelBookings,
+        "Tour Bookings": summary.totalTourBookings,
+        "Vehicle Bookings": summary.totalVehicleBookings,
+        "Hotel Income": summary.hotelIncome,
+        "Tour Income": summary.tourIncome,
+        "Vehicle Income": summary.vehicleIncome,
+      },
+    ];
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "System Report");
+    const wbout = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+    saveAs(new Blob([wbout], { type: "application/octet-stream" }), "System_Report.xlsx");
+  };
+
+  const exportHotelReport = () => {
+    if (!summary) return;
+    const data = summary.dailyIncome.map((d) => ({
+      Date: d.date,
+      "Hotel Income": d.hotel,
+      "Hotel Bookings": summary.totalHotelBookings,
+    }));
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Hotel Report");
+    const wbout = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+    saveAs(new Blob([wbout], { type: "application/octet-stream" }), "Hotel_Report.xlsx");
+  };
+
+  const exportTourReport = () => {
+    if (!summary) return;
+    const data = summary.dailyIncome.map((d) => ({
+      Date: d.date,
+      "Tour Income": d.tour,
+      "Tour Bookings": summary.totalTourBookings,
+    }));
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Tour Report");
+    const wbout = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+    saveAs(new Blob([wbout], { type: "application/octet-stream" }), "Tour_Report.xlsx");
+  };
+
+  const exportVehicleReport = () => {
+    if (!summary) return;
+    const data = summary.dailyIncome.map((d) => ({
+      Date: d.date,
+      "Vehicle Income": d.vehicle,
+      "Vehicle Bookings": summary.totalVehicleBookings,
+    }));
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Vehicle Report");
+    const wbout = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+    saveAs(new Blob([wbout], { type: "application/octet-stream" }), "Vehicle_Report.xlsx");
+  };
+
+  const exportUserReport = () => {
+    if (!summary) return;
+    const data = summary.dailyUsers.map((d) => ({
+      Date: d.date,
+      "New Users": d.count,
+    }));
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "User Report");
+    const wbout = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+    saveAs(new Blob([wbout], { type: "application/octet-stream" }), "User_Report.xlsx");
+  };
+
+  // Chart data
+  const incomeChartData = summary && {
+    labels: summary.dailyIncome.map((d) => d.date),
     datasets: [
       {
         type: "bar",
-        label: "Hotel Bookings",
-        data: [400, 300, 500, 450, 600, 350, 400, 700, 500, 300, 400, 200],
-        backgroundColor: "rgba(255, 99, 132, 06)",
-        borderColor: "rgba(255, 99, 132, 1)",
-        borderWidth: 1,
+        label: "Hotel Income",
+        data: summary.dailyIncome.map((d) => d.hotel),
+        backgroundColor: "rgba(54, 162, 235, 0.7)",
+        yAxisID: "y",
+      },
+      {
+        type: "bar",
+        label: "Tour Income",
+        data: summary.dailyIncome.map((d) => d.tour),
+        backgroundColor: "rgba(255, 206, 86, 0.7)",
+        yAxisID: "y",
+      },
+      {
+        type: "bar",
+        label: "Vehicle Income",
+        data: summary.dailyIncome.map((d) => d.vehicle),
+        backgroundColor: "rgba(75, 192, 192, 0.7)",
         yAxisID: "y",
       },
       {
         type: "line",
-        label: "Vehicle Rentals",
-        data: [30, 25, 40, 35, 45, 20, 30, 50, 40, 25, 35, 15],
-        borderColor: "rgba(255, 159, 64, 1)",
-        backgroundColor: "rgba(255, 159, 64, 0.2)",
+        label: "Total Income",
+        data: summary.dailyIncome.map((d) => d.total),
+        borderColor: "rgba(255, 99, 132, 1)",
+        backgroundColor: "rgba(255, 99, 132, 0.2)",
         fill: false,
         tension: 0.3,
-        yAxisID: "y1",
+        yAxisID: "y",
+      },
+    ],
+  };
+
+  const userChartData = summary && {
+    labels: summary.dailyUsers.map((d) => d.date),
+    datasets: [
+      {
+        type: "line",
+        label: "New Users",
+        data: summary.dailyUsers.map((d) => d.count),
+        borderColor: "rgba(54, 162, 235, 1)",
+        backgroundColor: "rgba(54, 162, 235, 0.2)",
+        fill: true,
+        tension: 0.3,
+      },
+    ],
+  };
+
+  const bookingPieData = summary && {
+    labels: ["Hotel Bookings", "Tour Bookings", "Vehicle Bookings"],
+    datasets: [
+      {
+        data: [
+          summary.totalHotelBookings,
+          summary.totalTourBookings,
+          summary.totalVehicleBookings,
+        ],
+        backgroundColor: [
+          "rgba(54, 162, 235, 0.8)",
+          "rgba(255, 206, 86, 0.8)",
+          "rgba(75, 192, 192, 0.8)",
+        ],
+      },
+    ],
+  };
+
+  const incomePieData = summary && {
+    labels: ["Hotel Income", "Tour Income", "Vehicle Income"],
+    datasets: [
+      {
+        data: [summary.hotelIncome, summary.tourIncome, summary.vehicleIncome],
+        backgroundColor: [
+          "rgba(54, 162, 235, 0.8)",
+          "rgba(255, 206, 86, 0.8)",
+          "rgba(75, 192, 192, 0.8)",
+        ],
       },
     ],
   };
@@ -67,44 +219,11 @@ const Reports = () => {
   const chartOptions = {
     responsive: true,
     plugins: {
-      legend: {
-        position: "bottom",
-      },
-      title: {
-        display: true,
-        text: "Hotel Bookings vs Vehicle Rentals (01 Mar - 12 Mar 2025)",
-      },
+      legend: { position: "bottom" },
+      title: { display: false },
     },
     scales: {
-      y: {
-        type: "linear",
-        display: true,
-        position: "left",
-        title: {
-          display: true,
-          text: "Hotel Bookings",
-        },
-        beginAtZero: true,
-      },
-      y1: {
-        type: "linear",
-        display: true,
-        position: "right",
-        title: {
-          display: true,
-          text: "Vehicle Rentals",
-        },
-        beginAtZero: true,
-        grid: {
-          drawOnChartArea: false,
-        },
-      },
-      x: {
-        title: {
-          display: true,
-          text: "Date",
-        },
-      },
+      y: { beginAtZero: true },
     },
   };
 
@@ -116,35 +235,82 @@ const Reports = () => {
         <div className="flex-1 p-6 bg-gray-100">
           <div className="max-w-6xl mx-auto">
             <h2 className="text-2xl font-bold mb-6">Reports Dashboard</h2>
-
-            {/* Summary Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-              <div className="bg-white p-4 rounded-lg shadow-md">
-                <h3 className="text-lg font-medium text-gray-700">Hotel Bookings</h3>
-                <p className="text-2xl font-bold text-gray-900">1,587</p>
-                <p className="text-sm text-green-600">+11% From previous period</p>
-              </div>
-              <div className="bg-white p-4 rounded-lg shadow-md">
-                <h3 className="text-lg font-medium text-gray-700">Vehicle Rentals</h3>
-                <p className="text-2xl font-bold text-gray-900">258</p>
-                <p className="text-sm text-green-600">+9% New rentals</p>
-              </div>
-              <div className="bg-white p-4 rounded-lg shadow-md">
-                <h3 className="text-lg font-medium text-gray-700">Tour Guide Bookings</h3>
-                <p className="text-2xl font-bold text-gray-900">2.3k</p>
-                <p className="text-sm text-green-600">+17% From previous period</p>
-              </div>
-              <div className="bg-white p-4 rounded-lg shadow-md">
-                <h3 className="text-lg font-medium text-gray-700">Total Users</h3>
-                <p className="text-2xl font-bold text-gray-900">11,587</p>
-                <p className="text-sm text-green-600">+21% From previous period</p>
-              </div>
+            <div className="flex flex-wrap gap-3 mb-6">
+              <button onClick={exportSystemReport} className="bg-gradient-to-r from-blue-700 to-blue-500 text-white px-4 py-2 rounded-lg shadow hover:from-blue-800 hover:to-blue-600 font-semibold border border-blue-800">Export System Report</button>
+              <button onClick={exportHotelReport} className="bg-gradient-to-r from-gray-700 to-gray-500 text-white px-4 py-2 rounded-lg shadow hover:from-gray-800 hover:to-gray-600 font-semibold border border-gray-700">Export Hotel Report</button>
+              <button onClick={exportTourReport} className="bg-gradient-to-r from-slate-700 to-slate-500 text-white px-4 py-2 rounded-lg shadow hover:from-slate-800 hover:to-slate-600 font-semibold border border-slate-700">Export Tour Report</button>
+              <button onClick={exportVehicleReport} className="bg-gradient-to-r from-neutral-700 to-neutral-500 text-white px-4 py-2 rounded-lg shadow hover:from-neutral-800 hover:to-neutral-600 font-semibold border border-neutral-700">Export Vehicle Report</button>
+              <button onClick={exportUserReport} className="bg-gradient-to-r from-indigo-700 to-indigo-500 text-white px-4 py-2 rounded-lg shadow hover:from-indigo-800 hover:to-indigo-600 font-semibold border border-indigo-700">Export User Report</button>
             </div>
+            {loading ? (
+              <div className="text-center py-10">Loading reports...</div>
+            ) : error ? (
+              <div className="text-center text-red-600">{error}</div>
+            ) : summary ? (
+              <>
+                {/* Summary Cards */}
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                  <div className="bg-white p-4 rounded-lg shadow-md">
+                    <h3 className="text-lg font-medium text-gray-700">System Income</h3>
+                    <p className="text-2xl font-bold text-gray-900">${summary.systemIncome.toLocaleString()}</p>
+                  </div>
+                  <div className="bg-white p-4 rounded-lg shadow-md">
+                    <h3 className="text-lg font-medium text-gray-700">Total Users</h3>
+                    <p className="text-2xl font-bold text-gray-900">{summary.totalUsers.toLocaleString()}</p>
+                  </div>
+                  <div className="bg-white p-4 rounded-lg shadow-md">
+                    <h3 className="text-lg font-medium text-gray-700">Hotel Bookings</h3>
+                    <p className="text-2xl font-bold text-gray-900">{summary.totalHotelBookings.toLocaleString()}</p>
+                  </div>
+                  <div className="bg-white p-4 rounded-lg shadow-md">
+                    <h3 className="text-lg font-medium text-gray-700">Tour Bookings</h3>
+                    <p className="text-2xl font-bold text-gray-900">{summary.totalTourBookings.toLocaleString()}</p>
+                  </div>
+                  <div className="bg-white p-4 rounded-lg shadow-md">
+                    <h3 className="text-lg font-medium text-gray-700">Vehicle Bookings</h3>
+                    <p className="text-2xl font-bold text-gray-900">{summary.totalVehicleBookings.toLocaleString()}</p>
+                  </div>
+                  <div className="bg-white p-4 rounded-lg shadow-md">
+                    <h3 className="text-lg font-medium text-gray-700">Hotel Income</h3>
+                    <p className="text-2xl font-bold text-gray-900">${summary.hotelIncome.toLocaleString()}</p>
+                  </div>
+                  <div className="bg-white p-4 rounded-lg shadow-md">
+                    <h3 className="text-lg font-medium text-gray-700">Tour Income</h3>
+                    <p className="text-2xl font-bold text-gray-900">${summary.tourIncome.toLocaleString()}</p>
+                  </div>
+                  <div className="bg-white p-4 rounded-lg shadow-md">
+                    <h3 className="text-lg font-medium text-gray-700">Vehicle Income</h3>
+                    <p className="text-2xl font-bold text-gray-900">${summary.vehicleIncome.toLocaleString()}</p>
+                  </div>
+                </div>
 
-            {/* Chart */}
-            <div className="bg-white p-4 rounded-lg shadow-md">
-              <Bar data={chartData} options={chartOptions} />
-            </div>
+                {/* Charts */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                  <div className="bg-white p-4 rounded-lg shadow-md">
+                    <h3 className="text-lg font-semibold mb-2">System Income (Last 14 Days)</h3>
+                    <Bar data={incomeChartData} options={chartOptions} height={260} />
+                  </div>
+                  <div className="bg-white p-4 rounded-lg shadow-md">
+                    <h3 className="text-lg font-semibold mb-2">User Registrations (Last 14 Days)</h3>
+                    <Line data={userChartData} options={chartOptions} height={260} />
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="bg-white p-4 rounded-lg shadow-md flex flex-col items-center">
+                    <h3 className="text-lg font-semibold mb-2">Booking Breakdown</h3>
+                    <div style={{ maxWidth: 260 }}>
+                      <Pie data={bookingPieData} />
+                    </div>
+                  </div>
+                  <div className="bg-white p-4 rounded-lg shadow-md flex flex-col items-center">
+                    <h3 className="text-lg font-semibold mb-2">Income Breakdown</h3>
+                    <div style={{ maxWidth: 260 }}>
+                      <Pie data={incomePieData} />
+                    </div>
+                  </div>
+                </div>
+              </>
+            ) : null}
           </div>
         </div>
       </div>

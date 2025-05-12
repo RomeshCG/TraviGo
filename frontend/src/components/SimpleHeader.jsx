@@ -23,7 +23,7 @@ function SimpleHeader() {
             <img
               src={logo}
               alt="TraviGo Logo"
-              className="w-auto h-12 lg:h-14"
+              className="w-auto h-16 lg:h-20 transition-all duration-300"
             />
           </Link>
 
