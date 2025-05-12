@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import SimpleHeader from "../components/SimpleHeader";
 import Footer from "../components/Footer";
 
@@ -7,6 +7,8 @@ function HotelCollection() {
   const [accommodations, setAccommodations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const location = useLocation();
+  const successMessage = location.state?.successMessage;
 
   useEffect(() => {
     const fetchAccommodations = async () => {
@@ -49,6 +51,11 @@ function HotelCollection() {
   return (
     <>
       <SimpleHeader />
+      {successMessage && (
+        <div className="bg-green-100 text-green-800 text-center py-4 mb-4 rounded">
+          {successMessage}
+        </div>
+      )}
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-100 py-16 px-4 pt-32">
         <div className="max-w-7xl mx-auto">
           <h1 className="text-4xl md:text-5xl font-extrabold text-center text-blue-900 mb-12 tracking-tight drop-shadow-lg">Our Hotels</h1>
