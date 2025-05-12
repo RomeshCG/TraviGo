@@ -146,7 +146,9 @@ function Dashboard() {
       <Sidebar setActiveSection={setActiveSection} handleLogout={handleLogout} />
       <div className="flex-1 flex flex-col">
         <header className="bg-white shadow-md p-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-gray-900">Grand Horizons Dashboard</h1>
+          <h1 className="text-2xl font-bold text-gray-900">
+            Welcome {provider ? provider.name || "Hotel Manager" : "Hotel Manager"}
+          </h1>
           {provider && (
             <div className="flex items-center space-x-4">
               <div className="text-gray-700">
@@ -163,12 +165,7 @@ function Dashboard() {
           )}
         </header>
         <main className="flex-1 p-8 overflow-auto">
-          <div className="mb-8">
-            <h2 className="text-3xl font-bold text-gray-900">
-              Welcome, {provider ? provider.name || "Hotel Manager" : "Hotel Manager"}!
-            </h2>
-            <p className="text-gray-600 mt-2">Manage your bookings, hotels, and generate reports with ease.</p>
-          </div>
+          
           {renderSection()}
         </main>
       </div>
