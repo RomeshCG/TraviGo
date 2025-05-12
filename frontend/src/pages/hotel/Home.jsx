@@ -22,23 +22,27 @@ function Home() {
       try {
         const token = localStorage.getItem("providerToken");
 
-        // Fetch bookings
-        const bookingsResponse = await fetch("http://localhost:5000/api/bookings", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (!bookingsResponse.ok) throw new Error("Failed to fetch bookings");
-        const bookings = await bookingsResponse.json();
-
         // Fetch hotels owned by the provider
         const hotelsResponse = await fetch("http://localhost:5000/api/hotels/provider", {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (!hotelsResponse.ok) throw new Error("Failed to fetch hotels");
         const hotels = await hotelsResponse.json();
+        const hotelIds = hotels.map((hotel) => hotel._id);
+
+        // Fetch bookings
+        const bookingsResponse = await fetch("http://localhost:5000/api/bookings", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!bookingsResponse.ok) throw new Error("Failed to fetch bookings");
+        const allBookings = await bookingsResponse.json();
+
+        // Only bookings for this provider's hotels
+        const providerBookings = allBookings.filter((booking) => hotelIds.includes(booking.hotelId));
 
         // Filter bookings by status
-        const acceptedBookings = bookings.filter((booking) => booking.status === "accepted");
-        const incomingBookings = bookings.filter((booking) => !booking.status || booking.status === "pending");
+        const acceptedBookings = providerBookings.filter((booking) => booking.status === "accepted");
+        const incomingBookings = providerBookings.filter((booking) => !booking.status || booking.status === "pending");
 
         // Calculate summary metrics
         const totalRevenue = acceptedBookings.reduce((sum, booking) => {
@@ -48,7 +52,7 @@ function Home() {
         const totalHotels = hotels.length;
 
         // Booking status distribution
-        const bookingStatus = bookings.reduce(
+        const bookingStatus = providerBookings.reduce(
           (acc, booking) => {
             const status = booking.status || "pending";
             acc[status] = (acc[status] || 0) + 1;
@@ -60,7 +64,7 @@ function Home() {
         // Hotel performance (bookings per hotel)
         const hotelPerformance = hotels.map((hotel) => ({
           name: hotel.name,
-          bookingsCount: bookings.filter((b) => b.hotelId === hotel._id).length,
+          bookingsCount: providerBookings.filter((b) => b.hotelId === hotel._id).length,
         }));
 
         setSummary({

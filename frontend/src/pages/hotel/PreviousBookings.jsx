@@ -8,16 +8,30 @@ function PreviousBookings() {
   useEffect(() => {
     const fetchBookings = async () => {
       try {
-        const response = await fetch("http://localhost:5000/api/bookings");
-        if (!response.ok) {
-          throw new Error(`Failed to fetch bookings (status: ${response.status})`);
-        }
-        const data = await response.json();
-        const acceptedBookings = data.filter((booking) => booking.status === "accepted");
-        console.log("Fetched accepted bookings:", acceptedBookings);
+        const token = localStorage.getItem("providerToken");
+        // Fetch hotels owned by this provider
+        const hotelsRes = await fetch("http://localhost:5000/api/hotels/provider", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!hotelsRes.ok) throw new Error("Failed to fetch hotels");
+        const hotels = await hotelsRes.json();
+        const hotelIds = hotels.map(h => h._id);
+
+        // Fetch all bookings
+        const bookingsRes = await fetch("http://localhost:5000/api/bookings", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!bookingsRes.ok) throw new Error("Failed to fetch bookings");
+        const allBookings = await bookingsRes.json();
+
+        // Filter bookings for this provider's hotels and accepted status
+        const acceptedBookings = allBookings.filter(
+          (booking) =>
+            hotelIds.includes(booking.hotelId) &&
+            booking.status === "accepted"
+        );
         setBookings(acceptedBookings);
       } catch (err) {
-        console.error("Fetch error:", err);
         setError(err.message);
       } finally {
         setLoading(false);

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import SidebarUser from '../../components/SidebarUser';
 import HeaderUser from '../../components/HeaderUser';
-import { FaStar } from 'react-icons/fa';
+import { FaStar, FaCheckCircle } from 'react-icons/fa';
 
 const HotelBooking = () => {
   const [bookings, setBookings] = useState([]);
@@ -9,8 +9,9 @@ const HotelBooking = () => {
   const [error, setError] = useState(null);
   const [reviewingId, setReviewingId] = useState(null);
   const [review, setReview] = useState({ rating: 5, comment: '' });
-  const [reviewSuccess, setReviewSuccess] = useState('');
+  const [reviewedBookings, setReviewedBookings] = useState([]);
   const [reviewError, setReviewError] = useState('');
+  const [reviewSuccess, setReviewSuccess] = useState('');
 
   useEffect(() => {
     const fetchBookings = async () => {
@@ -32,6 +33,19 @@ const HotelBooking = () => {
 
         const data = await response.json();
         setBookings(data);
+
+        // Fetch reviews for these bookings
+        const reviewed = await Promise.all(
+          data.map(async (booking) => {
+            const reviewResponse = await fetch(`/api/hotel-reviews/booking/${booking._id}`);
+            if (reviewResponse.ok) {
+              const reviewData = await reviewResponse.json();
+              return reviewData.review ? booking._id : null;
+            }
+            return null;
+          })
+        );
+        setReviewedBookings(reviewed.filter((id) => id !== null));
       } catch (err) {
         console.error('Fetch error:', err);
         setError(err.message);
@@ -88,6 +102,7 @@ const HotelBooking = () => {
         return;
       }
       setReviewSuccess('Thank you for your review!');
+      setReviewedBookings((prev) => [...prev, booking._id]);
       setReviewingId(null);
       setReview({ rating: 5, comment: '' });
     } catch {
@@ -106,7 +121,7 @@ const HotelBooking = () => {
         <div className="p-6 md:p-10">
           <div className="flex items-center justify-between mb-8">
             <h1 className="text-3xl font-extrabold text-blue-800 flex items-center gap-3">
-              My Hotel Bookings
+              <FaCheckCircle className="text-blue-400" /> My Hotel Bookings
             </h1>
             {bookings.length > 0 && (
               <button
@@ -130,64 +145,96 @@ const HotelBooking = () => {
                     <th className="p-3 text-left font-semibold text-blue-700">Nights</th>
                     <th className="p-3 text-left font-semibold text-blue-700">Status</th>
                     <th className="p-3 text-left font-semibold text-blue-700">Total Price</th>
+                    <th className="p-3 text-left font-semibold text-blue-700">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {bookings.map((booking) => (
-                    <tr key={booking._id} className="border-b hover:bg-blue-50 transition">
-                      <td className="p-3 font-medium text-gray-800">{booking.roomType}</td>
-                      <td className="p-3">{new Date(booking.checkInDate).toLocaleDateString()}</td>
-                      <td className="p-3">{new Date(booking.checkOutDate).toLocaleDateString()}</td>
-                      <td className="p-3">{booking.nights || '-'}</td>
-                      <td className="p-3">
-                        <span
-                          className={`px-2 py-1 rounded text-xs font-semibold flex items-center gap-1 ${
-                            booking.status === 'completed'
-                              ? 'bg-green-100 text-green-800'
-                              : 'bg-blue-100 text-blue-800'
-                          }`}
-                        >
-                          {booking.status === 'completed' ? 'Completed' : 'Accepted'}
-                        </span>
-                      </td>
-                      <td className="p-3">{`$${booking.totalPrice.toFixed(2)}`}</td>
-                      {booking.status === 'completed' && (
-                        <td className="p-3">
-                          {reviewingId === booking._id ? (
-                            <form
-                              onSubmit={(e) => {
-                                e.preventDefault();
-                                handleReviewSubmit(booking);
-                              }}
+                  {bookings.map((booking) => {
+                    const isCompleted = booking.status === 'completed';
+                    const isReviewed = reviewedBookings.includes(booking._id);
+                    return (
+                      <React.Fragment key={booking._id}>
+                        <tr className="border-b hover:bg-blue-50 transition">
+                          <td className="p-3 font-medium text-gray-800">{booking.roomType}</td>
+                          <td className="p-3">{new Date(booking.checkInDate).toLocaleDateString()}</td>
+                          <td className="p-3">{new Date(booking.checkOutDate).toLocaleDateString()}</td>
+                          <td className="p-3">{booking.nights || '-'}</td>
+                          <td className="p-3">
+                            <span
+                              className={`px-2 py-1 rounded text-xs font-semibold flex items-center gap-1 ${
+                                isCompleted ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'
+                              }`}
                             >
-                              <div>
-                                {[1, 2, 3, 4, 5].map((star) => (
+                              {isCompleted ? 'Completed' : 'Accepted'}
+                            </span>
+                          </td>
+                          <td className="p-3">{`$${booking.totalPrice.toFixed(2)}`}</td>
+                          <td className="p-3">
+                            {isCompleted && !isReviewed ? (
+                              reviewingId === booking._id ? (
+                                <form
+                                  onSubmit={(e) => {
+                                    e.preventDefault();
+                                    handleReviewSubmit(booking);
+                                  }}
+                                  className="flex flex-col md:flex-row md:items-center gap-3"
+                                >
+                                  <span className="font-semibold text-blue-700">Leave a review:</span>
+                                  <span className="flex items-center gap-1">
+                                    {[1, 2, 3, 4, 5].map((star) => (
+                                      <button
+                                        type="button"
+                                        key={star}
+                                        onClick={() => setReview((r) => ({ ...r, rating: star }))}
+                                        className={`text-2xl transition-colors ${
+                                          star <= review.rating ? 'text-yellow-400' : 'text-gray-300'
+                                        }`}
+                                      >
+                                        <FaStar />
+                                      </button>
+                                    ))}
+                                  </span>
+                                  <input
+                                    type="text"
+                                    value={review.comment}
+                                    onChange={(e) => setReview((r) => ({ ...r, comment: e.target.value }))}
+                                    placeholder="Write your review..."
+                                    className="border-2 border-blue-200 rounded px-3 py-2 flex-1 focus:outline-none focus:ring-2 focus:ring-blue-300"
+                                    required
+                                  />
                                   <button
-                                    key={star}
-                                    type="button"
-                                    onClick={() => setReview({ ...review, rating: star })}
+                                    type="submit"
+                                    className="bg-gradient-to-r from-blue-600 to-blue-800 text-white px-6 py-2 rounded-lg font-semibold shadow hover:from-blue-700 hover:to-blue-900 transition-all"
                                   >
-                                    <FaStar className={star <= review.rating ? 'text-yellow-400' : 'text-gray-300'} />
+                                    Submit
                                   </button>
-                                ))}
-                              </div>
-                              <textarea
-                                value={review.comment}
-                                onChange={(e) => setReview({ ...review, comment: e.target.value })}
-                                placeholder="Write your review..."
-                              />
-                              <button type="submit">Submit</button>
-                              <button type="button" onClick={() => setReviewingId(null)}>
-                                Cancel
-                              </button>
-                            </form>
-                          ) : (
-                            <button onClick={() => setReviewingId(booking._id)}>Leave a Review</button>
-                          )}
-                        </td>
-                      )}
-                    </tr>
-                  ))}
+                                  <button
+                                    type="button"
+                                    className="ml-2 text-gray-500 hover:text-red-400 font-semibold"
+                                    onClick={() => setReviewingId(null)}
+                                  >
+                                    Cancel
+                                  </button>
+                                  {reviewError && <span className="text-red-600 ml-2 font-semibold">{reviewError}</span>}
+                                </form>
+                              ) : (
+                                <button
+                                  className="bg-yellow-100 text-yellow-800 px-4 py-2 rounded-lg font-semibold shadow hover:bg-yellow-200 transition-all"
+                                  onClick={() => setReviewingId(booking._id)}
+                                >
+                                  Leave a Review
+                                </button>
+                              )
+                            ) : isReviewed ? (
+                              <span className="text-green-600 font-semibold">Reviewed</span>
+                            ) : (
+                              <span className="text-gray-500">Not eligible for review</span>
+                            )}
+                          </td>
+                        </tr>
+                      </React.Fragment>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

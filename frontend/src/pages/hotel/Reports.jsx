@@ -34,13 +34,25 @@ function Reports() {
         if (!bookingsResponse.ok) throw new Error("Failed to fetch bookings");
         const allBookings = await bookingsResponse.json();
 
-        // Filter bookings for the provider's hotels
-        const filteredBookings = allBookings.filter((booking) => hotelIds.includes(booking.hotelId));
+        // Only bookings for this provider's hotels
+        let filteredBookings = allBookings.filter((booking) => hotelIds.includes(booking.hotelId));
+
+        // Filter by date range if set
+        if (dateRange.startDate) {
+          filteredBookings = filteredBookings.filter(
+            (b) => new Date(b.createdAt) >= new Date(dateRange.startDate)
+          );
+        }
+        if (dateRange.endDate) {
+          filteredBookings = filteredBookings.filter(
+            (b) => new Date(b.createdAt) <= new Date(dateRange.endDate)
+          );
+        }
 
         // Calculate metrics
         const totalBookings = filteredBookings.length;
         const totalRevenue = filteredBookings.reduce((sum, booking) => {
-          const price = Number(booking.bookingPrice) || 0;
+          const price = Number(booking.totalPrice) || 0;
           return sum + price;
         }, 0);
 
@@ -51,7 +63,7 @@ function Reports() {
             name: hotel.name,
             bookingsCount: hotelBookings.length,
             revenue: hotelBookings.reduce((sum, b) => {
-              const price = Number(b.bookingPrice) || 0;
+              const price = Number(b.totalPrice) || 0;
               return sum + price;
             }, 0),
           };
@@ -66,7 +78,7 @@ function Reports() {
       }
     };
     fetchReportData();
-  }, []);
+  }, [dateRange]);
 
   const handleDateChange = (e) => {
     setDateRange({ ...dateRange, [e.target.name]: e.target.value });
