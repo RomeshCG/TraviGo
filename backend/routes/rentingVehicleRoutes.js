@@ -36,12 +36,13 @@ router.put('/:id', updateRentingVehicle);
 
 // Place an order
 router.post('/place-order', async (req, res) => {
-  const { vehicleId, userName, startDate, endDate, totalPrice, paymentMethod } = req.body;
+  const { vehicleId, userId, userName, startDate, endDate, totalPrice, paymentMethod } = req.body;
 
   try {
     // Save the order to the database
     const order = new Order({
       vehicleId,
+      userId, // Save userId
       userName,
       startDate,
       endDate,

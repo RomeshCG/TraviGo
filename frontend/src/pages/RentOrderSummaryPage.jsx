@@ -35,6 +35,7 @@ const RentOrderSummaryPage = () => {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               vehicleId: vehicle._id,
+              userId: formData.userId, // Pass userId
               userName: formData.fullName,
               startDate: formData.startDate,
               endDate: formData.endDate,
@@ -49,6 +50,7 @@ const RentOrderSummaryPage = () => {
             alert('Failed to place the order. Please try again.');
           }
         } catch (err) {
+          console.error('Error placing order:', err);
           alert('An error occurred. Please try again.');
         }
       }

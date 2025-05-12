@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import SimpleHeader from '../components/SimpleHeader';
+import Footer from '../components/Footer';
 
 const VehicleDetailPage = () => {
   const { id } = useParams();
@@ -95,7 +96,9 @@ const VehicleDetailPage = () => {
 
   return (
     <>
-      <SimpleHeader />
+      <div className="pt-8"> {/* Padding before header */}
+        <SimpleHeader />
+      </div>
       <div className="pt-28 pb-12 min-h-screen bg-gradient-to-br from-blue-50 to-white">
         <div className="max-w-5xl mx-auto bg-white rounded-xl shadow-lg p-8">
           {/* Back Arrow */}
@@ -196,6 +199,11 @@ const VehicleDetailPage = () => {
               <p className="text-gray-500">No reviews available for this vehicle.</p>
             )}
           </div>
+        </div>
+      </div>
+      <div className="pb-8"> {/* Padding before footer */}
+        <div className="mt-12 border-t-4 border-blue-300 shadow-lg">
+          <Footer />
         </div>
       </div>
     </>

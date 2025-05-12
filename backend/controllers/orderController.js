@@ -3,11 +3,12 @@ const RentingVehicle = require('../models/RentingVehicle');
 
 // Place a new order
 const placeOrder = async (req, res) => {
-  const { vehicleId, userName, startDate, endDate, totalPrice, paymentMethod } = req.body;
+  const { vehicleId, userId, userName, startDate, endDate, totalPrice, paymentMethod } = req.body;
 
   try {
     const order = new Order({
       vehicleId,
+      userId, // Save userId
       userName,
       startDate,
       endDate,
@@ -43,6 +44,31 @@ const getOrderById = async (req, res) => {
     res.status(200).json(order);
   } catch (err) {
     res.status(500).json({ message: 'Failed to fetch order', error: err.message });
+  }
+};
+
+// Get orders by userName
+const getOrdersByUserName = async (req, res) => {
+  const { username } = req.params;
+  console.log('[getOrdersByUserName] username param:', username); // Debug log
+  try {
+    const orders = await Order.find({ userName: username }).populate('vehicleId');
+    console.log(`[getOrdersByUserName] Found ${orders.length} orders for userName:`, username); // Debug log
+    res.status(200).json(orders);
+  } catch (err) {
+    console.error('[getOrdersByUserName] Error:', err); // Debug log
+    res.status(500).json({ message: 'Failed to fetch user orders', error: err.message });
+  }
+};
+
+// Get orders by userId
+const getOrdersByUserId = async (req, res) => {
+  const { userId } = req.params;
+  try {
+    const orders = await Order.find({ userId }).populate('vehicleId');
+    res.status(200).json(orders);
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to fetch user orders', error: err.message });
   }
 };
 
@@ -84,4 +110,6 @@ module.exports = {
   getAllOrders,
   getOrderById,
   updateOrderStatus,
+  getOrdersByUserName,
+  getOrdersByUserId, // Export new controller
 };

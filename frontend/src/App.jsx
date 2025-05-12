@@ -59,6 +59,7 @@ import RentingPaymentPage from './pages/RentingPaymentPage';
 import RentOrderSummaryPage from './pages/RentOrderSummaryPage';
 import ContactInquiries from './pages/Admin/ContactInquiries';
 import Reviews from './pages/user/Reviews';
+import VehicleRental from './pages/user/VehicleRental';
 
 // Load Stripe
 const stripePromise = loadStripe(import.meta.env.VITE_REACT_APP_STRIPE_PUBLISHABLE_KEY);
@@ -285,6 +286,14 @@ function AppContent() {
                     element={
                         <ProtectedRoute>
                             <TourGuideBookings />
+                        </ProtectedRoute>
+                    }
+                />
+                <Route
+                    path="/user/my-booking/vehicles"
+                    element={
+                        <ProtectedRoute>
+                            <VehicleRental />
                         </ProtectedRoute>
                     }
                 />

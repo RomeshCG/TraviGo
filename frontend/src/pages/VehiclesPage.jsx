@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import VehicleCard from '../components/VehicleCard';
 import SimpleHeader from '../components/SimpleHeader';
+import Footer from '../components/Footer';
 
 const VehiclesPage = () => {
   const [vehicles, setVehicles] = useState([]);
@@ -29,7 +30,9 @@ const VehiclesPage = () => {
 
   return (
     <>
-      <SimpleHeader />
+      <div className="pt-8"> {/* Padding before header */}
+        <SimpleHeader />
+      </div>
       <div className="pt-28 pb-12 min-h-screen bg-gradient-to-br from-blue-50 to-white">
         <div className="max-w-7xl mx-auto px-4">
           
@@ -49,7 +52,7 @@ const VehiclesPage = () => {
           )}
 
           {/* Vehicle Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 mt-8">
             {vehicles.map(vehicle => (
               <VehicleCard
                 key={vehicle._id}
@@ -71,6 +74,11 @@ const VehiclesPage = () => {
               No vehicles available at the moment. Please check back later.
             </div>
           )}
+        </div>
+      </div>
+      <div className="pb-8"> {/* Padding before footer */}
+        <div className="mt-12 border-t-4 border-blue-300 shadow-lg">
+          <Footer />
         </div>
       </div>
     </>

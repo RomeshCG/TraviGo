@@ -22,6 +22,11 @@ const RentVehiclePage = () => {
     const formData = new FormData(e.target);
     const data = Object.fromEntries(formData.entries());
     data.vehicleId = vehicle._id;
+    // Add userId from localStorage
+    const user = JSON.parse(localStorage.getItem('user'));
+    if (user && user._id) {
+      data.userId = user._id;
+    }
     navigate('/user/vehicles/order-summary', { state: { vehicle, formData: data } });
   };
 
