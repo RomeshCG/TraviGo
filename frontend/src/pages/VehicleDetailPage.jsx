@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
+import { FaStar } from 'react-icons/fa';
 import SimpleHeader from '../components/SimpleHeader';
 import Footer from '../components/Footer';
 
@@ -30,11 +31,15 @@ const VehicleDetailPage = () => {
             setOwner(ownerData.provider);
           }
 
-          // Fetch reviews for the vehicle
-          const reviewsRes = await fetch(`http://localhost:5000/api/reviews/vehicle/${id}`);
+          // Fetch reviews for the vehicle (from VehicleOrderReview)
+          const reviewsRes = await fetch(`http://localhost:5000/api/vehicle-order-reviews/vehicle/${id}`);
           const reviewsData = await reviewsRes.json();
-          if (reviewsRes.ok) {
-            setReviews(reviewsData.reviews || []);
+          if (reviewsRes.ok && Array.isArray(reviewsData)) {
+            setReviews(reviewsData);
+          } else if (reviewsRes.ok && Array.isArray(reviewsData.reviews)) {
+            setReviews(reviewsData.reviews);
+          } else {
+            setReviews([]);
           }
 
           // Use images array for mainImage
@@ -189,9 +194,19 @@ const VehicleDetailPage = () => {
             {reviews.length > 0 ? (
               <div className="space-y-4">
                 {reviews.map((review) => (
-                  <div key={review._id} className="bg-gray-100 p-4 rounded-lg shadow-md">
-                    <p className="text-gray-700"><strong>{review.userName}</strong></p>
-                    <p className="text-gray-600">{review.comment}</p>
+                  <div key={review._id} className="bg-gradient-to-r from-blue-100 to-blue-50 p-5 rounded-lg shadow flex flex-col md:flex-row md:items-center gap-4">
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-blue-900 text-lg">
+                        {review.userId?.name || review.userName || 'User'}
+                      </span>
+                      <span className="flex items-center ml-2">
+                        {[...Array(5)].map((_, i) => (
+                          <FaStar key={i} className={i < review.rating ? 'text-yellow-400' : 'text-gray-300'} />
+                        ))}
+                      </span>
+                    </div>
+                    <div className="text-gray-700 italic flex-1">{review.comment}</div>
+                    <div className="text-xs text-gray-500 mt-2 md:mt-0 md:ml-4">{review.createdAt ? new Date(review.createdAt).toLocaleDateString() : ''}</div>
                   </div>
                 ))}
               </div>

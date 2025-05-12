@@ -38,9 +38,9 @@ exports.getReviewForOrder = async (req, res) => {
   const { orderId } = req.params;
   try {
     const review = await VehicleOrderReview.findOne({ orderId });
-    // Always return { review: ... } for frontend compatibility
     res.status(200).json({ review: review || null });
   } catch (err) {
+    console.error('[VehicleOrderReview] getReviewForOrder ERROR', err); // DEBUG
     res.status(500).json({ message: 'Failed to fetch review', error: err.message });
   }
 };
