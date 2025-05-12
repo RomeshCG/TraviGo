@@ -1,4 +1,5 @@
 const Order = require('../models/Order');
+const RentingVehicle = require('../models/RentingVehicle');
 
 // Place a new order
 const placeOrder = async (req, res) => {
@@ -51,10 +52,27 @@ const updateOrderStatus = async (req, res) => {
   const { status } = req.body;
 
   try {
-    const order = await Order.findByIdAndUpdate(id, { status }, { new: true });
+    const order = await Order.findById(id).populate('vehicleId');
     if (!order) {
       return res.status(404).json({ message: 'Order not found' });
     }
+
+    // Update the order status
+    order.status = status;
+    await order.save();
+
+    // If the order is accepted, update the vehicle's availability
+    if (status === 'Confirmed') {
+      const vehicle = await RentingVehicle.findById(order.vehicleId._id);
+      if (vehicle) {
+        vehicle.availability.push({
+          startDate: order.startDate,
+          endDate: order.endDate,
+        });
+        await vehicle.save();
+      }
+    }
+
     res.status(200).json({ message: 'Order status updated successfully', order });
   } catch (err) {
     res.status(500).json({ message: 'Failed to update order status', error: err.message });

@@ -13,6 +13,12 @@ const rentingVehicleSchema = new mongoose.Schema({
   transmission: { type: String, required: true },
   description: { type: String, required: true },
   images: [String],
+  availability: [
+    {
+      startDate: { type: Date, required: true },
+      endDate: { type: Date, required: true },
+    },
+  ], // New field for unavailable dates
   createdAt: { type: Date, default: Date.now },
 });
 

@@ -81,6 +81,23 @@ exports.getRentingVehicleById = async (req, res) => {
   }
 };
 
+// Update a renting vehicle
+exports.updateRentingVehicle = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updatedData = req.body;
+
+    const vehicle = await RentingVehicle.findByIdAndUpdate(id, updatedData, { new: true });
+    if (!vehicle) {
+      return res.status(404).json({ message: 'Vehicle not found' });
+    }
+
+    res.status(200).json({ message: 'Vehicle updated successfully', vehicle });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
 // Rent a vehicle
 exports.rentVehicle = async (req, res) => {
   try {

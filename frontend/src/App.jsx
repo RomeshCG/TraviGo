@@ -47,7 +47,6 @@ import TourGuideReports from './pages/Admin/TourGuideReports';
 import UserTopBar from './components/UserTopBar';
 import TourGuideBookings from './pages/user/TourGuideBookings';
 import ReviewManagement from './pages/Admin/ReviewManagement';
-<<<<<<< HEAD
 import VehicleAdminDashboard from './pages/vehicle/VehicleAdminDashboard';
 import DashboardHome from './pages/vehicle/DashboardHome';
 import AddVehicle from './pages/vehicle/AddVehicle';
@@ -58,10 +57,8 @@ import VehicleDetailPage from './pages/VehicleDetailPage';
 import RentVehiclePage from './pages/RentVehiclePage';
 import RentingPaymentPage from './pages/RentingPaymentPage';
 import RentOrderSummaryPage from './pages/RentOrderSummaryPage';
-=======
 import ContactInquiries from './pages/Admin/ContactInquiries';
 import Reviews from './pages/user/Reviews';
->>>>>>> 5b99cf354ee2fc09fa1883909b905f8304b58100
 
 // Load Stripe
 const stripePromise = loadStripe(import.meta.env.VITE_REACT_APP_STRIPE_PUBLISHABLE_KEY);
@@ -216,7 +213,6 @@ function AppContent() {
     };
 
     const publicRoutes = ['/login', '/signin', '/service-provider/login', '/admin/login'];
-    // Hide UserTopBar on dashboard and user dashboard and ALL /user/ pages
     const dashboardRoutes = [
         '/dashboard',
         '/user/dashboard',
@@ -324,8 +320,6 @@ function AppContent() {
                         </ProtectedRoute>
                     }
                 />
-<<<<<<< HEAD
-=======
                 <Route
                     path="/user/reviews"
                     element={
@@ -340,11 +334,10 @@ function AppContent() {
                     path="/rent"
                     element={
                         <ProtectedRoute>
-                            <VehicleRentPage />
+                            <RentVehiclePage />
                         </ProtectedRoute>
                     }
                 />
->>>>>>> 5b99cf354ee2fc09fa1883909b905f8304b58100
                 <Route path="/admin/login" element={<AdminLogin />} />
                 <Route
                     path="/admin/dashboard"

@@ -510,20 +510,35 @@ router.get('/admin/hotels', isAdmin, async (req, res) => {
 
 // Service provider registration
 router.post('/service-provider/register', async (req, res) => {
-  const { name, email, password, providerType } = req.body;
-  if (!name || !email || !password || !providerType) {
+  const { name, email, password, providerType, phoneNumber, address } = req.body;
+
+  if (!name || !email || !password || !providerType || !phoneNumber || !address) {
     return res.status(400).json({ message: 'All fields are required' });
   }
+
   if (!['HotelProvider', 'TourGuide', 'VehicleProvider'].includes(providerType)) {
     return res.status(400).json({ message: 'Invalid provider type' });
   }
+
   try {
     const existingProvider = await ServiceProvider.findOne({ email });
     if (existingProvider) return res.status(400).json({ message: 'Email already exists' });
+
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
+
     const newProvider = new ServiceProvider({ name, email, password: hashedPassword, providerType });
     await newProvider.save();
+
+    if (providerType === 'VehicleProvider') {
+      const vehicleProvider = new VehicleProvider({
+        providerId: newProvider._id,
+        phoneNumber,
+        address,
+      });
+      await vehicleProvider.save();
+    }
+
     res.status(201).json({
       message: 'Basic details registered successfully',
       providerId: newProvider._id,
@@ -636,6 +651,13 @@ router.get('/verify-provider-token', async (req, res) => {
     if (!provider) {
       return res.status(404).json({ message: 'Service provider not found' });
     }
+
+    // If the provider is a VehicleProvider, fetch additional details
+    let vehicleProviderDetails = null;
+    if (provider.providerType === 'VehicleProvider') {
+      vehicleProviderDetails = await VehicleProvider.findOne({ providerId: provider._id });
+    }
+
     res.status(200).json({
       message: 'Token is valid',
       provider: {
@@ -643,6 +665,8 @@ router.get('/verify-provider-token', async (req, res) => {
         name: provider.name,
         email: provider.email,
         providerType: provider.providerType,
+        phone: vehicleProviderDetails?.phoneNumber || null,
+        address: vehicleProviderDetails?.address || null,
         isAdvancedRegistrationComplete: provider.isAdvancedRegistrationComplete,
       },
     });
@@ -1084,7 +1108,7 @@ router.get('/user/booking-stats/monthly', async (req, res) => {
     // Aggregate counts per month
     const stats = months.map(({ label, start, end }) => {
       const hotel = hotelBookings.filter(b => b.createdAt >= start && b.createdAt <= end).length;
-      const tour = tourBookings.filter(b => b.createdAt >= start && b.createdAt <= end).length;
+      const tour = tourBookings.filter(b.createdAt >= start && b.createdAt <= end).length;
       const vehicle = userVehicleBookings.filter(b => b.createdAt >= start && b.createdAt <= end).length;
       return { month: label, hotel, tour, vehicle };
     });
@@ -1865,6 +1889,66 @@ router.get('/admin/reviews', isAdmin, async (req, res) => {
     res.status(200).json({ reviews, stats });
   } catch (error) {
     console.error('Admin fetch all reviews error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Update provider profile
+router.put('/provider/update-profile', upload.single('profilePic'), async (req, res) => {
+  const { name, email, phone, address } = req.body;
+  const providerId = req.providerId;
+
+  try {
+    const provider = await ServiceProvider.findById(providerId);
+    if (!provider) {
+      return res.status(404).json({ message: 'Provider not found' });
+    }
+
+    provider.name = name || provider.name;
+    provider.email = email || provider.email;
+
+    const vehicleProvider = await VehicleProvider.findOne({ providerId });
+    if (vehicleProvider) {
+      vehicleProvider.phoneNumber = phone || vehicleProvider.phoneNumber;
+      vehicleProvider.address = address || vehicleProvider.address;
+      await vehicleProvider.save();
+    }
+
+    if (req.file) {
+      provider.profilePic = `/uploads/${req.file.filename}`;
+    }
+
+    await provider.save();
+
+    res.status(200).json({ message: 'Profile updated successfully', provider });
+  } catch (error) {
+    console.error('Error updating profile:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Get service provider by ID
+router.get('/service-providers/:id', async (req, res) => {
+  try {
+    const provider = await ServiceProvider.findById(req.params.id);
+    if (!provider) {
+      return res.status(404).json({ message: 'Service provider not found' });
+    }
+
+    // If the provider is a VehicleProvider, fetch additional details
+    const vehicleProvider = await VehicleProvider.findOne({ providerId: provider._id });
+
+    res.status(200).json({
+      provider: {
+        _id: provider._id,
+        name: provider.name,
+        email: provider.email,
+        phoneNumber: vehicleProvider?.phoneNumber || null,
+        address: vehicleProvider?.address || null,
+      },
+    });
+  } catch (error) {
+    console.error('Error fetching service provider:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });

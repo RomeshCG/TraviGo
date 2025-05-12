@@ -5,16 +5,28 @@ const Bookings = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [adminId, setAdminId] = useState(null);
 
   useEffect(() => {
     const fetchOrders = async () => {
       setLoading(true);
       setError('');
       try {
-        const res = await fetch('/api/orders'); // Use relative path if proxy is set
+        // Get the logged-in admin's ID from localStorage
+        const provider = JSON.parse(localStorage.getItem('provider'));
+        const providerId = provider?._id;
+        setAdminId(providerId);
+
+        // Fetch all orders
+        const res = await fetch('http://localhost:5000/api/orders'); // Ensure the URL matches your backend server
         const data = await res.json();
+
         if (res.ok) {
-          setOrders(data);
+          // Filter orders to only include those belonging to the admin's vehicles
+          const filteredOrders = data.filter(
+            (order) => order.vehicleId?.providerId === providerId
+          );
+          setOrders(filteredOrders);
         } else {
           setError(data.message || 'Failed to fetch orders');
         }
@@ -89,7 +101,7 @@ const Bookings = () => {
           <tbody>
             {orders.map((order) => (
               <tr key={order._id}>
-                <td className="py-2">{order.vehicleId?.name || 'N/A'}</td>
+                <td className="py-2">{order.vehicleId?.vehicleName || 'N/A'}</td>
                 <td className="py-2">{order.userName}</td>
                 <td className="py-2">
                   {new Date(order.startDate).toLocaleDateString()} -{' '}
@@ -123,7 +135,7 @@ const Bookings = () => {
           </tbody>
         </table>
         {orders.length === 0 && (
-          <div className="text-center text-gray-500 mt-4">No bookings found for this vehicle.</div>
+          <div className="text-center text-gray-500 mt-4">No bookings found for your vehicles.</div>
         )}
       </div>
     </div>

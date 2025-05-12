@@ -9,6 +9,8 @@ const ServiceProviderRegister = () => {
     email: '',
     password: '',
     providerType: '',
+    phoneNumber: '', // Added phone number
+    address: '', // Added address
   });
   const [errors, setErrors] = useState({});
   const [success, setSuccess] = useState('');
@@ -22,6 +24,8 @@ const ServiceProviderRegister = () => {
     if (!emailRegex.test(formData.email)) newErrors.email = 'Please enter a valid email';
     if (formData.password.length < 7) newErrors.password = 'Password must be at least 7 characters';
     if (!formData.providerType) newErrors.providerType = 'Please select a provider type';
+    if (!formData.phoneNumber) newErrors.phoneNumber = 'Phone number is required';
+    if (!formData.address) newErrors.address = 'Address is required';
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -85,7 +89,7 @@ const ServiceProviderRegister = () => {
                   value={formData.name}
                   onChange={handleChange}
                   placeholder="Full Name"
-                  className={`w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue- SPACE500 ${
+                  className={`w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                     errors.name ? 'border-red-500' : 'border-gray-300'
                   }`}
                   required
@@ -119,6 +123,34 @@ const ServiceProviderRegister = () => {
                   required
                 />
                 {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password}</p>}
+              </div>
+              <div className="mb-4">
+                <input
+                  type="text"
+                  name="phoneNumber"
+                  value={formData.phoneNumber}
+                  onChange={handleChange}
+                  placeholder="Phone Number"
+                  className={`w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                    errors.phoneNumber ? 'border-red-500' : 'border-gray-300'
+                  }`}
+                  required
+                />
+                {errors.phoneNumber && <p className="text-red-500 text-sm mt-1">{errors.phoneNumber}</p>}
+              </div>
+              <div className="mb-4">
+                <input
+                  type="text"
+                  name="address"
+                  value={formData.address}
+                  onChange={handleChange}
+                  placeholder="Address"
+                  className={`w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                    errors.address ? 'border-red-500' : 'border-gray-300'
+                  }`}
+                  required
+                />
+                {errors.address && <p className="text-red-500 text-sm mt-1">{errors.address}</p>}
               </div>
               <div className="mb-6">
                 <select

@@ -8,6 +8,8 @@ const VehicleDetailPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [mainImage, setMainImage] = useState('');
+  const [owner, setOwner] = useState(null); // State for owner details
+  const [reviews, setReviews] = useState([]); // State for user reviews
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -19,6 +21,21 @@ const VehicleDetailPage = () => {
         const data = await res.json();
         if (res.ok && data.vehicle) {
           setVehicle(data.vehicle);
+
+          // Fetch owner details
+          const ownerRes = await fetch(`http://localhost:5000/api/service-providers/${data.vehicle.providerId}`);
+          const ownerData = await ownerRes.json();
+          if (ownerRes.ok) {
+            setOwner(ownerData.provider);
+          }
+
+          // Fetch reviews for the vehicle
+          const reviewsRes = await fetch(`http://localhost:5000/api/reviews/vehicle/${id}`);
+          const reviewsData = await reviewsRes.json();
+          if (reviewsRes.ok) {
+            setReviews(reviewsData.reviews || []);
+          }
+
           // Use images array for mainImage
           if (data.vehicle.images && data.vehicle.images.length > 0) {
             const img = data.vehicle.images[0];
@@ -81,6 +98,13 @@ const VehicleDetailPage = () => {
       <SimpleHeader />
       <div className="pt-28 pb-12 min-h-screen bg-gradient-to-br from-blue-50 to-white">
         <div className="max-w-5xl mx-auto bg-white rounded-xl shadow-lg p-8">
+          {/* Back Arrow */}
+          <div className="mb-6">
+            <Link to="/user/vehicles" className="text-blue-600 underline text-lg font-semibold">
+              &larr; Back to Vehicles
+            </Link>
+          </div>
+
           <div className="flex flex-col md:flex-row gap-8">
             {/* Image Section */}
             <div className="md:w-1/2 flex flex-col items-center">
@@ -105,6 +129,7 @@ const VehicleDetailPage = () => {
                 </div>
               )}
             </div>
+
             {/* Details Section */}
             <div className="md:w-1/2 flex flex-col justify-between">
               <div>
@@ -126,8 +151,50 @@ const VehicleDetailPage = () => {
               </button>
             </div>
           </div>
+
+          {/* Availability Section */}
+          <div className="mt-8 bg-gray-100 p-6 rounded-lg shadow-md">
+            <h3 className="text-xl font-bold text-[#203c8c] mb-4">Availability</h3>
+            {vehicle.availability && vehicle.availability.length > 0 ? (
+              <ul className="list-disc pl-6">
+                {vehicle.availability.map((range, idx) => (
+                  <li key={idx} className="text-gray-700">
+                    Not available from{' '}
+                    <strong>{new Date(range.startDate).toLocaleDateString()}</strong> to{' '}
+                    <strong>{new Date(range.endDate).toLocaleDateString()}</strong>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-gray-500">This vehicle is available for all dates.</p>
+            )}
+          </div>
+
+          {/* Owner Contact Section */}
+          {owner && (
+            <div className="mt-8 bg-gray-100 p-6 rounded-lg shadow-md">
+              <h3 className="text-xl font-bold text-[#203c8c] mb-4">Contact Owner</h3>
+              <p className="text-gray-700"><strong>Name:</strong> {owner.name}</p>
+              <p className="text-gray-700"><strong>Email:</strong> {owner.email}</p>
+              <p className="text-gray-700"><strong>Phone:</strong> {owner.phoneNumber}</p>
+            </div>
+          )}
+
+          {/* User Reviews Section */}
           <div className="mt-8">
-            <Link to="/user/vehicles" className="text-blue-600 underline">&larr; Back to Vehicles</Link>
+            <h3 className="text-xl font-bold text-[#203c8c] mb-4">User Reviews</h3>
+            {reviews.length > 0 ? (
+              <div className="space-y-4">
+                {reviews.map((review) => (
+                  <div key={review._id} className="bg-gray-100 p-4 rounded-lg shadow-md">
+                    <p className="text-gray-700"><strong>{review.userName}</strong></p>
+                    <p className="text-gray-600">{review.comment}</p>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-gray-500">No reviews available for this vehicle.</p>
+            )}
           </div>
         </div>
       </div>

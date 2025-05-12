@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const multer = require('multer');
 const path = require('path');
-const { addRentingVehicle, getAllRentingVehicles, getRentingVehicleById, rentVehicle, createPaymentIntent } = require('../controllers/rentingVehicleController');
+const { addRentingVehicle, getAllRentingVehicles, getRentingVehicleById, rentVehicle, createPaymentIntent, updateRentingVehicle } = require('../controllers/rentingVehicleController');
 const Order = require('../models/Order'); // Import the Order model
 
 // Multer setup for file uploads
@@ -30,6 +30,9 @@ router.post('/rent', rentVehicle);
 
 // Stripe payment intent for renting vehicle
 router.post('/create-payment-intent', createPaymentIntent);
+
+// Update a renting vehicle
+router.put('/:id', updateRentingVehicle);
 
 // Place an order
 router.post('/place-order', async (req, res) => {
