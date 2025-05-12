@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import Footer from '../../components/Footer';
+import VehicleProviderHeader from '../../components/VehicleProviderHeader';
 
 const sidebarLinks = [
     { name: 'Dashboard', path: '/vehicle/dashboard' },
@@ -24,7 +25,18 @@ const VehicleAdminDashboard = () => {
     const location = useLocation();
     const navigate = useNavigate();
 
+    const handleLogout = useCallback(() => {
+        localStorage.removeItem('providerToken');
+        localStorage.removeItem('provider');
+        navigate('/service-provider/login');
+    }, [navigate]);
+
     useEffect(() => {
+        // Check if sidebar requested edit mode
+        if (localStorage.getItem('vehicleEditProfile') === 'true') {
+            setIsEditing(true);
+            localStorage.removeItem('vehicleEditProfile');
+        }
         const verifyAndLoadProvider = async () => {
             const token = localStorage.getItem('providerToken');
             const provider = localStorage.getItem('provider');
@@ -61,13 +73,7 @@ const VehicleAdminDashboard = () => {
         };
 
         verifyAndLoadProvider();
-    }, [navigate]);
-
-    const handleLogout = () => {
-        localStorage.removeItem('providerToken');
-        localStorage.removeItem('provider');
-        navigate('/service-provider/login');
-    };
+    }, [navigate, handleLogout]);
 
     const confirmLogout = () => setShowLogoutConfirm(true);
     const cancelLogout = () => setShowLogoutConfirm(false);
@@ -98,7 +104,7 @@ const VehicleAdminDashboard = () => {
         }
 
         try {
-            const response = await fetch('http://localhost:5000/api/provider/update-profile', {
+            const response = await fetch('http://localhost:5000/api/vehicle-provider/update-profile', {
                 method: 'PUT',
                 headers: { Authorization: `Bearer ${token}` },
                 body: formDataToSend,
@@ -128,18 +134,26 @@ const VehicleAdminDashboard = () => {
 
     return (
         <div className="min-h-screen flex flex-col">
-            <div className="flex flex-1 min-h-[80vh] bg-gray-100">
+            <div className="fixed top-0 left-0 w-full z-50">
+                <VehicleProviderHeader />
+            </div>
+            <div className="flex flex-1 min-h-[80vh] bg-gray-100" style={{ paddingTop: 64 }}>
                 {/* Sidebar */}
-                <aside className="w-64 bg-gradient-to-b from-blue-900 to-blue-700 text-white flex flex-col py-8 px-4 min-h-[80vh]">
+                <aside className="w-64 bg-gradient-to-b from-blue-900 to-blue-700 text-white flex flex-col py-8 px-4 min-h-[80vh] fixed top-16 left-0 h-[calc(100vh-64px)] z-40">
                     {/* Profile Section */}
                     <div className="mb-8 text-center">
                         <img
                             src={
-                                providerData?.profilePic ||
-                                'https://via.placeholder.com/100'
+                                providerData?.profilePic && providerData?.profilePic !== ''
+                                    ? providerData.profilePic.startsWith('http')
+                                        ? providerData.profilePic
+                                        : `${providerData.profilePic}`.startsWith('/uploads/')
+                                            ? `${window.location.origin}${providerData.profilePic}`
+                                            : `${window.location.origin}/uploads/${providerData.profilePic}`
+                                    : 'https://ui-avatars.com/api/?name=' + encodeURIComponent(providerData?.name || 'Provider') + '&background=0D8ABC&color=fff'
                             }
                             alt="Profile"
-                            className="w-24 h-24 rounded-full mx-auto mb-4"
+                            className="w-24 h-24 rounded-full mx-auto mb-4 object-cover border-2 border-blue-400"
                         />
                         <h2 className="text-xl font-bold">{providerData?.name || 'Admin'}</h2>
                         <p className="text-sm text-blue-200">{providerData?.email}</p>
@@ -195,7 +209,7 @@ const VehicleAdminDashboard = () => {
                 </aside>
 
                 {/* Main Content */}
-                <main className="flex-1 min-h-[80vh]">
+                <main className="flex-1 min-h-[80vh] ml-64">
                     <div className="p-6">
                         {isEditing ? (
                             <form onSubmit={handleSaveChanges} className="space-y-4">
@@ -285,7 +299,7 @@ const VehicleAdminDashboard = () => {
                     </div>
                 </div>
             )}
-            <Footer />
+           
         </div>
     );
 };
