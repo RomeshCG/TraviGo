@@ -5,8 +5,10 @@ import Vehicle1 from "../assets/Vehicle1.jpg";
 import Vehicle2 from "../assets/Vehicle2.jpg";
 import Vehicle3 from "../assets/Vehicle3.jpg";
 import Vehicle4 from "../assets/Vehicle4.jpg";
+import { useNavigate } from 'react-router-dom';
 
 const VehicleListingsService = () => {
+  const navigate = useNavigate();
   return (
     <div className="min-h-screen bg-gray-50 pt-20">
       <SimpleHeader />
@@ -27,7 +29,7 @@ const VehicleListingsService = () => {
           <p className="text-lg text-white mb-6">
             Choose from a wide range of vehicles for your travel needs – from sedans to SUVs. Enjoy flexible rental options and a seamless booking experience.
           </p>
-          <button className="bg-white text-teal-500 px-6 py-3 rounded-full hover:bg-gray-100">
+          <button className="bg-white text-teal-500 px-6 py-3 rounded-full hover:bg-gray-100" onClick={() => navigate('/user/vehicles')}>
             Let’s Talk
           </button>
         </div>

@@ -62,7 +62,11 @@ import Reviews from './pages/user/Reviews';
 import VehicleRental from './pages/user/VehicleRental';
 import ReceiptPage from './pages/ReceiptPage'; // Import the new receipt page
 import HotelBooking from './pages/user/HotelBooking'; // Import HotelBooking.jsx
+<<<<<<< HEAD
 import HotelManagePage from './pages/hotel/HotelManagePage';
+=======
+import VehicleListing from './pages/Admin/VehicleListing';
+>>>>>>> 8c9ab11d9107c6fc5fecbdc9e1b223c6325bd624
 
 // Load Stripe
 const stripePromise = loadStripe(import.meta.env.VITE_REACT_APP_STRIPE_PUBLISHABLE_KEY);
@@ -239,6 +243,7 @@ function AppContent() {
                 <Route path="/login" element={<Login />} />
                 <Route path="/services/hotel-listings" element={<HotelListingsService />} />
                 <Route path="/services/tour-guides" element={<TourGuidesService />} />
+                <Route path="/services/vehicle-listings" element={<VehicleListingsService />} />
                 <Route path="/tour-guide/:providerId" element={<TourGuideProfile />} />
                 <Route path="/hotels" element={<HotelCollection />} />
                 <Route path="/hotels/:id" element={<HotelDetails />} />
@@ -436,6 +441,14 @@ function AppContent() {
                     element={
                         <ProtectedAdminRoute>
                             <ContactInquiries />
+                        </ProtectedAdminRoute>
+                    }
+                />
+                <Route
+                    path="/admin/vehicle-listing"
+                    element={
+                        <ProtectedAdminRoute>
+                            <VehicleListing />
                         </ProtectedAdminRoute>
                     }
                 />

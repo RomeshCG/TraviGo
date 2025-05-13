@@ -310,6 +310,11 @@ const TourGuideDashboard = () => {
   const [bankError, setBankError] = useState('');
   const [reviewFilter, setReviewFilter] = useState(0); // 0 = all, 1-5 = star rating
 
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editPackageData, setEditPackageData] = useState(null);
+  const [editLoading, setEditLoading] = useState(false);
+  const [editError, setEditError] = useState('');
+
   const navigate = useNavigate();
   const BASE_URL = 'http://localhost:5000';
 
@@ -547,6 +552,45 @@ const TourGuideDashboard = () => {
       }
     } catch (err) {
       setError(`Failed to delete tour package: ${err.message}`);
+    }
+  };
+
+  const handleEditPackage = (pkg) => {
+    setEditPackageData({ ...pkg });
+    setShowEditModal(true);
+    setEditError('');
+  };
+
+  const handleEditInputChange = (e) => {
+    const { name, value } = e.target;
+    setEditPackageData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleEditPackageSubmit = async (e) => {
+    e.preventDefault();
+    setEditLoading(true);
+    setEditError('');
+    try {
+      const token = localStorage.getItem('providerToken');
+      const res = await fetch(`${BASE_URL}/api/tour-guide/tour-package/${editPackageData._id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(editPackageData),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.message || 'Failed to update package');
+      }
+      setShowEditModal(false);
+      setEditLoading(false);
+      setEditPackageData(null);
+      await fetchTourGuideData();
+    } catch (err) {
+      setEditError(err.message);
+      setEditLoading(false);
     }
   };
 
@@ -1039,6 +1083,12 @@ const TourGuideDashboard = () => {
                               </button>
                             )}
                             <button
+                              onClick={() => handleEditPackage(pkg)}
+                              className="text-blue-600 hover:text-blue-800 font-semibold"
+                            >
+                              Edit
+                            </button>
+                            <button
                               onClick={() => handleDelete(pkg._id)}
                               className="text-red-600 hover:text-red-800 font-semibold"
                             >
@@ -1415,6 +1465,30 @@ const TourGuideDashboard = () => {
         </div>
       </Modal>
       {/* End of Modal */}
+
+      {/* Edit Package Modal */}
+      {showEditModal && editPackageData && (
+        <div className="fixed inset-0 flex items-center justify-center z-50" style={{ background: 'rgba(30,41,59,0.15)', backdropFilter: 'blur(2px)' }}>
+          <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-lg">
+            <h3 className="text-xl font-bold mb-4">Edit Tour Package</h3>
+            <form onSubmit={handleEditPackageSubmit} className="space-y-3">
+              <input type="text" name="title" value={editPackageData.title} onChange={handleEditInputChange} className="w-full border rounded p-2" placeholder="Title" required />
+              <textarea name="description" value={editPackageData.description} onChange={handleEditInputChange} className="w-full border rounded p-2" placeholder="Description" required />
+              <input type="text" name="duration" value={editPackageData.duration} onChange={handleEditInputChange} className="w-full border rounded p-2" placeholder="Duration" required />
+              <input type="number" name="price" value={editPackageData.price} onChange={handleEditInputChange} className="w-full border rounded p-2" placeholder="Price" required min="0" />
+              <input type="text" name="location" value={editPackageData.location} onChange={handleEditInputChange} className="w-full border rounded p-2" placeholder="Location" required />
+              <textarea name="itinerary" value={editPackageData.itinerary} onChange={handleEditInputChange} className="w-full border rounded p-2" placeholder="Itinerary" required />
+              <input type="number" name="maxParticipants" value={editPackageData.maxParticipants} onChange={handleEditInputChange} className="w-full border rounded p-2" placeholder="Max Participants" required min="1" />
+              {editError && <div className="text-red-600">{editError}</div>}
+              <div className="flex justify-end space-x-2">
+                <button type="button" onClick={() => setShowEditModal(false)} className="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300" disabled={editLoading}>Cancel</button>
+                <button type="submit" className="px-4 py-2 rounded bg-green-500 text-white hover:bg-green-600" disabled={editLoading}>{editLoading ? 'Saving...' : 'Save'}</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+      {/* End of Edit Package Modal */}
     </div>
   );
 };
