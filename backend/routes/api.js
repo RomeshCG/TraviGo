@@ -551,6 +551,62 @@ router.post('/service-provider/register', async (req, res) => {
   }
 });
 
+router.post('/service-provider/register-advanced', async (req, res) => {
+  const { providerId, providerType, acceptedTerms, advancedDetails } = req.body;
+
+  if (!providerId || !providerType) {
+    return res.status(400).json({ message: 'Provider ID and type are required' });
+  }
+
+  try {
+    const provider = await ServiceProvider.findById(providerId);
+    if (!provider) return res.status(404).json({ message: 'Service provider not found' });
+    if (provider.providerType !== providerType) {
+      return res.status(400).json({ message: 'Provider type mismatch' });
+    }
+
+    // HotelProvider and VehicleProvider: Only require acceptedTerms
+    if (providerType === 'HotelProvider' || providerType === 'VehicleProvider') {
+      if (!acceptedTerms) {
+        return res.status(400).json({ message: 'You must accept the Terms and Conditions.' });
+      }
+      provider.isAdvancedRegistrationComplete = true;
+      provider.acceptedTerms = true;
+      await provider.save();
+      return res.status(200).json({ message: 'Registration complete. You may now log in.' });
+    }
+
+    // TourGuide: Still require advancedDetails
+    if (providerType === 'TourGuide') {
+      if (!advancedDetails) {
+        return res.status(400).json({ message: 'All tour guide details are required' });
+      }
+      const { yearsOfExperience, languages, certification, bio, location } = advancedDetails;
+      if (!yearsOfExperience || !languages || !languages.length || !certification || !bio || !location) {
+        return res.status(400).json({ message: 'All tour guide details are required' });
+      }
+      const tourGuide = new TourGuide({
+        providerId,
+        name: provider.name,
+        yearsOfExperience,
+        languages,
+        certification,
+        bio,
+        location,
+      });
+      await tourGuide.save();
+      provider.isAdvancedRegistrationComplete = true;
+      await provider.save();
+      return res.status(201).json({ message: 'Advanced details registered successfully' });
+    }
+
+    res.status(400).json({ message: 'Unsupported provider type' });
+  } catch (error) {
+    console.error('Advanced registration error:', error.stack);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 // Tour guide advanced registration
 router.post('/service-provider/register-advanced', async (req, res) => {
   const { providerId, providerType, acceptedTerms, advancedDetails } = req.body;

@@ -3,16 +3,35 @@ import { useNavigate } from 'react-router-dom';
 import SimpleHeader from '../components/SimpleHeader';
 import Footer from '../components/Footer';
 
+const TERMS = `
+You must be at least 18 years old to register a vehicle.
+
+You must be the legal owner of the vehicle or have proper authorization to register the vehicle on behalf of the owner.
+
+Your vehicle must comply with all applicable local laws and regulations.
+
+The vehicle must be in good working condition and meet all safety, emission, and licensing standards.
+
+All documents (registration, insurance, permits, etc.) must be valid and up to date.
+
+The owner must provide accurate details including make, model, year, registration number, and photos.
+
+You violate any of these terms.
+
+We receive complaints or detect fraudulent activity.
+
+Legal authorities request such action due to violations or investigations.
+
+We reserve the right to update or modify these Terms and Conditions at any time. Continued use of the platform constitutes acceptance of the updated terms.
+
+By clicking “I Agree” or registering your vehicle, you confirm that you have read, understood, and accepted these Terms and Conditions.
+`;
+
 const VehicleProviderRegister = () => {
-  const [formData, setFormData] = useState({
-    vehicleType: '',
-    vehicleModel: '',
-    licensePlate: '',
-    insuranceDetails: '',
-  });
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [providerId, setProviderId] = useState('');
+  const [accepted, setAccepted] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -25,14 +44,15 @@ const VehicleProviderRegister = () => {
     }
   }, [navigate]);
 
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setSuccess('');
+
+    if (!accepted) {
+      setError('You must accept the Terms and Conditions to register.');
+      return;
+    }
 
     try {
       const response = await fetch('/api/service-provider/register-advanced', {
@@ -43,7 +63,7 @@ const VehicleProviderRegister = () => {
         body: JSON.stringify({
           providerId,
           providerType: 'VehicleProvider',
-          advancedDetails: formData,
+          acceptedTerms: true,
         }),
       });
 
@@ -66,58 +86,31 @@ const VehicleProviderRegister = () => {
       <SimpleHeader />
       <main className="flex-grow flex mt-20 lg:mt-24 mb-12 lg:mb-16">
         <div className="w-full flex justify-center items-center p-6">
-          <div className="bg-white shadow-lg rounded-lg p-8 w-full max-w-md mt-6 lg:mt-8">
+          <div className="bg-white shadow-lg rounded-lg p-8 w-full max-w-xl mt-6 lg:mt-8">
             <h2 className="text-2xl font-semibold text-center mb-6">Vehicle Provider Registration</h2>
             {error && <p className="text-red-500 text-center mb-4">{error}</p>}
             {success && <p className="text-green-500 text-center mb-4">{success}</p>}
             <form onSubmit={handleSubmit}>
-              <div className="mb-4">
-                <input
-                  type="text"
-                  name="vehicleType"
-                  value={formData.vehicleType}
-                  onChange={handleChange}
-                  placeholder="Vehicle Type (e.g., Car, Van, Bus)"
-                  className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required
-                />
+              <div className="mb-6 max-h-96 overflow-y-auto border rounded p-4 bg-gray-50 text-gray-700 text-sm whitespace-pre-line">
+                {TERMS}
               </div>
-              <div className="mb-4">
+              <div className="mb-6 flex items-center">
                 <input
-                  type="text"
-                  name="vehicleModel"
-                  value={formData.vehicleModel}
-                  onChange={handleChange}
-                  placeholder="Vehicle Model"
-                  className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  type="checkbox"
+                  id="acceptTerms"
+                  checked={accepted}
+                  onChange={e => setAccepted(e.target.checked)}
+                  className="mr-2"
                   required
                 />
-              </div>
-              <div className="mb-4">
-                <input
-                  type="text"
-                  name="licensePlate"
-                  value={formData.licensePlate}
-                  onChange={handleChange}
-                  placeholder="License Plate"
-                  className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required
-                />
-              </div>
-              <div className="mb-6">
-                <input
-                  type="text"
-                  name="insuranceDetails"
-                  value={formData.insuranceDetails}
-                  onChange={handleChange}
-                  placeholder="Insurance Details"
-                  className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required
-                />
+                <label htmlFor="acceptTerms" className="text-gray-700">
+                  I have read and accept the Terms and Conditions
+                </label>
               </div>
               <button
                 type="submit"
-                className="w-full bg-blue-600 text-white p-3 rounded-lg hover:bg-blue-700 transition"
+                className={`w-full bg-blue-600 text-white p-3 rounded-lg hover:bg-blue-700 transition ${!accepted ? 'opacity-60 cursor-not-allowed' : ''}`}
+                disabled={!accepted}
               >
                 Complete Registration
               </button>
