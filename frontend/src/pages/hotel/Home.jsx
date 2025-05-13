@@ -119,9 +119,9 @@ function Home() {
     <div className="bg-white rounded-xl shadow-lg p-6">
       <h2 className="text-2xl font-bold text-gray-900 mb-6">Dashboard Overview</h2>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div className="bg-blue-50 p-4 rounded-lg">
-          <h3 className="text-lg font-semibold text-gray-900">Accepted Bookings</h3>
-          <p className="text-2xl font-bold text-blue-600">{summary.acceptedBookings}</p>
+        <div className="bg-blue-100 p-6 rounded-lg shadow text-center">
+          <h3 className="text-lg font-semibold text-blue-900">Accepted Bookings</h3>
+          <p className="text-3xl font-bold text-blue-700">{summary.acceptedBookings}</p>
         </div>
         <div className="bg-yellow-50 p-4 rounded-lg">
           <h3 className="text-lg font-semibold text-gray-900">Incoming Bookings</h3>

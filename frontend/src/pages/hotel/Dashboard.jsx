@@ -4,9 +4,10 @@ import Sidebar from "./Sidebar";
 import Home from "./Home";
 import IncomingBookings from "./IncomingBookings";
 import PreviousBookings from "./PreviousBookings";
-import HotelDetails from "./HotelDetails";
+import HotelDetails from "./HotelManagePage";
 import AddHotel from "./AddHotel";
 import Reports from "./Reports";
+import HotelManagePage from './HotelManagePage';
 
 function Dashboard() {
   const [activeSection, setActiveSection] = useState("home");
@@ -108,15 +109,21 @@ function Dashboard() {
           return <div className="text-center text-red-600 text-xl font-semibold py-10">{error}</div>;
         }
         return (
-          <div className="bg-white rounded-xl shadow-lg p-6">
+          <div className="bg-white rounded-xl shadow-lg p-8">
             <h2 className="text-2xl font-bold text-gray-900 mb-6">Manage Hotels</h2>
             {hotels.length === 0 ? (
               <p className="text-gray-600">No hotels available or failed to load. Try adding a hotel.</p>
             ) : (
               <ul className="space-y-4">
                 {hotels.map((hotel) => (
-                  <li key={hotel._id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
-                    <Link to={`/dashboard/hotel/${hotel._id}`} className="text-blue-600 hover:underline font-medium">
+                  <li
+                    key={hotel._id}
+                    className="flex items-center justify-between p-4 bg-blue-50 rounded-lg hover:bg-blue-100 transition border border-blue-100"
+                  >
+                    <Link
+                      to={`/dashboard/hotel/${hotel._id}`}
+                      className="text-blue-700 hover:underline font-semibold text-lg"
+                    >
                       {hotel.name}
                     </Link>
                     <span className="text-gray-500 text-sm">{hotel.location}</span>
