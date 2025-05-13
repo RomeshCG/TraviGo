@@ -1361,7 +1361,8 @@ router.post('/tour-bookings/:id/review', async (req, res) => {
     const existing = await Review.findOne({
       tourGuideId: booking.guideId,
       touristId: booking.userId,
-      reviewerType
+      reviewerType,
+      bookingId: id // Ensure only one review per booking per user
     });
     if (existing) {
       return res.status(400).json({ message: 'You have already reviewed this booking.' });
@@ -1372,6 +1373,17 @@ router.post('/tour-bookings/:id/review', async (req, res) => {
   } catch (error) {
     console.error('Submit review error:', error);
     res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Get review for a specific booking (tourist or guide)
+router.get('/reviews/booking/:bookingId', async (req, res) => {
+  try {
+    const { bookingId } = req.params;
+    const review = await require('../models/Review').findOne({ bookingId });
+    res.status(200).json({ review: review || null });
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to fetch review', error: err.message });
   }
 });
 
@@ -1526,6 +1538,21 @@ router.post(
     }
   }
 );
+
+// Update tour package
+router.put('/tour-guide/tour-package/:id', isProvider, async (req, res) => {
+  try {
+    const updated = await TourPackage.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { new: true }
+    );
+    if (!updated) return res.status(404).json({ message: 'Package not found' });
+    res.json(updated);
+  } catch (error) {
+    res.status(500).json({ message: 'Error updating package', error: error.message });
+  }
+});
 
 // Publish tour package
 router.put('/tour-guide/tour-package/:id/publish', isProvider, async (req, res) => {

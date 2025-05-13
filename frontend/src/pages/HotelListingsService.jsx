@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom';
 import SimpleHeader from '../components/SimpleHeader'; // Adjust path if needed
 import Footer from '../components/Footer'; // Adjust path based on your project structure
 import backgroundImage from "../assets/Herosec11.jpg";
@@ -7,6 +8,7 @@ import Hotel3 from "../assets/Hotel3.jpg";
 import Hotel4 from "../assets/Hotel4.jpg";
 
 const HotelListingsService = () => {
+  const navigate = useNavigate();
   return (
     <div className="min-h-screen bg-gray-50 pt-20">
       <SimpleHeader />
@@ -27,7 +29,7 @@ const HotelListingsService = () => {
           <p className="text-lg text-white mb-6">
             Discover a wide range of hotels tailored to your needs – from luxury resorts to budget stays. Book easily and explore thousands of options to make your stay unforgettable.
           </p>
-          <button className="bg-white text-teal-500 px-6 py-3 rounded-full hover:bg-gray-100">
+          <button className="bg-white text-teal-500 px-6 py-3 rounded-full hover:bg-gray-100" onClick={() => navigate('/hotels')}>
             Let’s Talk
           </button>
         </div>
