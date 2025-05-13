@@ -395,11 +395,7 @@ router.get('/admin/reports/summary', isAdmin, async (req, res) => {
     const User = require('../models/user');
     const Booking = require('../models/Booking');
     const TourBooking = require('../models/TourBookings');
-    // If you have a VehicleBooking model, require it here
-    let VehicleBooking;
-    try {
-      VehicleBooking = require('../models/VehicleBooking');
-    } catch { VehicleBooking = null; }
+    const Order = require('../models/Order'); // Use Order model for vehicle bookings
 
     // Total users
     const totalUsers = await User.countDocuments();
@@ -414,14 +410,10 @@ router.get('/admin/reports/summary', isAdmin, async (req, res) => {
     const totalTourBookings = tourBookings.length;
     const tourIncome = tourBookings.reduce((sum, b) => sum + (b.totalPrice || 0), 0);
 
-    // Vehicle bookings (optional)
-    let totalVehicleBookings = 0;
-    let vehicleIncome = 0;
-    if (VehicleBooking) {
-      const vehicleBookings = await VehicleBooking.find();
-      totalVehicleBookings = vehicleBookings.length;
-      vehicleIncome = vehicleBookings.reduce((sum, b) => sum + (b.totalPrice || 0), 0);
-    }
+    // Vehicle bookings (Order model)
+    const vehicleOrders = await Order.find();
+    const totalVehicleBookings = vehicleOrders.length;
+    const vehicleIncome = vehicleOrders.reduce((sum, b) => sum + (b.totalPrice || 0), 0);
 
     // System income
     const systemIncome = hotelIncome + tourIncome + vehicleIncome;
@@ -437,7 +429,7 @@ router.get('/admin/reports/summary', isAdmin, async (req, res) => {
       const end = new Date(day.setHours(23,59,59,999));
       const hotelDay = hotelBookings.filter(b => b.createdAt >= start && b.createdAt <= end).reduce((sum, b) => sum + (b.totalPrice || 0), 0);
       const tourDay = tourBookings.filter(b => b.createdAt >= start && b.createdAt <= end).reduce((sum, b) => sum + (b.totalPrice || 0), 0);
-      const vehicleDay = VehicleBooking ? (await VehicleBooking.find({ createdAt: { $gte: start, $lte: end } })).reduce((sum, b) => sum + (b.totalPrice || 0), 0) : 0;
+      const vehicleDay = vehicleOrders.filter(b => b.createdAt >= start && b.createdAt <= end).reduce((sum, b) => sum + (b.totalPrice || 0), 0);
       dailyIncome.push({
         date: start.toISOString().slice(0, 10),
         hotel: hotelDay,
@@ -1184,38 +1176,23 @@ router.get('/user/booking-stats/monthly', async (req, res) => {
   try {
     const Booking = require('../models/Booking');
     const TourBooking = require('../models/TourBookings');
-    const RentalRequest = require('../models/RentalRequest');
-    // Get date range: last 12 months
-    const now = new Date();
-    const months = [];
-    for (let i = 11; i >= 0; i--) {
-      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      months.push({
-        label: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`,
-        start: new Date(d.getFullYear(), d.getMonth(), 1),
-        end: new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59, 999)
-      });
-    }
-    // Hotel bookings
+    const Order = require('../models/Order');
+    // Get all bookings for this user
     const hotelBookings = await Booking.find({ userId });
-    // Tour bookings
     const tourBookings = await TourBooking.find({ userId });
-    // Vehicle bookings (RentalRequest)
-    const vehicleBookings = await RentalRequest.find({ email: { $exists: true, $ne: null } });
-    // Try to match vehicle bookings by user email (since userId may not be present)
-    let userEmail = null;
-    if (hotelBookings.length > 0) userEmail = hotelBookings[0].email;
-    else if (tourBookings.length > 0) userEmail = tourBookings[0].email;
-    // If userId is present in RentalRequest, prefer that
-    let userVehicleBookings = [];
-    if (vehicleBookings.length > 0 && userEmail) {
-      userVehicleBookings = vehicleBookings.filter(b => b.email === userEmail);
-    }
+    const vehicleOrders = await Order.find({ userId });
+    // Prepare months
+    const months = Array.from({ length: 12 }, (_, i) => {
+      const year = new Date().getFullYear();
+      const start = new Date(year, i, 1);
+      const end = new Date(year, i + 1, 0, 23, 59, 59, 999);
+      return { label: start.toLocaleString('default', { month: 'short' }), start, end };
+    });
     // Aggregate counts per month
     const stats = months.map(({ label, start, end }) => {
       const hotel = hotelBookings.filter(b => b.createdAt >= start && b.createdAt <= end).length;
-      const tour = tourBookings.filter(b.createdAt >= start && b.createdAt <= end).length;
-      const vehicle = userVehicleBookings.filter(b => b.createdAt >= start && b.createdAt <= end).length;
+      const tour = tourBookings.filter(b => b.createdAt >= start && b.createdAt <= end).length;
+      const vehicle = vehicleOrders.filter(b => b.createdAt >= start && b.createdAt <= end).length;
       return { month: label, hotel, tour, vehicle };
     });
     res.status(200).json({ stats });

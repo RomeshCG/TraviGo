@@ -197,12 +197,12 @@ function UserDashboard() {
       },
     ],
   };
-  if (travelStats && travelStats.length === 12) {
+
+  // Only use travelStats if it's a valid array of 12 objects with numbers
+  const isValidStats = Array.isArray(travelStats) && travelStats.length === 12 && travelStats.every(s => s && typeof s.hotel === 'number' && typeof s.tour === 'number');
+  if (isValidStats) {
     travelStatsData = {
-      labels: travelStats.map(s => {
-        const [year, month] = s.month.split('-');
-        return new Date(year, month - 1).toLocaleString('default', { month: 'short' });
-      }),
+      labels: travelStats.map((_, idx) => ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][idx]),
       datasets: [
         {
           label: 'Hotel Bookings',
@@ -218,7 +218,7 @@ function UserDashboard() {
         },
         {
           label: 'Vehicle Bookings',
-          data: travelStats.map(s => s.vehicle),
+          data: Array(12).fill(0),
           backgroundColor: '#64748b',
           borderRadius: 6,
         },
@@ -268,7 +268,7 @@ function UserDashboard() {
 
             {/* Main Content */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              {/* Left Column: Profile and Quick Actions */}
+              {/* Left Column: Profile and Reviews */}
               <div className="space-y-6">
                 {/* Profile Card */}
                 <div className="bg-white p-8 rounded-3xl shadow-2xl border border-blue-100 hover:shadow-blue-200 transition-shadow duration-300">
@@ -329,24 +329,6 @@ function UserDashboard() {
                   >
                     Edit Profile
                   </button>
-                </div>
-
-                {/* Quick Actions Card */}
-                <div className="bg-gradient-to-br from-blue-100 via-white to-blue-200 p-6 rounded-3xl shadow-xl border border-blue-50">
-                  <h2 className="text-2xl font-bold text-blue-700 mb-4 flex items-center gap-2">
-                    <FaMapMarkedAlt className="text-blue-400" /> Quick Actions
-                  </h2>
-                  <div className="space-y-3">
-                    <button className="w-full flex items-center gap-3 bg-gradient-to-r from-blue-500 to-blue-700 text-white py-3 rounded-xl hover:from-blue-600 hover:to-blue-900 transition-all shadow-md font-semibold text-lg justify-center">
-                      <FaHotel className="text-white text-xl" /> Book a Hotel
-                    </button>
-                    <button className="w-full flex items-center gap-3 bg-gradient-to-r from-blue-500 to-blue-700 text-white py-3 rounded-xl hover:from-blue-600 hover:to-blue-900 transition-all shadow-md font-semibold text-lg justify-center">
-                      <FaCar className="text-white text-xl" /> Rent a Car
-                    </button>
-                    <button className="w-full flex items-center gap-3 bg-gradient-to-r from-blue-500 to-blue-700 text-white py-3 rounded-xl hover:from-blue-600 hover:to-blue-900 transition-all shadow-md font-semibold text-lg justify-center">
-                      <FaMapMarkedAlt className="text-white text-xl" /> Plan a Tour
-                    </button>
-                  </div>
                 </div>
 
                 {/* Reviews Received Section */}
@@ -422,61 +404,25 @@ function UserDashboard() {
                 </div>
               </div>
 
-              {/* Right Column: Travel Statistics Only (remove Upcoming Trips) */}
+              {/* Right Column: Travel Statistics */}
               <div className="lg:col-span-2 space-y-6">
                 <div className="bg-white p-8 rounded-3xl shadow-xl border border-blue-100">
                   <h2 className="text-2xl font-bold text-blue-700 mb-4 flex items-center gap-2">
                     <FaMapMarkedAlt className="text-blue-400" /> Travel Statistics
                   </h2>
                   <div className="mb-4 flex justify-center">
-                    <div style={{ width: 600 }}>
-                      <Bar data={travelStatsData} options={travelStatsOptions} height={320} />
+                    <div style={{ width: 400 }}>
+                      {isValidStats ? (
+                        <Bar data={travelStatsData} options={travelStatsOptions} height={180} />
+                      ) : (
+                        <div className="text-gray-500 text-center">Travel statistics are not available at the moment.</div>
+                      )}
                     </div>
                   </div>
                   <p className="text-gray-600">
                     {userReviews.length === 0 ? 'No activity yet.' : 'Your travel statistics for the year are shown above.'}
                   </p>
                 </div>
-              </div>
-            </div>
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              {/* Hotel Bookings Section */}
-              <div
-                className="bg-white p-8 rounded-3xl shadow-2xl border border-blue-100 hover:shadow-blue-200 transition-shadow duration-300 cursor-pointer"
-                onClick={() => navigate('/user/my-booking/hotels')} // Correct route
-              >
-                <h2 className="text-2xl font-bold text-blue-700 mb-4 flex items-center gap-2">
-                  <FaHotel className="text-blue-400" /> Hotel Bookings
-                </h2>
-                <p className="text-gray-600">
-                  View and manage your hotel bookings.
-                </p>
-              </div>
-
-              {/* Tour Guide Bookings Section */}
-              <div
-                className="bg-white p-8 rounded-3xl shadow-2xl border border-blue-100 hover:shadow-blue-200 transition-shadow duration-300 cursor-pointer"
-                onClick={() => navigate('/user/my-booking/tour-guides')}
-              >
-                <h2 className="text-2xl font-bold text-blue-700 mb-4 flex items-center gap-2">
-                  <FaMapMarkedAlt className="text-blue-400" /> Tour Guide Bookings
-                </h2>
-                <p className="text-gray-600">
-                  View and manage your tour guide bookings.
-                </p>
-              </div>
-
-              {/* Vehicle Bookings Section */}
-              <div
-                className="bg-white p-8 rounded-3xl shadow-2xl border border-blue-100 hover:shadow-blue-200 transition-shadow duration-300 cursor-pointer"
-                onClick={() => navigate('/user/my-booking/vehicles')}
-              >
-                <h2 className="text-2xl font-bold text-blue-700 mb-4 flex items-center gap-2">
-                  <FaCar className="text-blue-400" /> Vehicle Bookings
-                </h2>
-                <p className="text-gray-600">
-                  View and manage your vehicle bookings.
-                </p>
               </div>
             </div>
           </div>

@@ -67,6 +67,9 @@ import HotelManagePage from './pages/hotel/HotelManagePage';
 import VehicleListing from './pages/Admin/VehicleListing';
 import HotelOwnerList from './pages/Admin/HotelOwnerList';
 import HotelOwnerDetails from './pages/Admin/HotelOwnerDetails';
+import FAQPage from './pages/FAQPage';
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import TermsAndConditions from './pages/TermsAndConditions';
 
 // Load Stripe
 const stripePromise = loadStripe(import.meta.env.VITE_REACT_APP_STRIPE_PUBLISHABLE_KEY);
@@ -588,6 +591,9 @@ function AppContent() {
                     }
                 />
                 <Route path="/dashboard/hotel/:id" element={<HotelManagePage />} />
+                <Route path="/faq" element={<FAQPage />} />
+                <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+                <Route path="/terms-conditions" element={<TermsAndConditions />} />
                 <Route path="*" element={<div>404 - Page Not Found</div>} />
             </Routes>
             <ScrollToTopButton />
