@@ -73,7 +73,7 @@ const HotelProviderRegister = () => {
         setSuccess(data.message);
         localStorage.removeItem('providerId');
         localStorage.removeItem('providerType');
-        setTimeout(() => navigate('/login'), 2000);
+        setTimeout(() => navigate('/service-provider/login'), 2000);
       } else {
         setError(data.message);
       }

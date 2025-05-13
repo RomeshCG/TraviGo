@@ -41,7 +41,7 @@ function FAQPage() {
   return (
     <div className="min-h-screen bg-white">
       <SimpleHeader />
-      <div className="pt-24 pb-16">
+      <div className="pt-32 pb-24">
         <div className="container mx-auto px-4 max-w-3xl">
           <h1 className="text-5xl font-extrabold text-center text-blue-800 mb-12">Frequently Asked Questions</h1>
           <div className="space-y-6">

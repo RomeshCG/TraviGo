@@ -77,7 +77,7 @@ const HotelListing = () => {
       <AdminHeader />
       <div className="flex flex-1">
         <AdminSidebar />
-        <div className="flex-1 p-6 bg-gray-100">
+        <div className="flex-1 p-6 bg-gray-100 md:pl-72 pl-0">
           <div className="max-w-6xl mx-auto">
             <h2 className="text-2xl font-bold mb-6">Hotel Listing</h2>
             {/* Filter UI */}

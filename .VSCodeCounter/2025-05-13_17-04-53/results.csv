@@ -1,0 +1,187 @@
+"filename", "language", "JSON", "JavaScript", "JavaScript JSX", "Markdown", "CSS", "XML", "HTML", "comment", "blank", "total"
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\README.md", "Markdown", 0, 0, 0, 2, 0, 0, 0, 0, 1, 3
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\admin\README.md", "Markdown", 0, 0, 0, 7, 0, 0, 0, 0, 6, 13
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\admin\eslint.config.js", "JavaScript", 0, 32, 0, 0, 0, 0, 0, 0, 2, 34
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\admin\index.html", "HTML", 0, 0, 0, 0, 0, 0, 13, 0, 1, 14
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\admin\package-lock.json", "JSON", 4420, 0, 0, 0, 0, 0, 0, 0, 1, 4421
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\admin\package.json", "JSON", 33, 0, 0, 0, 0, 0, 0, 0, 1, 34
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\admin\public\vite.svg", "XML", 0, 0, 0, 0, 0, 1, 0, 0, 0, 1
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\admin\src\App.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 1, 1
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\admin\src\App.jsx", "JavaScript JSX", 0, 0, 52, 0, 0, 0, 0, 1, 6, 59
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\admin\src\assets\react.svg", "XML", 0, 0, 0, 0, 0, 1, 0, 0, 0, 1
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\admin\src\context\AuthContext.jsx", "JavaScript JSX", 0, 0, 26, 0, 0, 0, 0, 0, 6, 32
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\admin\src\index.css", "CSS", 0, 0, 0, 0, 1, 0, 0, 0, 0, 1
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\admin\src\main.jsx", "JavaScript JSX", 0, 0, 15, 0, 0, 0, 0, 1, 1, 17
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\admin\src\pages\AddHotel.jsx", "JavaScript JSX", 0, 0, 292, 0, 0, 0, 0, 0, 17, 309
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\admin\src\pages\Dashboard.jsx", "JavaScript JSX", 0, 0, 91, 0, 0, 0, 0, 0, 5, 96
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\admin\src\pages\Home.jsx", "JavaScript JSX", 0, 0, 129, 0, 0, 0, 0, 8, 13, 150
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\admin\src\pages\HotelDetails.jsx", "JavaScript JSX", 0, 0, 361, 0, 0, 0, 0, 3, 16, 380
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\admin\src\pages\IncomingBookings.jsx", "JavaScript JSX", 0, 0, 127, 0, 0, 0, 0, 2, 8, 137
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\admin\src\pages\Login.jsx", "JavaScript JSX", 0, 0, 55, 0, 0, 0, 0, 0, 7, 62
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\admin\src\pages\PreviousBookings.jsx", "JavaScript JSX", 0, 0, 62, 0, 0, 0, 0, 1, 5, 68
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\admin\src\pages\Reports.jsx", "JavaScript JSX", 0, 0, 134, 0, 0, 0, 0, 4, 11, 149
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\admin\src\pages\Sidebar.jsx", "JavaScript JSX", 0, 0, 64, 0, 0, 0, 0, 0, 2, 66
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\admin\vite.config.js", "JavaScript", 0, 6, 0, 0, 0, 0, 0, 1, 2, 9
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\backend\Middleware\auth.js", "JavaScript", 0, 29, 0, 0, 0, 0, 0, 1, 3, 33
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\backend\Middleware\verifyToken.js", "JavaScript", 0, 31, 0, 0, 0, 0, 0, 0, 6, 37
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\backend\config\cloudinary.js", "JavaScript", 0, 9, 0, 0, 0, 0, 0, 0, 2, 11
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\backend\config\db.js", "JavaScript", 0, 13, 0, 0, 0, 0, 0, 0, 2, 15
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\backend\config\mongodb.js", "JavaScript", 0, 16, 0, 0, 0, 0, 0, 0, 2, 18
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\backend\controllers\bookingController.js", "JavaScript", 0, 37, 0, 0, 0, 0, 0, 0, 6, 43
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\backend\controllers\hotelBookingReviewController.js", "JavaScript", 0, 35, 0, 0, 0, 0, 0, 6, 5, 46
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\backend\controllers\hotelPaymentController.js", "JavaScript", 0, 24, 0, 0, 0, 0, 0, 0, 6, 30
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\backend\controllers\orderController.js", "JavaScript", 0, 94, 0, 0, 0, 0, 0, 8, 13, 115
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\backend\controllers\rentingVehicleController.js", "JavaScript", 0, 108, 0, 0, 0, 0, 0, 10, 12, 130
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\backend\controllers\vehicleOrderReviewController.js", "JavaScript", 0, 36, 0, 0, 0, 0, 0, 7, 4, 47
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\backend\models\Admin.js", "JavaScript", 0, 8, 0, 0, 0, 0, 0, 0, 2, 10
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\backend\models\AdminHotel.js", "JavaScript", 0, 26, 0, 0, 0, 0, 0, 0, 2, 28
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\backend\models\Booking.js", "JavaScript", 0, 19, 0, 0, 0, 0, 0, 0, 2, 21
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\backend\models\CashoutRequest.js", "JavaScript", 0, 10, 0, 0, 0, 0, 0, 0, 2, 12
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\backend\models\ContactMessage.js", "JavaScript", 0, 38, 0, 0, 0, 0, 0, 0, 2, 40
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\backend\models\Hotel.js", "JavaScript", 0, 25, 0, 0, 0, 0, 0, 0, 2, 27
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\backend\models\HotelBookingReview.js", "JavaScript", 0, 10, 0, 0, 0, 0, 0, 0, 2, 12
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\backend\models\HotelOwner.js", "JavaScript", 0, 10, 0, 0, 0, 0, 0, 0, 2, 12
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\backend\models\Order.js", "JavaScript", 0, 15, 0, 0, 0, 0, 0, 0, 2, 17
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\backend\models\RentingVehicle.js", "JavaScript", 0, 23, 0, 0, 0, 0, 0, 0, 2, 25
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\backend\models\Review.js", "JavaScript", 0, 15, 0, 0, 0, 0, 0, 2, 2, 19
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\backend\models\ServiceProvider.js", "JavaScript", 0, 10, 0, 0, 0, 0, 0, 0, 2, 12
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\backend\models\TourBookings.js", "JavaScript", 0, 74, 0, 0, 0, 0, 0, 0, 2, 76
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\backend\models\TourGuide.js", "JavaScript", 0, 27, 0, 0, 0, 0, 0, 1, 2, 30
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\backend\models\TourPackage.js", "JavaScript", 0, 14, 0, 0, 0, 0, 0, 0, 2, 16
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\backend\models\VehicleOrderReview.js", "JavaScript", 0, 10, 0, 0, 0, 0, 0, 1, 3, 14
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\backend\models\VehicleProvider.js", "JavaScript", 0, 8, 0, 0, 0, 0, 0, 0, 2, 10
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\backend\models\VehicleReview.js", "JavaScript", 0, 10, 0, 0, 0, 0, 0, 0, 2, 12
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\backend\models\user.js", "JavaScript", 0, 19, 0, 0, 0, 0, 0, 1, 3, 23
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\backend\package-lock.json", "JSON", 4805, 0, 0, 0, 0, 0, 0, 0, 1, 4806
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\backend\package.json", "JSON", 48, 0, 0, 0, 0, 0, 0, 0, 1, 49
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\backend\routes\api.js", "JavaScript", 0, 1815, 0, 0, 0, 0, 0, 140, 147, 2102
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\backend\routes\bookingRoutes.js", "JavaScript", 0, 200, 0, 0, 0, 0, 0, 12, 26, 238
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\backend\routes\emailRoutes.js", "JavaScript", 0, 58, 0, 0, 0, 0, 0, 4, 13, 75
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\backend\routes\hotelBookingReviewRoutes.js", "JavaScript", 0, 7, 0, 0, 0, 0, 0, 3, 4, 14
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\backend\routes\hotelPaymentRoutes.js", "JavaScript", 0, 5, 0, 0, 0, 0, 0, 0, 2, 7
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\backend\routes\hotelRoutes.js", "JavaScript", 0, 150, 0, 0, 0, 0, 0, 8, 23, 181
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\backend\routes\orderRoutes.js", "JavaScript", 0, 17, 0, 0, 0, 0, 0, 6, 7, 30
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\backend\routes\rentingVehicleRoutes.js", "JavaScript", 0, 52, 0, 0, 0, 0, 0, 10, 11, 73
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\backend\routes\tourGuideBookingRoutes.js", "JavaScript", 0, 16, 0, 0, 0, 0, 0, 1, 3, 20
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\backend\routes\vehicleOrderReviewRoutes.js", "JavaScript", 0, 7, 0, 0, 0, 0, 0, 4, 5, 16
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\backend\routes\vehicleReviewRoutes.js", "JavaScript", 0, 36, 0, 0, 0, 0, 0, 2, 6, 44
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\backend\server.js", "JavaScript", 0, 41, 0, 0, 0, 0, 0, 6, 7, 54
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\README.md", "Markdown", 0, 0, 0, 7, 0, 0, 0, 0, 6, 13
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\eslint.config.js", "JavaScript", 0, 32, 0, 0, 0, 0, 0, 0, 2, 34
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\index.html", "HTML", 0, 0, 0, 0, 0, 0, 13, 0, 2, 15
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\package-lock.json", "JSON", 4233, 0, 0, 0, 0, 0, 0, 0, 1, 4234
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\package.json", "JSON", 49, 0, 0, 0, 0, 0, 0, 0, 1, 50
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\postcss.config.js", "JavaScript", 0, 0, 0, 0, 0, 0, 0, 0, 1, 1
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\public\vite.svg", "XML", 0, 0, 0, 0, 0, 1, 0, 0, 0, 1
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\App.css", "CSS", 0, 0, 0, 0, 37, 0, 0, 0, 7, 44
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\App.jsx", "JavaScript JSX", 0, 0, 590, 0, 0, 0, 0, 4, 18, 612
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\assets\react.svg", "XML", 0, 0, 0, 0, 0, 1, 0, 0, 0, 1
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\components\AdminHeader.jsx", "JavaScript JSX", 0, 0, 35, 0, 0, 0, 0, 0, 5, 40
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\components\BankDetailsModal.jsx", "JavaScript JSX", 0, 0, 34, 0, 0, 0, 0, 0, 3, 37
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\components\ConfirmationModal.jsx", "JavaScript JSX", 0, 0, 49, 0, 0, 0, 0, 0, 3, 52
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\components\ContactUsSmall.jsx", "JavaScript JSX", 0, 0, 197, 0, 0, 0, 0, 2, 11, 210
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\components\Footer.jsx", "JavaScript JSX", 0, 0, 150, 0, 0, 0, 0, 12, 12, 174
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\components\Header.jsx", "JavaScript JSX", 0, 0, 144, 0, 0, 0, 0, 7, 10, 161
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\components\HeaderUser.jsx", "JavaScript JSX", 0, 0, 34, 0, 0, 0, 0, 0, 5, 39
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\components\HotelItem.jsx", "JavaScript JSX", 0, 0, 42, 0, 0, 0, 0, 3, 4, 49
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\components\MessageBox.jsx", "JavaScript JSX", 0, 0, 19, 0, 0, 0, 0, 0, 2, 21
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\components\MessageModal.jsx", "JavaScript JSX", 0, 0, 22, 0, 0, 0, 0, 0, 2, 24
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\components\Navbar.jsx", "JavaScript JSX", 0, 0, 66, 0, 0, 0, 0, 4, 5, 75
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\components\SearchBar.jsx", "JavaScript JSX", 0, 0, 18, 0, 0, 0, 0, 0, 2, 20
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\components\SidebarAdmin.jsx", "JavaScript JSX", 0, 0, 311, 0, 0, 0, 0, 5, 9, 325
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\components\SidebarUser.jsx", "JavaScript JSX", 0, 0, 188, 0, 0, 0, 0, 5, 12, 205
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\components\SidebarUserContext.js", "JavaScript", 0, 3, 0, 0, 0, 0, 0, 0, 2, 5
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\components\SimpleHeader.jsx", "JavaScript JSX", 0, 0, 129, 0, 0, 0, 0, 6, 9, 144
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\components\TourGuideHeader.jsx", "JavaScript JSX", 0, 0, 35, 0, 0, 0, 0, 0, 5, 40
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\components\UserTopBar.jsx", "JavaScript JSX", 0, 0, 23, 0, 0, 0, 0, 0, 3, 26
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\components\VehicleCard.jsx", "JavaScript JSX", 0, 0, 27, 0, 0, 0, 0, 1, 4, 32
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\components\VehicleProviderHeader.jsx", "JavaScript JSX", 0, 0, 35, 0, 0, 0, 0, 0, 6, 41
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\index.css", "CSS", 0, 0, 0, 0, 1, 0, 0, 0, 0, 1
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\main.jsx", "JavaScript JSX", 0, 0, 10, 0, 0, 0, 0, 0, 2, 12
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\AboutUs.jsx", "JavaScript JSX", 0, 0, 139, 0, 0, 0, 0, 10, 11, 160
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\Admin\AdminContactInquiries.jsx", "JavaScript JSX", 0, 0, 59, 0, 0, 0, 0, 0, 6, 65
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\Admin\AdminDashboard.jsx", "JavaScript JSX", 0, 0, 122, 0, 0, 0, 0, 3, 4, 129
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\Admin\AdminLogin.jsx", "JavaScript JSX", 0, 0, 95, 0, 0, 0, 0, 4, 12, 111
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\Admin\AdminRegister.jsx", "JavaScript JSX", 0, 0, 137, 0, 0, 0, 0, 0, 10, 147
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\Admin\ContactInquiries.jsx", "JavaScript JSX", 0, 0, 127, 0, 0, 0, 0, 1, 9, 137
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\Admin\HotelListing.jsx", "JavaScript JSX", 0, 0, 152, 0, 0, 0, 0, 5, 6, 163
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\Admin\HotelOwnerDetails.jsx", "JavaScript JSX", 0, 0, 74, 0, 0, 0, 0, 1, 5, 80
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\Admin\HotelOwnerList.jsx", "JavaScript JSX", 0, 0, 81, 0, 0, 0, 0, 0, 5, 86
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\Admin\Reports.jsx", "JavaScript JSX", 0, 0, 302, 0, 0, 0, 0, 3, 16, 321
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\Admin\ReviewManagement.jsx", "JavaScript JSX", 0, 0, 326, 0, 0, 0, 0, 7, 28, 361
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\Admin\TourGuide.jsx", "JavaScript JSX", 0, 0, 239, 0, 0, 0, 0, 8, 10, 257
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\Admin\TourGuidePayments.jsx", "JavaScript JSX", 0, 0, 357, 0, 0, 0, 0, 19, 20, 396
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\Admin\TourGuideReports.jsx", "JavaScript JSX", 0, 0, 19, 0, 0, 0, 0, 0, 3, 22
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\Admin\UIManage.jsx", "JavaScript JSX", 0, 0, 58, 0, 0, 0, 0, 0, 5, 63
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\Admin\Users.jsx", "JavaScript JSX", 0, 0, 124, 0, 0, 0, 0, 3, 7, 134
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\Admin\VehicleListing.jsx", "JavaScript JSX", 0, 0, 141, 0, 0, 0, 0, 1, 6, 148
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\BookingPage.jsx", "JavaScript JSX", 0, 0, 371, 0, 0, 0, 0, 2, 23, 396
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\ContactUs.jsx", "JavaScript JSX", 0, 0, 352, 0, 0, 0, 0, 14, 20, 386
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\Dashboard.jsx", "JavaScript JSX", 0, 0, 33, 0, 0, 0, 0, 1, 4, 38
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\FAQPage.jsx", "JavaScript JSX", 0, 0, 62, 0, 0, 0, 0, 0, 4, 66
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\Home.jsx", "JavaScript JSX", 0, 0, 381, 0, 0, 0, 0, 22, 17, 420
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\HotelCollection.jsx", "JavaScript JSX", 0, 0, 150, 0, 0, 0, 0, 3, 13, 166
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\HotelDetails.jsx", "JavaScript JSX", 0, 0, 198, 0, 0, 0, 0, 7, 14, 219
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\HotelListingsService.jsx", "JavaScript JSX", 0, 0, 105, 0, 0, 0, 0, 6, 6, 117
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\HotelPaymentPage.jsx", "JavaScript JSX", 0, 0, 185, 0, 0, 0, 0, 2, 13, 200
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\HotelProviderRegister.jsx", "JavaScript JSX", 0, 0, 118, 0, 0, 0, 0, 0, 9, 127
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\Login.jsx", "JavaScript JSX", 0, 0, 120, 0, 0, 0, 0, 4, 8, 132
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\PrivacyPolicy.jsx", "JavaScript JSX", 0, 0, 37, 0, 0, 0, 0, 0, 3, 40
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\ReceiptPage.jsx", "JavaScript JSX", 0, 0, 31, 0, 0, 0, 0, 0, 5, 36
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\RentOrderSummaryPage.jsx", "JavaScript JSX", 0, 0, 109, 0, 0, 0, 0, 1, 8, 118
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\RentVehiclePage.jsx", "JavaScript JSX", 0, 0, 64, 0, 0, 0, 0, 2, 6, 72
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\RentingPaymentPage.jsx", "JavaScript JSX", 0, 0, 175, 0, 0, 0, 0, 4, 16, 195
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\ServiceProviderLogin.jsx", "JavaScript JSX", 0, 0, 185, 0, 0, 0, 0, 0, 11, 196
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\ServiceProviderRegister.jsx", "JavaScript JSX", 0, 0, 176, 0, 0, 0, 0, 0, 11, 187
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\SignIn.jsx", "JavaScript JSX", 0, 0, 198, 0, 0, 0, 0, 0, 11, 209
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\TermsAndConditions.jsx", "JavaScript JSX", 0, 0, 36, 0, 0, 0, 0, 0, 3, 39
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\TourGuidePaymentPage.jsx", "JavaScript JSX", 0, 0, 192, 0, 0, 0, 0, 0, 23, 215
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\TourGuideProfile.jsx", "JavaScript JSX", 0, 0, 233, 0, 0, 0, 0, 15, 17, 265
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\TourGuideRegister.jsx", "JavaScript JSX", 0, 0, 134, 0, 0, 0, 0, 2, 9, 145
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\TourGuides.jsx", "JavaScript JSX", 0, 0, 181, 0, 0, 0, 0, 8, 13, 202
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\TourGuidesService.jsx", "JavaScript JSX", 0, 0, 106, 0, 0, 0, 0, 6, 6, 118
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\VehicleDetailPage.jsx", "JavaScript JSX", 0, 0, 200, 0, 0, 0, 0, 12, 17, 229
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\VehicleListingsService.jsx", "JavaScript JSX", 0, 0, 105, 0, 0, 0, 0, 6, 6, 117
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\VehicleProviderRegister.jsx", "JavaScript JSX", 0, 0, 117, 0, 0, 0, 0, 0, 9, 126
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\VehiclesPage.jsx", "JavaScript JSX", 0, 0, 152, 0, 0, 0, 0, 7, 12, 171
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\hotel\AddHotel.jsx", "JavaScript JSX", 0, 0, 325, 0, 0, 0, 0, 0, 18, 343
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\hotel\Dashboard.jsx", "JavaScript JSX", 0, 0, 167, 0, 0, 0, 0, 2, 16, 185
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\hotel\Home.jsx", "JavaScript JSX", 0, 0, 145, 0, 0, 0, 0, 10, 16, 171
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\hotel\HotelManagePage.jsx", "JavaScript JSX", 0, 0, 256, 0, 0, 0, 0, 1, 10, 267
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\hotel\HotelProviderDashboard.jsx", "JavaScript JSX", 0, 0, 49, 0, 0, 0, 0, 0, 5, 54
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\hotel\IncomingBookings.jsx", "JavaScript JSX", 0, 0, 159, 0, 0, 0, 0, 4, 18, 181
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\hotel\Login.jsx", "JavaScript JSX", 0, 0, 55, 0, 0, 0, 0, 0, 7, 62
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\hotel\PreviousBookings.jsx", "JavaScript JSX", 0, 0, 99, 0, 0, 0, 0, 3, 11, 113
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\hotel\Reports.jsx", "JavaScript JSX", 0, 0, 151, 0, 0, 0, 0, 6, 14, 171
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\hotel\Sidebar.jsx", "JavaScript JSX", 0, 0, 123, 0, 0, 0, 0, 2, 6, 131
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\hotel\context\AuthContext.jsx", "JavaScript JSX", 0, 0, 26, 0, 0, 0, 0, 0, 6, 32
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\tourguide\TourGuideBookingConfirmation.jsx", "JavaScript JSX", 0, 0, 15, 0, 0, 0, 0, 0, 2, 17
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\tourguide\TourGuideBookingForm.jsx", "JavaScript JSX", 0, 0, 141, 0, 0, 0, 0, 0, 9, 150
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\tourguide\TourGuideCreatePackage.jsx", "JavaScript JSX", 0, 0, 224, 0, 0, 0, 0, 0, 14, 238
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\tourguide\TourGuideDashboard.jsx", "JavaScript JSX", 0, 0, 1412, 0, 0, 0, 0, 19, 65, 1496
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\tourguide\TourGuidePaymentPage.jsx", "JavaScript JSX", 0, 0, 97, 0, 0, 0, 0, 0, 17, 114
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\tourguide\TourGuideServices.jsx", "JavaScript JSX", 0, 0, 74, 0, 0, 0, 0, 0, 5, 79
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\user\AccountSettings.jsx", "JavaScript JSX", 0, 0, 106, 0, 0, 0, 0, 3, 5, 114
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\user\EditProfile.jsx", "JavaScript JSX", 0, 0, 351, 0, 0, 0, 0, 0, 17, 368
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\user\ExploreDestinations.jsx", "JavaScript JSX", 0, 0, 53, 0, 0, 0, 0, 1, 4, 58
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\user\HotelBooking.jsx", "JavaScript JSX", 0, 0, 235, 0, 0, 0, 0, 1, 12, 248
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\user\MyBooking.jsx", "JavaScript JSX", 0, 0, 41, 0, 0, 0, 0, 0, 3, 44
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\user\Reviews.jsx", "JavaScript JSX", 0, 0, 66, 0, 0, 0, 0, 0, 6, 72
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\user\TourGuide.jsx", "JavaScript JSX", 0, 0, 53, 0, 0, 0, 0, 1, 4, 58
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\user\TourGuideBookings.jsx", "JavaScript JSX", 0, 0, 290, 0, 0, 0, 0, 10, 7, 307
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\user\TravelPackages.jsx", "JavaScript JSX", 0, 0, 33, 0, 0, 0, 0, 0, 3, 36
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\user\UserDashboard.jsx", "JavaScript JSX", 0, 0, 395, 0, 0, 0, 0, 14, 26, 435
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\user\VehicleRental.jsx", "JavaScript JSX", 0, 0, 197, 0, 0, 0, 0, 2, 7, 206
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\vehicle\AddVehicle.jsx", "JavaScript JSX", 0, 0, 157, 0, 0, 0, 0, 0, 9, 166
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\vehicle\Bookings.jsx", "JavaScript JSX", 0, 0, 221, 0, 0, 0, 0, 5, 13, 239
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\vehicle\DashboardHome.jsx", "JavaScript JSX", 0, 0, 127, 0, 0, 0, 0, 6, 5, 138
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\vehicle\Home.jsx", "JavaScript JSX", 0, 0, 15, 0, 0, 0, 0, 0, 1, 16
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\vehicle\IncomingBookings.jsx", "JavaScript JSX", 0, 0, 45, 0, 0, 0, 0, 0, 5, 50
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\vehicle\ManageVehicles.jsx", "JavaScript JSX", 0, 0, 229, 0, 0, 0, 0, 2, 13, 244
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\vehicle\PreviousBookings.jsx", "JavaScript JSX", 0, 0, 45, 0, 0, 0, 0, 0, 5, 50
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\vehicle\Reports.jsx", "JavaScript JSX", 0, 0, 13, 0, 0, 0, 0, 0, 1, 14
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\vehicle\Sidebar.jsx", "JavaScript JSX", 0, 0, 79, 0, 0, 0, 0, 4, 4, 87
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\vehicle\VehicleAdminDashboard.jsx", "JavaScript JSX", 0, 0, 277, 0, 0, 0, 0, 7, 23, 307
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\vite.config.js", "JavaScript", 0, 16, 0, 0, 0, 0, 0, 0, 2, 18
+"d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\package-lock.json", "JSON", 6, 0, 0, 0, 0, 0, 0, 0, 1, 7
+"Total", "-", 13594, 3296, 17170, 16, 39, 4, 26, 595, 1518, 36258

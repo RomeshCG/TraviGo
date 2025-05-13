@@ -102,7 +102,7 @@ function Home() {
             <h1 className="text-6xl font-extrabold text-white animate-pulse">
               Discover Your Perfect Stay
             </h1>
-            <p className="text-xl mt-6 max-w-2xl leading-relaxed animate-fade-in text-blue-800">
+            <p className="text-xl mt-6 max-w-2xl leading-relaxed animate-fade-in text-white">
               Where Your Dream Vacation Becomes a Reality. Customize your travel
               experience with our exclusive packages.
             </p>

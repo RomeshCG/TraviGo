@@ -122,7 +122,7 @@ const ReviewManagement = () => {
       <div className="flex flex-1">
         <AdminSidebar />
         
-        <div className="flex-1 p-6 overflow-auto">
+        <div className="flex-1 p-6 overflow-auto md:pl-72 pl-0">
           <div className="max-w-7xl mx-auto">
             <h1 className="text-3xl font-bold text-gray-800 mb-6 flex items-center">
               <span className="bg-gradient-to-r from-indigo-600 to-pink-600 bg-clip-text text-transparent">
