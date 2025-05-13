@@ -1,5 +1,6 @@
+import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { Elements } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
 import VehicleProviderRegister from './pages/VehicleProviderRegister';
@@ -167,6 +168,31 @@ const ProtectedProviderRoute = ({ children, allowedProviderType }) => {
     return children;
 };
 
+function ScrollToTopButton() {
+    const [visible, setVisible] = useState(false);
+    React.useEffect(() => {
+        const handleScroll = () => {
+            setVisible(window.scrollY > 200);
+        };
+        window.addEventListener('scroll', handleScroll);
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, []);
+    const scrollToTop = () => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+    return (
+        <button
+            onClick={scrollToTop}
+            className={`fixed bottom-8 right-8 z-50 bg-blue-600 text-white p-3 rounded-full shadow-lg transition-opacity duration-300 hover:bg-blue-800 ${visible ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+            aria-label="Scroll to top"
+        >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+            </svg>
+        </button>
+    );
+}
+
 function AppContent() {
     const location = useLocation();
     const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -228,7 +254,7 @@ function AppContent() {
     const hideUserTopBar = publicRoutes.includes(location.pathname) || dashboardRoutes.includes(location.pathname) || userRoutes;
 
     return (
-        <>
+        <React.Fragment>
             {isAuthenticated && username && !hideUserTopBar && (
                 <UserTopBar username={username} onLogout={handleLogout} />
             )}
@@ -544,7 +570,8 @@ function AppContent() {
                 />
                 <Route path="*" element={<div>404 - Page Not Found</div>} />
             </Routes>
-        </>
+            <ScrollToTopButton />
+        </React.Fragment>
     );
 }
 
