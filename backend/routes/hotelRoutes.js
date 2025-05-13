@@ -18,10 +18,10 @@ const verifyProvider = verifyToken('HotelProvider');
 // Add a new hotel
 router.post('/add', verifyProvider, async (req, res) => {
   try {
-    const { name, location, price, description, image, imageArray, rooms } = req.body;
+    const { name, location, price, description, image, imageArray, rooms, accommodationType } = req.body;
     const providerId = req.providerId; // Use req.providerId instead of req.provider._id
 
-    if (!name || !location || !price || !description || !image) {
+    if (!name || !location || !price || !description || !image || !accommodationType) {
       return res.status(400).json({ message: 'Missing required fields' });
     }
 
@@ -53,6 +53,7 @@ router.post('/add', verifyProvider, async (req, res) => {
       providerId,
       name,
       location,
+      accommodationType, // <-- add this line
       image: mainImageResult.secure_url,
       imageArray: uploadedImageArray.map((img) => img.secure_url),
       price: Number(price),
