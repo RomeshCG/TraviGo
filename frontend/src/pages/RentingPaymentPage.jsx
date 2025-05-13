@@ -82,8 +82,31 @@ const PaymentForm = () => {
         setError(result.error.message);
         setProcessing(false);
       } else if (result.paymentIntent.status === 'succeeded') {
-        alert('Payment successful! Vehicle rented.');
-        navigate('/user/vehicles');
+        // Save order to backend after successful payment
+        try {
+          const orderRes = await fetch('/api/orders/place-order', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              vehicleId: vehicle._id,
+              userId: formData.userId, // Make sure userId is available in formData
+              userName: formData.fullName,
+              startDate: formData.startDate,
+              endDate: formData.endDate,
+              totalPrice: price,
+              paymentMethod: 'Card',
+            }),
+          });
+          if (!orderRes.ok) {
+            const errData = await orderRes.json();
+            throw new Error(errData.message || 'Order saving failed');
+          }
+          alert('Payment successful! Vehicle rented.');
+          navigate('/user/vehicles');
+        } catch (orderErr) {
+          setError(orderErr.message || 'Order saving failed.');
+        }
+        setProcessing(false);
       }
     } catch (err) {
       setError(err.message || 'Payment failed.');
