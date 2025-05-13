@@ -61,8 +61,8 @@ function HotelDetails() {
     }
   };
 
-  // Slider settings for image carousel
-  const sliderSettings = {
+  // Slider settings for main image carousel
+  const mainSliderSettings = {
     dots: true,
     infinite: true,
     speed: 500,
@@ -96,7 +96,7 @@ function HotelDetails() {
     <>
       <SimpleHeader />
       <div className="min-h-screen bg-gray-100 py-12 px-4 sm:px-6 lg:px-8 pt-24">
-        <div className="max-w-7xl mx-auto bg-white rounded-xl shadow-xl overflow-hidden">
+        <div className="max-w-5xl mx-auto bg-white rounded-xl shadow-xl overflow-hidden">
           {/* Header */}
           <div className="bg-gradient-to-r from-blue-600 to-blue-800 p-6">
             <h1 className="text-3xl md:text-4xl font-bold text-white">
@@ -106,10 +106,21 @@ function HotelDetails() {
           </div>
 
           <div className="p-8">
+            {/* Back Button */}
+            <button
+              onClick={() => navigate('/hotels')}
+              className="mb-6 text-blue-600 hover:underline font-semibold flex items-center"
+            >
+              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
+              </svg>
+              Back to Accommodations
+            </button>
+
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               {/* Image Carousel */}
               <div className="lg:col-span-2">
-                <Slider {...sliderSettings}>
+                <Slider {...mainSliderSettings}>
                   <div>
                     <img
                       src={accommodation.image || '/images/placeholder.jpg'}
@@ -147,30 +158,36 @@ function HotelDetails() {
             </div>
 
             {/* Rooms */}
-            <h2 className="text-2xl font-semibold text-gray-800 mt-10 mb-6">Available Rooms</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <h2 className="text-2xl font-semibold text-gray-800 mt-10 mb-6 text-center">Available Rooms</h2>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 justify-center max-w-4xl mx-auto">
               {accommodation.rooms.map((room, index) => (
-                <div key={index} className="bg-gray-50 p-6 rounded-lg shadow-md hover:shadow-lg transition">
-                  <h3 className="text-xl font-semibold text-gray-800">{room.type}</h3>
-                  <p className="text-gray-600 mt-2"><strong>Price:</strong> ${room.price}/night</p>
-                  <p className="text-gray-600 mt-1"><strong>Features:</strong> {room.features}</p>
-                  <p className="text-gray-600 mt-1"><strong>Amenities:</strong> {room.amenities}</p>
-                  {room.size && <p className="text-gray-600 mt-1"><strong>Size:</strong> {room.size}</p>}
-                  {room.occupancy && <p className="text-gray-600 mt-1"><strong>Occupancy:</strong> {room.occupancy}</p>}
-                  {room.perks && <p className="text-gray-600 mt-1"><strong>Perks:</strong> {room.perks}</p>}
-                  <div className="mt-4 grid grid-cols-2 gap-2">
+                <div
+                  key={index}
+                  className="bg-gray-50 p-7 rounded-xl shadow-md hover:shadow-lg hover:scale-105 transition-transform duration-300 flex flex-col"
+                >
+                  <h3 className="text-xl font-semibold text-gray-800 mb-3">{room.type}</h3>
+                  <div className="grid grid-cols-2 gap-2 mb-4">
                     {room.images.map((img, imgIndex) => (
                       <img
                         key={imgIndex}
                         src={img || '/images/placeholder.jpg'}
-                        alt={`Room view ${imgIndex + 1}`}
-                        className="w-full h-24 object-cover rounded-md"
+                        alt={`${room.type} view ${imgIndex + 1}`}
+                        className="w-full h-40 object-cover rounded-md cursor-pointer"
+                        onClick={() => handleRoomSelect(index)}
                       />
                     ))}
                   </div>
+                  <ul className="text-gray-600 text-sm space-y-2 mb-4">
+                    <li><strong>Price:</strong> ${room.price}/night</li>
+                    <li><strong>Features:</strong> {room.features}</li>
+                    <li><strong>Amenities:</strong> {room.amenities}</li>
+                    {room.size && <li><strong>Size:</strong> {room.size}</li>}
+                    {room.occupancy && <li><strong>Occupancy:</strong> {room.occupancy}</li>}
+                    {room.perks && <li><strong>Perks:</strong> {room.perks}</li>}
+                  </ul>
                   <button
                     onClick={() => handleRoomSelect(index)}
-                    className="mt-4 w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition font-semibold"
+                    className="w-full bg-gradient-to-r from-blue-600 to-blue-800 text-white py-2.5 px-4 rounded-md hover:from-blue-700 hover:to-blue-900 transition font-semibold mt-auto"
                   >
                     Book This Room
                   </button>
@@ -179,9 +196,9 @@ function HotelDetails() {
             </div>
 
             {/* User Reviews */}
-            <h2 className="text-2xl font-semibold text-gray-800 mt-10 mb-6">User Reviews</h2>
+            <h2 className="text-2xl font-semibold text-gray-800 mt-10 mb-6 text-center">User Reviews</h2>
             {reviews.length === 0 ? (
-              <p>No reviews yet.</p>
+              <p className="text-gray-600 text-center">No reviews yet.</p>
             ) : (
               reviews.map((review) => (
                 <div key={review._id} className="bg-gray-50 p-6 rounded-lg shadow-md mb-4">
@@ -191,17 +208,6 @@ function HotelDetails() {
                 </div>
               ))
             )}
-
-            {/* Back Button */}
-            <button
-              onClick={() => navigate('/hotels')}
-              className="mt-8 text-blue-600 hover:underline font-semibold flex items-center"
-            >
-              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
-              </svg>
-              Back to Accommodations
-            </button>
           </div>
         </div>
       </div>

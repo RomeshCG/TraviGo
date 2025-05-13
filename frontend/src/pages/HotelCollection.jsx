@@ -3,10 +3,27 @@ import { Link, useLocation } from "react-router-dom";
 import SimpleHeader from "../components/SimpleHeader";
 import Footer from "../components/Footer";
 
+const LOCATION_ORDER = [
+  "Kandy",
+  "Colombo",
+  "Matara",
+  "Galle",
+  "Nuwaraeliya",
+  "Anuradhapura",
+  "Matale",
+  "Kurunegala"
+];
+
+function getFirstWord(location = "") {
+  return location.split(",")[0].trim();
+}
+
 function HotelCollection() {
   const [accommodations, setAccommodations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [sortOrder, setSortOrder] = useState(""); // price sort
+  const [locationFilter, setLocationFilter] = useState("All");
   const location = useLocation();
   const successMessage = location.state?.successMessage;
 
@@ -27,6 +44,20 @@ function HotelCollection() {
     };
     fetchAccommodations();
   }, []);
+
+  // Filter by location (optional, like vehicle page)
+  const filteredAccommodations = accommodations.filter(a =>
+    locationFilter === "All" ? true : getFirstWord(a.location) === locationFilter
+  );
+
+  // Sorting logic
+  let sortedAccommodations = [...filteredAccommodations];
+
+  if (sortOrder === "lowToHigh") {
+    sortedAccommodations.sort((a, b) => a.price - b.price);
+  } else if (sortOrder === "highToLow") {
+    sortedAccommodations.sort((a, b) => b.price - a.price);
+  }
 
   if (loading) {
     return (
@@ -58,9 +89,41 @@ function HotelCollection() {
       )}
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-100 py-16 px-4 pt-32">
         <div className="max-w-7xl mx-auto">
-          <h1 className="text-4xl md:text-5xl font-extrabold text-center text-blue-900 mb-12 tracking-tight drop-shadow-lg">Our Hotels</h1>
+          <h1 className="text-4xl md:text-5xl font-extrabold text-center text-blue-900 mb-12 tracking-tight drop-shadow-lg">Discover Our Accommodations</h1>
+          
+          {/* Sorting Section */}
+          <div className="flex flex-wrap justify-end mb-8 gap-4">
+            <div>
+              <label className="mr-2 font-medium text-blue-800">Sort by price:</label>
+              <select
+                value={sortOrder}
+                onChange={e => {
+                  setSortOrder(e.target.value);
+                }}
+                className="border border-blue-200 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-300"
+              >
+                <option value="">Default</option>
+                <option value="lowToHigh">Low to High</option>
+                <option value="highToLow">High to Low</option>
+              </select>
+            </div>
+            <div>
+              <label className="mr-2 font-medium text-blue-800">Filter by location:</label>
+              <select
+                value={locationFilter}
+                onChange={e => setLocationFilter(e.target.value)}
+                className="border border-blue-200 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-300"
+              >
+                <option value="All">All</option>
+                {LOCATION_ORDER.map(loc => (
+                  <option key={loc} value={loc}>{loc}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10">
-            {accommodations.map((accommodation) => (
+            {sortedAccommodations.map((accommodation) => (
               <div
                 key={accommodation._id}
                 className="group bg-white rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden border border-blue-100 relative flex flex-col"
