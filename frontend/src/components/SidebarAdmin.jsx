@@ -6,6 +6,7 @@ const SidebarAdmin = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [admin, setAdmin] = useState(null);
   const [tourGuideMenuOpen, setTourGuideMenuOpen] = useState(false);
+  const [hotelOwnerMenuOpen, setHotelOwnerMenuOpen] = useState(false);
   const navigate = useNavigate();
 
   const handleLogout = useCallback(() => {
@@ -192,6 +193,34 @@ const SidebarAdmin = () => {
                     >
                       <FaMoneyCheckAlt className="w-4 h-4" />
                       <span>Payment Manager</span>
+                    </NavLink>
+                  </li>
+                </ul>
+              )}
+            </li>
+            {/* Hotel Owners Collapsible Section */}
+            <li>
+              <button
+                className="flex items-center space-x-2 p-4 w-full hover:bg-pink-100 hover:text-black focus:outline-none"
+                onClick={() => setHotelOwnerMenuOpen((prev) => !prev)}
+                aria-expanded={hotelOwnerMenuOpen}
+              >
+                <FaUserTie className="w-5 h-5" />
+                <span>Hotel Owners</span>
+                {hotelOwnerMenuOpen ? <FaChevronUp className="ml-auto" /> : <FaChevronDown className="ml-auto" />}
+              </button>
+              {hotelOwnerMenuOpen && (
+                <ul className="ml-8 space-y-1">
+                  <li>
+                    <NavLink
+                      to="/admin/hotel-owners"
+                      className={({ isActive }) =>
+                        `flex items-center space-x-2 p-2 hover:bg-pink-100 hover:text-black rounded-md ${isActive ? "bg-pink-100 text-black" : ""}`
+                      }
+                      onClick={() => setIsOpen(false)}
+                    >
+                      <FaUsers className="w-4 h-4" />
+                      <span>Manage Hotel Owners</span>
                     </NavLink>
                   </li>
                 </ul>

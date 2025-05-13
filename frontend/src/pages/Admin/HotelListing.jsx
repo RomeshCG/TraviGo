@@ -6,6 +6,19 @@ const HotelListing = () => {
   const [hotelsByOwner, setHotelsByOwner] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [filter, setFilter] = useState({ name: "", location: "" });
+
+  // Filtering logic
+  const filteredHotelsByOwner = hotelsByOwner
+    .map(([ownerName, hotels]) => [
+      ownerName,
+      hotels.filter(
+        (hotel) =>
+          (!filter.name || hotel.name.toLowerCase().includes(filter.name.toLowerCase())) &&
+          (!filter.location || hotel.location.toLowerCase().includes(filter.location.toLowerCase()))
+      ),
+    ])
+    .filter(([, hotels]) => hotels.length > 0);
 
   useEffect(() => {
     const fetchHotels = async () => {
@@ -36,14 +49,27 @@ const HotelListing = () => {
     fetchHotels();
   }, []);
 
-  const handleUpdate = (id) => {
-    // Implement update logic (e.g., open modal)
-    alert(`Update hotel ${id}`);
-  };
-
-  const handleDelete = (id) => {
-    // Implement delete logic (e.g., confirmation and API call)
-    alert(`Delete hotel ${id}`);
+  // Admin can only delete hotels
+  const handleDelete = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this hotel? This action cannot be undone.")) return;
+    try {
+      const token = localStorage.getItem("adminToken");
+      const res = await fetch(`/api/hotels/admin/${id}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.message || "Failed to delete hotel");
+      }
+      setHotelsByOwner((prev) =>
+        prev
+          .map(([ownerName, hotels]) => [ownerName, hotels.filter((hotel) => hotel._id !== id)])
+          .filter(([, hotels]) => hotels.length > 0)
+      );
+    } catch (err) {
+      setError(err.message);
+    }
   };
 
   return (
@@ -54,14 +80,43 @@ const HotelListing = () => {
         <div className="flex-1 p-6 bg-gray-100">
           <div className="max-w-6xl mx-auto">
             <h2 className="text-2xl font-bold mb-6">Hotel Listing</h2>
+            {/* Filter UI */}
+            <div className="flex flex-wrap gap-4 mb-6 items-end">
+              <div>
+                <label className="block text-gray-700 font-medium mb-1">Hotel Name</label>
+                <input
+                  type="text"
+                  value={filter.name}
+                  onChange={(e) => setFilter((f) => ({ ...f, name: e.target.value }))}
+                  placeholder="Search by name"
+                  className="p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-gray-700 font-medium mb-1">Location</label>
+                <input
+                  type="text"
+                  value={filter.location}
+                  onChange={(e) => setFilter((f) => ({ ...f, location: e.target.value }))}
+                  placeholder="Search by location"
+                  className="p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"
+                />
+              </div>
+              <button
+                className="ml-auto bg-gray-200 px-4 py-2 rounded-md hover:bg-gray-300 transition"
+                onClick={() => setFilter({ name: "", location: "" })}
+              >
+                Clear Filters
+              </button>
+            </div>
             {loading ? (
               <div className="text-center py-10">Loading hotels...</div>
             ) : error ? (
               <div className="text-center text-red-600">{error}</div>
-            ) : hotelsByOwner.length === 0 ? (
+            ) : filteredHotelsByOwner.length === 0 ? (
               <div className="text-center text-gray-500">No hotels found.</div>
             ) : (
-              hotelsByOwner.map(([ownerName, hotels]) => (
+              filteredHotelsByOwner.map(([ownerName, hotels]) => (
                 <div key={ownerName} className="mb-8">
                   <h3 className="text-xl font-semibold mb-4 text-indigo-700 flex items-center">
                     <span className="bg-indigo-100 px-3 py-1 rounded-lg mr-2">{ownerName}</span>
@@ -83,16 +138,8 @@ const HotelListing = () => {
                           <p className="text-sm text-gray-600 mb-1">Location: <span className="font-medium">{hotel.location}</span></p>
                           <p className="text-sm text-gray-600 mb-1">Price: <span className="font-medium">${hotel.price}</span></p>
                           <p className="text-sm text-gray-600 mb-1">Rooms: <span className="font-medium">{hotel.rooms?.length || 0}</span></p>
-                          <p className="text-sm text-gray-600 mb-1">Contact: <span className="font-medium">{hotel.phone || 'N/A'}</span></p>
-                          <p className="text-sm text-gray-600 mb-1">Email: <span className="font-medium">{hotel.email || 'N/A'}</span></p>
                         </div>
                         <div className="flex gap-2 mt-auto">
-                          <button
-                            onClick={() => handleUpdate(hotel._id)}
-                            className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition"
-                          >
-                            Update
-                          </button>
                           <button
                             onClick={() => handleDelete(hotel._id)}
                             className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition"

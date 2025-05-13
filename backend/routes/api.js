@@ -478,34 +478,61 @@ router.get('/admin/reports/summary', isAdmin, async (req, res) => {
 // ADMIN: Get all hotels with owner info
 router.get('/admin/hotels', isAdmin, async (req, res) => {
   try {
-    const Hotel = require('../models/Hotel');
-    const HotelOwner = require('../models/HotelOwner');
-    // Fetch all hotels
-    const hotels = await Hotel.find().lean();
-    // Fetch all owners
-    const owners = await HotelOwner.find().lean();
-    // Map ownerId to owner
-    const ownerMap = {};
-    owners.forEach(owner => {
-      ownerMap[String(owner._id)] = owner;
+    const AdminHotel = require('../models/AdminHotel');
+    const ServiceProvider = require('../models/ServiceProvider');
+    // Fetch all hotels from AdminHotel
+    const hotels = await AdminHotel.find().lean();
+    // Fetch all providers
+    const providers = await ServiceProvider.find().lean();
+    // Map providerId to provider
+    const providerMap = {};
+    providers.forEach(provider => {
+      providerMap[String(provider._id)] = provider;
     });
-    // Attach owner info to each hotel (if available)
-    const hotelsWithOwner = hotels.map(hotel => {
-      // Try to find owner by matching hotel name/address/license
-      const owner = owners.find(o => o.hotelName === hotel.name) || null;
+    // Attach provider info to each hotel (if available)
+    const hotelsWithProvider = hotels.map(hotel => {
+      const provider = providerMap[String(hotel.providerId)] || null;
       return {
         ...hotel,
-        owner: owner ? {
-          hotelName: owner.hotelName,
-          hotelAddress: owner.hotelAddress,
-          hotelLicenseNumber: owner.hotelLicenseNumber,
-          numberOfRooms: owner.numberOfRooms,
+        owner: provider ? {
+          hotelName: provider.name,
+          email: provider.email,
+          providerType: provider.providerType,
         } : null
       };
     });
-    res.json(hotelsWithOwner);
+    res.json(hotelsWithProvider);
   } catch (err) {
     res.status(500).json({ message: 'Failed to fetch hotels', error: err.message });
+  }
+});
+
+// ADMIN: Get all hotel owners
+router.get('/admin/hotel-owners', isAdmin, async (req, res) => {
+  try {
+    const ServiceProvider = require('../models/ServiceProvider');
+    // Only providers with providerType 'HotelProvider'
+    const owners = await ServiceProvider.find({ providerType: 'HotelProvider' })
+      .select('-password -__v')
+      .lean();
+    res.json(owners);
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to fetch hotel owners', error: err.message });
+  }
+});
+
+// ADMIN: Get hotel owner details (with hotels)
+router.get('/admin/hotel-owners/:id', isAdmin, async (req, res) => {
+  try {
+    const ServiceProvider = require('../models/ServiceProvider');
+    const AdminHotel = require('../models/AdminHotel');
+    const owner = await ServiceProvider.findById(req.params.id).select('-password -__v').lean();
+    if (!owner) return res.status(404).json({ message: 'Hotel owner not found' });
+    // Find hotels owned by this provider
+    const hotels = await AdminHotel.find({ providerId: owner._id }).select('name location');
+    res.json({ ...owner, hotels });
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to fetch hotel owner details', error: err.message });
   }
 });
 

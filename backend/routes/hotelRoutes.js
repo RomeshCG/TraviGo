@@ -165,4 +165,17 @@ router.put('/:id', verifyProvider, async (req, res) => {
   }
 });
 
+// ADMIN: Delete a hotel by ID
+router.delete('/admin/:id', async (req, res) => {
+  try {
+    // Optionally, add admin authentication middleware here
+    const hotel = await AdminHotel.findByIdAndDelete(req.params.id);
+    if (!hotel) return res.status(404).json({ message: 'Hotel not found' });
+    res.status(200).json({ message: 'Hotel deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting hotel:', error);
+    res.status(500).json({ message: 'Failed to delete hotel', error: error.message });
+  }
+});
+
 module.exports = router;
