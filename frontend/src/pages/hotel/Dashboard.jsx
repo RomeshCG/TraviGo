@@ -85,9 +85,11 @@ function Dashboard() {
   }, [navigate]);
 
   const handleLogout = () => {
-    localStorage.removeItem("providerToken");
-    localStorage.removeItem("provider");
-    navigate("/service-provider/login");
+    if (window.confirm("Are you sure you want to logout?")) {
+      localStorage.removeItem("providerToken");
+      localStorage.removeItem("provider");
+      navigate("/service-provider/login");
+    }
   };
 
   const renderSection = () => {
