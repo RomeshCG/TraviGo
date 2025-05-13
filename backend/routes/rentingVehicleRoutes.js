@@ -34,6 +34,20 @@ router.post('/create-payment-intent', createPaymentIntent);
 // Update a renting vehicle
 router.put('/:id', updateRentingVehicle);
 
+// Delete a renting vehicle by ID
+router.delete('/:id', async (req, res) => {
+  try {
+    const RentingVehicle = require('../models/RentingVehicle');
+    const vehicle = await RentingVehicle.findByIdAndDelete(req.params.id);
+    if (!vehicle) {
+      return res.status(404).json({ message: 'Vehicle not found' });
+    }
+    res.json({ message: 'Vehicle deleted successfully' });
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to delete vehicle', error: err.message });
+  }
+});
+
 // Place an order
 router.post('/place-order', async (req, res) => {
   const { vehicleId, userId, userName, startDate, endDate, totalPrice, paymentMethod } = req.body;

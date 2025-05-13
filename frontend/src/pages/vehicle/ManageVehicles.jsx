@@ -90,6 +90,30 @@ const ManageVehicles = () => {
         }
     };
 
+    const handleDeleteVehicle = async (vehicleId) => {
+        if (!window.confirm('Are you sure you want to delete this vehicle?')) return;
+        try {
+            const token = localStorage.getItem('providerToken');
+            const res = await fetch(`http://localhost:5000/api/renting-vehicles/${vehicleId}`, {
+                method: 'DELETE',
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+            const data = await res.json();
+            if (res.ok) {
+                setVehicles((prevVehicles) =>
+                    prevVehicles.filter((vehicle) => vehicle._id !== vehicleId)
+                );
+                alert('Vehicle deleted successfully!');
+            } else {
+                alert(data.message || 'Failed to delete vehicle');
+            }
+        } catch {
+            alert('Server error. Please try again.');
+        }
+    };
+
     if (loading) {
         return (
             <div className="min-h-screen flex items-center justify-center">
@@ -193,12 +217,18 @@ const ManageVehicles = () => {
                                     <td className="py-2">{vehicle.vehicleType}</td>
                                     <td className="py-2">${vehicle.pricePerDay}</td>
                                     <td className="py-2">{vehicle.location}</td>
-                                    <td className="py-2">
+                                    <td className="py-2 flex gap-2">
                                         <button
                                             className="text-blue-600"
                                             onClick={() => handleEditClick(vehicle)}
                                         >
                                             Edit
+                                        </button>
+                                        <button
+                                            className="text-red-600"
+                                            onClick={() => handleDeleteVehicle(vehicle._id)}
+                                        >
+                                            Delete
                                         </button>
                                     </td>
                                 </tr>
