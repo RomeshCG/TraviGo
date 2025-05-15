@@ -1,62 +1,203 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import SidebarUser from '../../components/SidebarUser';
 import HeaderUser from '../../components/HeaderUser';
-
-// Placeholder images for vehicles
-const vehicleImages = {
-  Sedan: 'https://images.unsplash.com/photo-1502877338535-766e1452684a?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80',
-  SUV: 'https://images.unsplash.com/photo-1580273916550-ebdde4c9a7f5?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80',
-  Van: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80',
-};
+import Footer from '../../components/Footer';
+import { FaStar, FaCheckCircle } from 'react-icons/fa';
 
 const VehicleRental = () => {
-  const vehicles = [
-    { id: 1, type: 'Sedan', make: 'Toyota', model: 'Camry', price: 50, available: true },
-    { id: 2, type: 'SUV', make: 'Honda', model: 'CR-V', price: 70, available: false },
-    { id: 3, type: 'Van', make: 'Ford', model: 'Transit', price: 90, available: true },
-  ];
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [reviewingId, setReviewingId] = useState(null);
+  const [review, setReview] = useState({ rating: 5, comment: '' });
+  const [reviewedOrders, setReviewedOrders] = useState([]);
+  const [reviewError, setReviewError] = useState('');
+
+  useEffect(() => {
+    const fetchOrdersAndReviews = async () => {
+      setLoading(true);
+      setError('');
+      try {
+        const user = JSON.parse(localStorage.getItem('user'));
+        const userId = user?._id;
+        const res = await fetch(`http://localhost:5000/api/orders/userid/${userId}`);
+        const data = await res.json();
+        if (res.ok) {
+          setOrders(data);
+          // Fetch reviews for these orders
+          const reviewed = [];
+          for (const order of data) {
+            if (order.status === 'Completed') {
+              const reviewRes = await fetch(`/api/vehicle-order-reviews/order/${order._id}`);
+              const reviewData = await reviewRes.json();
+              if (reviewRes.ok && reviewData && reviewData.review) {
+                reviewed.push(order._id);
+              }
+            }
+          }
+          setReviewedOrders(reviewed);
+        } else {
+          setError(data.message || 'Failed to fetch bookings');
+        }
+      } catch {
+        setError('Server error. Please try again.');
+      }
+      setLoading(false);
+    };
+    fetchOrdersAndReviews();
+  }, []);
+
+  const handleReviewSubmit = async (order) => {
+    setReviewError('');
+    try {
+      const user = JSON.parse(localStorage.getItem('user'));
+      const res = await fetch(`/api/vehicle-order-reviews/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          orderId: order._id,
+          vehicleId: order.vehicleId?._id || order.vehicleId,
+          userId: user._id,
+          userName: user.username || user.name,
+          rating: review.rating,
+          comment: review.comment,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setReviewError(data.message || 'Failed to submit review');
+        return;
+      }
+      setReviewedOrders(prev => [...prev, order._id]);
+      setReviewingId(null);
+      setReview({ rating: 5, comment: '' });
+    } catch {
+      setReviewError('Failed to submit review');
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 flex">
-      <SidebarUser />
-      <div className="flex-1">
-        <HeaderUser />
-        <div className="p-6 md:p-10">
-          <h1 className="text-4xl font-bold text-gray-900 mb-10">Vehicle Rental</h1>
-          <div className="grid md:grid-cols-3 gap-8">
-            {vehicles.map((vehicle) => (
-              <div
-                key={vehicle.id}
-                className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden"
-              >
-                <div className="relative">
-                  <img
-                    src={vehicleImages[vehicle.type] || 'https://via.placeholder.com/400x200?text=No+Image'}
-                    alt={`${vehicle.make} ${vehicle.model}`}
-                    className="w-full h-56 object-cover rounded-t-2xl"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent rounded-t-2xl"></div>
-                  <h2 className="absolute bottom-4 left-4 text-2xl font-semibold text-white">
-                    {vehicle.type} - {vehicle.make} {vehicle.model}
-                  </h2>
-                </div>
-                <div className="p-6">
-                  <p className="text-gray-600">Price: ${vehicle.price}/day</p>
-                  <p className="text-gray-600">
-                    Available: <span className={vehicle.available ? 'text-green-600' : 'text-red-600'}>{vehicle.available ? 'Yes' : 'No'}</span>
-                  </p>
-                  <button
-                    className="mt-4 w-full bg-gradient-to-r from-blue-600 to-blue-800 text-white px-4 py-3 rounded-lg hover:from-blue-700 hover:to-blue-900 transition-all shadow-md disabled:opacity-50"
-                    disabled={!vehicle.available}
-                  >
-                    Rent Now
-                  </button>
-                </div>
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 flex flex-col">
+      <div className="flex flex-1">
+        <SidebarUser />
+        <div className="flex-1 flex flex-col ml-20 md:ml-64 transition-all duration-300">
+          <HeaderUser />
+          <div className="p-6 md:p-10 flex-1">
+            <h1 className="text-3xl font-bold text-gray-900 mb-8">My Vehicle Bookings</h1>
+            {loading ? (
+              <div className="flex justify-center items-center h-40">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-600 border-opacity-50"></div>
+                <span className="ml-4 text-lg text-blue-700 font-medium">Loading bookings...</span>
               </div>
-            ))}
+            ) : error ? (
+              <div className="bg-red-100 border border-red-400 text-red-700 px-6 py-4 rounded mb-6 text-center font-semibold">
+                {error}
+              </div>
+            ) : orders.length === 0 ? (
+              <div className="text-gray-500 mt-16 text-center text-xl font-medium">
+                You have no vehicle bookings yet.
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="min-w-full bg-white rounded-lg shadow-md">
+                  <thead>
+                    <tr>
+                      <th className="py-3 px-4 text-left">Vehicle</th>
+                      <th className="py-3 px-4 text-left">Rental Dates</th>
+                      <th className="py-3 px-4 text-left">Total Price</th>
+                      <th className="py-3 px-4 text-left">Payment</th>
+                      <th className="py-3 px-4 text-left">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {orders.map((order) => {
+                      const isCompleted = order.status === 'Completed';
+                      const isReviewed = reviewedOrders.includes(order._id);
+                      return (
+                        <React.Fragment key={order._id}>
+                          <tr className="border-t">
+                            <td className="py-2 px-4 font-semibold">{order.vehicleId?.vehicleName || 'N/A'}</td>
+                            <td className="py-2 px-4">{new Date(order.startDate).toLocaleDateString()} - {new Date(order.endDate).toLocaleDateString()}</td>
+                            <td className="py-2 px-4">${order.totalPrice}</td>
+                            <td className="py-2 px-4">{order.paymentMethod}</td>
+                            <td className="py-2 px-4">
+                              <span className={
+                                order.status === 'Confirmed'
+                                  ? 'text-green-600 font-bold'
+                                  : order.status === 'Cancelled'
+                                  ? 'text-red-600 font-bold'
+                                  : order.status === 'Completed'
+                                  ? 'text-blue-600 font-bold'
+                                  : 'text-yellow-600 font-bold'
+                              }>
+                                {order.status}
+                              </span>
+                            </td>
+                          </tr>
+                          {/* Review section logic */}
+                          {isCompleted && (
+                            <tr>
+                              <td colSpan={5} className="bg-blue-50 p-6 border-b border-blue-100">
+                                {isReviewed ? (
+                                  <span className="text-green-600 font-semibold flex items-center gap-2 animate-fade-in">
+                                    <FaCheckCircle className="text-green-500" /> Thank you for your review!
+                                  </span>
+                                ) : reviewingId === order._id ? (
+                                  <form
+                                    onSubmit={e => {
+                                      e.preventDefault();
+                                      handleReviewSubmit(order);
+                                    }}
+                                    className="flex flex-col md:flex-row md:items-center gap-3 animate-fade-in"
+                                  >
+                                    <span className="font-semibold mr-2 text-blue-700">Leave a review for {order.vehicleId?.vehicleName || 'Vehicle'}:</span>
+                                    <span className="flex items-center gap-1">
+                                      {[1,2,3,4,5].map(star => (
+                                        <button
+                                          type="button"
+                                          key={star}
+                                          onClick={() => setReview(r => ({ ...r, rating: star }))}
+                                          className={`text-2xl transition-colors ${star <= review.rating ? 'text-yellow-400 scale-110' : 'text-gray-300'} hover:scale-125`}
+                                          aria-label={`Rate ${star} star${star > 1 ? 's' : ''}`}
+                                        >
+                                          <FaStar />
+                                        </button>
+                                      ))}
+                                    </span>
+                                    <input
+                                      type="text"
+                                      value={review.comment}
+                                      onChange={e => setReview(r => ({ ...r, comment: e.target.value }))}
+                                      placeholder="Write your review..."
+                                      className="border-2 border-blue-200 rounded px-3 py-2 flex-1 focus:outline-none focus:ring-2 focus:ring-blue-300"
+                                      required
+                                    />
+                                    <button type="submit" className="bg-gradient-to-r from-blue-600 to-blue-800 text-white px-6 py-2 rounded-lg font-semibold shadow hover:from-blue-700 hover:to-blue-900 transition-all">Submit</button>
+                                    <button type="button" className="ml-2 text-gray-500 hover:text-red-400 font-semibold" onClick={() => setReviewingId(null)}>Cancel</button>
+                                    {reviewError && <span className="text-red-600 ml-2 font-semibold">{reviewError}</span>}
+                                  </form>
+                                ) : (
+                                  <button
+                                    className="bg-yellow-100 text-yellow-800 px-4 py-2 rounded-lg font-semibold shadow hover:bg-yellow-200 transition-all"
+                                    onClick={() => setReviewingId(order._id)}
+                                  >
+                                    Leave a Review
+                                  </button>
+                                )}
+                              </td>
+                            </tr>
+                          )}
+                        </React.Fragment>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         </div>
       </div>
+  
     </div>
   );
 };

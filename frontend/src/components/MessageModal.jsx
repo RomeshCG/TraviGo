@@ -1,19 +1,21 @@
 import React from "react";
 
-const MessageModal = ({ message, type, onClose, showContinue = false }) => {
+const MessageModal = ({ message, type, onClose }) => {
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-      <div className={`p-6 rounded-lg shadow-lg ${type === "success" ? "bg-green-100" : "bg-red-100"} max-w-sm w-full`}>
-        <h3 className={`text-lg font-semibold ${type === "success" ? "text-green-700" : "text-red-700"}`}>
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className={`bg-white rounded-lg p-6 max-w-md w-full mx-4 shadow-xl border-l-4 ${type === "success" ? "border-green-500" : "border-red-500"}`}>
+        <h2 className="text-xl font-semibold text-gray-800 mb-4">
           {type === "success" ? "Success" : "Error"}
-        </h3>
-        <p className="mt-2 text-gray-700">{message}</p>
-        <button
-          onClick={onClose}
-          className={`mt-4 w-full py-2 rounded-lg text-white ${type === "success" ? "bg-green-600" : "bg-red-600"} hover:${type === "success" ? "bg-green-700" : "bg-red-700"} transition-colors`}
-        >
-          {showContinue ? "Continue" : "Close"}
-        </button>
+        </h2>
+        <p className="text-gray-700">{message}</p>
+        <div className="mt-6 flex justify-end">
+          <button
+            onClick={onClose}
+            className="bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition"
+          >
+            Close
+          </button>
+        </div>
       </div>
     </div>
   );

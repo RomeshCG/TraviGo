@@ -18,6 +18,13 @@ const tourGuideSchema = new mongoose.Schema({
   isBanned: { type: Boolean, default: false }, // Added banned status
   profilePicture: { type: String, default: '' },
   banner: { type: String },
+  bankDetails: {
+    accountHolderName: { type: String },
+    bankName: { type: String },
+    accountNumber: { type: String },
+    branch: { type: String },
+    swiftCode: { type: String },
+  },
 }, { timestamps: true });
 
 module.exports = mongoose.model('TourGuide', tourGuideSchema);

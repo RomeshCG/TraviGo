@@ -27,6 +27,10 @@ const contactMessageSchema = new mongoose.Schema({
     required: true,
     trim: true,
   },
+  replied: {
+    type: Boolean,
+    default: false,
+  },
   createdAt: {
     type: Date,
     default: Date.now,

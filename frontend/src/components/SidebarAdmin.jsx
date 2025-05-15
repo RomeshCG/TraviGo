@@ -6,6 +6,7 @@ const SidebarAdmin = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [admin, setAdmin] = useState(null);
   const [tourGuideMenuOpen, setTourGuideMenuOpen] = useState(false);
+  const [hotelOwnerMenuOpen, setHotelOwnerMenuOpen] = useState(false);
   const navigate = useNavigate();
 
   const handleLogout = useCallback(() => {
@@ -88,9 +89,9 @@ const SidebarAdmin = () => {
       </button>
       {/* Sidebar */}
       <aside
-        className={`w-64 bg-indigo-900 text-white flex flex-col fixed md:static top-16 md:top-0 h-[calc(100vh-4rem)] transition-transform duration-300 ${
-          isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
-        } z-40`}
+        className={`w-64 bg-indigo-900 text-white flex flex-col fixed top-0 left-0 h-screen transition-transform duration-300 z-40 ${{
+          true: isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+        }["true"]}`}
         aria-hidden={!isOpen}
       >
         <div className="p-6">
@@ -194,16 +195,32 @@ const SidebarAdmin = () => {
                       <span>Payment Manager</span>
                     </NavLink>
                   </li>
+                </ul>
+              )}
+            </li>
+            {/* Hotel Owners Collapsible Section */}
+            <li>
+              <button
+                className="flex items-center space-x-2 p-4 w-full hover:bg-pink-100 hover:text-black focus:outline-none"
+                onClick={() => setHotelOwnerMenuOpen((prev) => !prev)}
+                aria-expanded={hotelOwnerMenuOpen}
+              >
+                <FaUserTie className="w-5 h-5" />
+                <span>Hotel Owners</span>
+                {hotelOwnerMenuOpen ? <FaChevronUp className="ml-auto" /> : <FaChevronDown className="ml-auto" />}
+              </button>
+              {hotelOwnerMenuOpen && (
+                <ul className="ml-8 space-y-1">
                   <li>
                     <NavLink
-                      to="/admin/tour-guide-reports"
+                      to="/admin/hotel-owners"
                       className={({ isActive }) =>
                         `flex items-center space-x-2 p-2 hover:bg-pink-100 hover:text-black rounded-md ${isActive ? "bg-pink-100 text-black" : ""}`
                       }
                       onClick={() => setIsOpen(false)}
                     >
-                      <FaFileAlt className="w-4 h-4" />
-                      <span>Tour Guide Reports</span>
+                      <FaUsers className="w-4 h-4" />
+                      <span>Manage Hotel Owners</span>
                     </NavLink>
                   </li>
                 </ul>
@@ -239,7 +256,7 @@ const SidebarAdmin = () => {
             </li>
             <li>
               <NavLink
-                to="/admin/ui-manager"
+                to="/admin/review-management"
                 className={({ isActive }) =>
                   `flex items-center space-x-2 p-4 hover:bg-pink-100 hover:text-black ${
                     isActive ? "bg-pink-100 text-black" : ""
@@ -247,8 +264,23 @@ const SidebarAdmin = () => {
                 }
                 onClick={() => setIsOpen(false)}
               >
-                <FaPaintBrush className="w-5 h-5" />
-                <span>UI Manager</span>
+                <FaFileAlt className="w-5 h-5" />
+                <span>Review Management</span>
+              </NavLink>
+            </li>
+            <li>
+              <NavLink
+                to="/admin/contact-inquiries"
+                className={({ isActive }) =>
+                  `flex items-center space-x-2 p-4 hover:bg-pink-100 hover:text-black hover:font-semibold hover:border-l-4 hover:border-pink-500 transition-all duration-150 focus:outline-none focus:bg-pink-200 focus:text-black focus:font-semibold focus:border-l-4 focus:border-pink-500 ${
+                    isActive ? "bg-pink-100 text-black font-semibold border-l-4 border-pink-500" : ""
+                  }`
+                }
+                onClick={() => setIsOpen(false)}
+                aria-current={({ isActive }) => (isActive ? "page" : undefined)}
+              >
+                <FaFileAlt className="w-5 h-5" />
+                <span>Contact Inquiries</span>
               </NavLink>
             </li>
             <li>

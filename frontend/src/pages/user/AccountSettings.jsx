@@ -1,12 +1,58 @@
-import React from 'react';
+import React, { useState } from 'react';
 import SidebarUser from '../../components/SidebarUser';
 import HeaderUser from '../../components/HeaderUser';
 
 const AccountSettings = () => {
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  // Toast helper (uses alert if no toast library)
+  const showToast = (msg, type = 'info') => {
+    if (window.toast) {
+      window.toast(msg, { type });
+    } else {
+      alert(msg);
+    }
+  };
+
+  const handlePasswordChange = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const storedUser = JSON.parse(localStorage.getItem('user'));
+      if (!storedUser || !storedUser._id) {
+        showToast('User not found. Please log in again.', 'error');
+        setLoading(false);
+        return;
+      }
+      const res = await fetch('/api/user/change-password', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: storedUser._id,
+          currentPassword,
+          newPassword,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        showToast('Password changed successfully!', 'success');
+        setCurrentPassword('');
+        setNewPassword('');
+      } else {
+        showToast(data.message || 'Failed to change password', 'error');
+      }
+    } catch {
+      showToast('An error occurred. Please try again.', 'error');
+    }
+    setLoading(false);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 flex">
       <SidebarUser />
-      <div className="flex-1">
+      <div style={{ marginLeft: 'var(--sidebar-width, 16rem)' }} className="flex-1">
         <HeaderUser />
         <div className="p-6 md:p-10">
           <h1 className="text-4xl font-bold text-gray-900 mb-10">Account Settings</h1>
@@ -14,7 +60,7 @@ const AccountSettings = () => {
             {/* Change Password */}
             <div>
               <h2 className="text-2xl font-semibold text-gray-900 mb-4">Change Password</h2>
-              <form>
+              <form onSubmit={handlePasswordChange}>
                 <div className="mb-4">
                   <label className="block text-gray-700 font-semibold mb-2" htmlFor="current-password">
                     Current Password
@@ -22,7 +68,10 @@ const AccountSettings = () => {
                   <input
                     type="password"
                     id="current-password"
+                    value={currentPassword}
+                    onChange={e => setCurrentPassword(e.target.value)}
                     className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+                    required
                   />
                 </div>
                 <div className="mb-4">
@@ -32,33 +81,21 @@ const AccountSettings = () => {
                   <input
                     type="password"
                     id="new-password"
+                    value={newPassword}
+                    onChange={e => setNewPassword(e.target.value)}
                     className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+                    required
                   />
                 </div>
                 <button
                   type="submit"
                   className="w-full bg-gradient-to-r from-blue-600 to-blue-800 text-white py-3 rounded-lg hover:from-blue-700 hover:to-blue-900 transition-all shadow-md"
+                  disabled={loading}
                 >
-                  Update Password
+                  {loading ? 'Updating...' : 'Update Password'}
                 </button>
               </form>
             </div>
-
-            {/* Notification Settings */}
-            <div>
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">Notification Settings</h2>
-              <div className="space-y-2">
-                <label className="flex items-center">
-                  <input type="checkbox" defaultChecked className="mr-2 text-blue-600 focus:ring-blue-600" />
-                  <span className="text-gray-700">Email Notifications</span>
-                </label>
-                <label className="flex items-center">
-                  <input type="checkbox" defaultChecked className="mr-2 text-blue-600 focus:ring-blue-600" />
-                  <span className="text-gray-700">SMS Notifications</span>
-                </label>
-              </div>
-            </div>
-
             {/* Delete Account */}
             <div>
               <h2 className="text-2xl font-semibold text-gray-900 mb-4">Delete Account</h2>

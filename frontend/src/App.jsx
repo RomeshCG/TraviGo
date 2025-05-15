@@ -1,9 +1,11 @@
+import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
+import { Elements } from '@stripe/react-stripe-js';
+import { loadStripe } from '@stripe/stripe-js';
 import VehicleProviderRegister from './pages/VehicleProviderRegister';
 import ServiceProviderLogin from './pages/ServiceProviderLogin';
-import HotelProviderDashboard from './pages/hotel/HotelProviderDashboard';
-import VehicleProviderDashboard from './pages/vehicle/VehicleProviderDashboard';
+import Dashboard from './pages/hotel/Dashboard';
 import TourGuideDashboard from './pages/tourguide/TourGuideDashboard';
 import TourGuideCreatePackage from './pages/tourguide/TourGuideCreatePackage';
 import AboutUs from './pages/AboutUs';
@@ -13,7 +15,6 @@ import EditProfile from './pages/user/EditProfile';
 import ExploreDestinations from './pages/user/ExploreDestinations';
 import MyBooking from './pages/user/MyBooking';
 import AccountSettings from './pages/user/AccountSettings';
-import VehicleRental from './pages/user/VehicleRental';
 import TourGuides from './pages/user/TourGuide';
 import TourGuidess from './pages/TourGuides';
 import TravelPackages from './pages/user/TravelPackages';
@@ -31,7 +32,6 @@ import Reports from './pages/admin/Reports';
 import TourGuide from './pages/admin/TourGuide';
 import UIManager from './pages/Admin/UIManage';
 import Users from './pages/admin/Users';
-import VehicleListing from './pages/admin/VehicleListing';
 import HotelListingsService from './pages/HotelListingsService';
 import TourGuidesService from './pages/TourGuidesService';
 import VehicleListingsService from './pages/VehicleListingsService';
@@ -39,17 +39,40 @@ import TourGuideProfile from './pages/TourGuideProfile';
 import HotelCollection from './pages/HotelCollection';
 import HotelDetails from './pages/HotelDetails';
 import BookingPage from './pages/BookingPage';
-import PaymentPage from './pages/PaymentPage';
-import VehiclesPage from './pages/VehiclesPage';
-import VehicleDetailPage from './pages/VehicleDetailPage';
-import VehicleRentPage from './pages/VehicleRentPage';
+import HotelPaymentPage from './pages/HotelPaymentPage'; // Use the new payment page
 import TourGuideBookingForm from './pages/tourguide/TourGuideBookingForm';
-import TourGuidePaymentPage from './pages/tourguide/TourGuidePaymentPage';
+import TourGuidePaymentPage from './pages/tourguide/TourGuidePaymentPage'; // Tour guide payment
 import TourGuideBookingConfirmation from './pages/tourguide/TourGuideBookingConfirmation';
 import TourGuidePayments from './pages/Admin/TourGuidePayments';
 import TourGuideReports from './pages/Admin/TourGuideReports';
 import UserTopBar from './components/UserTopBar';
 import TourGuideBookings from './pages/user/TourGuideBookings';
+import ReviewManagement from './pages/Admin/ReviewManagement';
+import VehicleAdminDashboard from './pages/vehicle/VehicleAdminDashboard';
+import DashboardHome from './pages/vehicle/DashboardHome';
+import AddVehicle from './pages/vehicle/AddVehicle';
+import ManageVehicles from './pages/vehicle/ManageVehicles';
+import Bookings from './pages/vehicle/Bookings';
+import VehiclesPage from './pages/VehiclesPage';
+import VehicleDetailPage from './pages/VehicleDetailPage';
+import RentVehiclePage from './pages/RentVehiclePage';
+import RentingPaymentPage from './pages/RentingPaymentPage'; // Vehicle payment
+import RentOrderSummaryPage from './pages/RentOrderSummaryPage';
+import ContactInquiries from './pages/Admin/ContactInquiries';
+import Reviews from './pages/user/Reviews';
+import VehicleRental from './pages/user/VehicleRental';
+import ReceiptPage from './pages/ReceiptPage'; // Import the new receipt page
+import HotelBooking from './pages/user/HotelBooking'; // Import HotelBooking.jsx
+import HotelManagePage from './pages/hotel/HotelManagePage';
+import VehicleListing from './pages/Admin/VehicleListing';
+import HotelOwnerList from './pages/Admin/HotelOwnerList';
+import HotelOwnerDetails from './pages/Admin/HotelOwnerDetails';
+import FAQPage from './pages/FAQPage';
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import TermsAndConditions from './pages/TermsAndConditions';
+
+// Load Stripe
+const stripePromise = loadStripe(import.meta.env.VITE_REACT_APP_STRIPE_PUBLISHABLE_KEY);
 
 // Protected Route Component for Users
 const ProtectedRoute = ({ children }) => {
@@ -59,7 +82,7 @@ const ProtectedRoute = ({ children }) => {
     useEffect(() => {
         const verifyToken = async () => {
             try {
-                const response = await fetch('/api/verify-token', {
+                const response = await fetch('/api/bookings/verify-token', {
                     headers: { Authorization: `Bearer ${token}` },
                 });
                 if (response.ok) {
@@ -118,7 +141,7 @@ const ProtectedAdminRoute = ({ children }) => {
 };
 
 // Protected Route Component for Service Providers
-const ProtectedProviderRoute = ({ children }) => {
+const ProtectedProviderRoute = ({ children, allowedProviderType }) => {
     const token = localStorage.getItem('providerToken');
     const [isAuthenticated, setIsAuthenticated] = useState(null);
 
@@ -128,7 +151,8 @@ const ProtectedProviderRoute = ({ children }) => {
                 const response = await fetch('/api/verify-provider-token', {
                     headers: { Authorization: `Bearer ${token}` },
                 });
-                if (response.ok) {
+                const data = await response.json();
+                if (response.ok && (!allowedProviderType || data.provider.providerType === allowedProviderType)) {
                     setIsAuthenticated(true);
                 } else {
                     setIsAuthenticated(false);
@@ -143,12 +167,37 @@ const ProtectedProviderRoute = ({ children }) => {
         };
         if (token) verifyToken();
         else setIsAuthenticated(false);
-    }, [token]);
+    }, [token, allowedProviderType]);
 
     if (isAuthenticated === null) return <div>Loading...</div>;
     if (!isAuthenticated) return <Navigate to="/service-provider/login" replace />;
     return children;
 };
+
+function ScrollToTopButton() {
+    const [visible, setVisible] = useState(false);
+    React.useEffect(() => {
+        const handleScroll = () => {
+            setVisible(window.scrollY > 200);
+        };
+        window.addEventListener('scroll', handleScroll);
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, []);
+    const scrollToTop = () => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+    return (
+        <button
+            onClick={scrollToTop}
+            className={`fixed bottom-8 right-8 z-50 bg-blue-600 text-white p-3 rounded-full shadow-lg transition-opacity duration-300 hover:bg-blue-800 ${visible ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+            aria-label="Scroll to top"
+        >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+            </svg>
+        </button>
+    );
+}
 
 function AppContent() {
     const location = useLocation();
@@ -156,10 +205,11 @@ function AppContent() {
     const [username, setUsername] = useState('');
 
     useEffect(() => {
+        console.log(`Current route: ${location.pathname}`);
         const token = localStorage.getItem('token');
         const user = localStorage.getItem('user');
         if (token && user) {
-            fetch('/api/verify-token', {
+            fetch('/api/bookings/verify-token', {
                 headers: { Authorization: `Bearer ${token}` },
             })
                 .then(res => {
@@ -199,14 +249,21 @@ function AppContent() {
     };
 
     const publicRoutes = ['/login', '/signin', '/service-provider/login', '/admin/login'];
-    const hideUserTopBar = publicRoutes.includes(location.pathname);
+    const dashboardRoutes = [
+        '/dashboard',
+        '/user/dashboard',
+        '/admin/dashboard',
+        '/pages/hotel/dashboard',
+        '/pages/vehicle/dashboard',
+    ];
+    const userRoutes = location.pathname.startsWith('/user/');
+    const hideUserTopBar = publicRoutes.includes(location.pathname) || dashboardRoutes.includes(location.pathname) || userRoutes;
 
     return (
-        <>
+        <React.Fragment>
             {isAuthenticated && username && !hideUserTopBar && (
                 <UserTopBar username={username} onLogout={handleLogout} />
             )}
-            {/* Main header would go here */}
             <Routes>
                 <Route path="/admin/register" element={<AdminRegister />} />
                 <Route path="/" element={<Home />} />
@@ -214,8 +271,8 @@ function AppContent() {
                 <Route path="/login" element={<Login />} />
                 <Route path="/services/hotel-listings" element={<HotelListingsService />} />
                 <Route path="/services/tour-guides" element={<TourGuidesService />} />
-                <Route path="/tour-guide/:providerId" element={<TourGuideProfile />} />
                 <Route path="/services/vehicle-listings" element={<VehicleListingsService />} />
+                <Route path="/tour-guide/:providerId" element={<TourGuideProfile />} />
                 <Route path="/hotels" element={<HotelCollection />} />
                 <Route path="/hotels/:id" element={<HotelDetails />} />
                 <Route
@@ -230,7 +287,9 @@ function AppContent() {
                     path="/hotels/payment"
                     element={
                         <ProtectedRoute>
-                            <PaymentPage />
+                            <Elements stripe={stripePromise}>
+                                <HotelPaymentPage />
+                            </Elements>
                         </ProtectedRoute>
                     }
                 />
@@ -267,6 +326,22 @@ function AppContent() {
                     }
                 />
                 <Route
+                    path="/user/my-booking/vehicles"
+                    element={
+                        <ProtectedRoute>
+                            <VehicleRental />
+                        </ProtectedRoute>
+                    }
+                />
+                <Route
+                    path="/user/my-booking/hotels"
+                    element={
+                        <ProtectedRoute>
+                            <HotelBooking />
+                        </ProtectedRoute>
+                    }
+                />
+                <Route
                     path="/user/edit-profile"
                     element={
                         <ProtectedRoute>
@@ -279,14 +354,6 @@ function AppContent() {
                     element={
                         <ProtectedRoute>
                             <AccountSettings />
-                        </ProtectedRoute>
-                    }
-                />
-                <Route
-                    path="/user/vehicles"
-                    element={
-                        <ProtectedRoute>
-                            <VehicleRental />
                         </ProtectedRoute>
                     }
                 />
@@ -306,26 +373,24 @@ function AppContent() {
                         </ProtectedRoute>
                     }
                 />
-                {/* Vehicle Rental Routes */}
+                <Route
+                    path="/user/reviews"
+                    element={
+                        <ProtectedRoute>
+                            <Reviews />
+                        </ProtectedRoute>
+                    }
+                />
                 <Route path="/vehicles" element={<VehiclesPage />} />
                 <Route path="/vehicles/:id" element={<VehicleDetailPage />} />
                 <Route
                     path="/rent"
                     element={
                         <ProtectedRoute>
-                            <VehicleRentPage />
+                            <RentVehiclePage />
                         </ProtectedRoute>
                     }
                 />
-                <Route
-                    path="/payment"
-                    element={
-                        <ProtectedRoute>
-                            <PaymentPage />
-                        </ProtectedRoute>
-                    }
-                />
-                {/* Admin Routes */}
                 <Route path="/admin/login" element={<AdminLogin />} />
                 <Route
                     path="/admin/dashboard"
@@ -376,14 +441,6 @@ function AppContent() {
                     }
                 />
                 <Route
-                    path="/admin/vehicle-listing"
-                    element={
-                        <ProtectedAdminRoute>
-                            <VehicleListing />
-                        </ProtectedAdminRoute>
-                    }
-                />
-                <Route
                     path="/admin/tour-guide-payments"
                     element={
                         <ProtectedAdminRoute>
@@ -399,6 +456,46 @@ function AppContent() {
                         </ProtectedAdminRoute>
                     }
                 />
+                <Route
+                    path="/admin/review-management"
+                    element={
+                        <ProtectedAdminRoute>
+                            <ReviewManagement />
+                        </ProtectedAdminRoute>
+                    }
+                />
+                <Route
+                    path="/admin/contact-inquiries"
+                    element={
+                        <ProtectedAdminRoute>
+                            <ContactInquiries />
+                        </ProtectedAdminRoute>
+                    }
+                />
+                <Route
+                    path="/admin/vehicle-listing"
+                    element={
+                        <ProtectedAdminRoute>
+                            <VehicleListing />
+                        </ProtectedAdminRoute>
+                    }
+                />
+                <Route
+                    path="/admin/hotel-owners"
+                    element={
+                        <ProtectedAdminRoute>
+                            <HotelOwnerList />
+                        </ProtectedAdminRoute>
+                    }
+                />
+                <Route
+                    path="/admin/hotel-owners/:id"
+                    element={
+                        <ProtectedAdminRoute>
+                            <HotelOwnerDetails />
+                        </ProtectedAdminRoute>
+                    }
+                />
                 <Route path="/about" element={<AboutUs />} />
                 <Route path="/contact" element={<ContactUs />} />
                 <Route path="/service-provider/register" element={<ProviderReg />} />
@@ -409,7 +506,7 @@ function AppContent() {
                 <Route
                     path="/tour-guide/dashboard"
                     element={
-                        <ProtectedProviderRoute>
+                        <ProtectedProviderRoute allowedProviderType="TourGuide">
                             <TourGuideDashboard />
                         </ProtectedProviderRoute>
                     }
@@ -417,13 +514,27 @@ function AppContent() {
                 <Route
                     path="/tour-guide/create-package"
                     element={
-                        <ProtectedProviderRoute>
+                        <ProtectedProviderRoute allowedProviderType="TourGuide">
                             <TourGuideCreatePackage />
                         </ProtectedProviderRoute>
                     }
                 />
-                <Route path="/pages/hotel/dashboard" element={<HotelProviderDashboard />} />
-                <Route path="/pages/vehicle/dashboard" element={<VehicleProviderDashboard />} />
+                <Route
+                    path="/pages/hotel/dashboard"
+                    element={
+                        <ProtectedProviderRoute allowedProviderType="HotelProvider">
+                            <Dashboard />
+                        </ProtectedProviderRoute>
+                    }
+                />
+                <Route
+                    path="/dashboard"
+                    element={
+                        <ProtectedProviderRoute allowedProviderType="HotelProvider">
+                            <Dashboard />
+                        </ProtectedProviderRoute>
+                    }
+                />
                 <Route path="/tour-guides" element={<TourGuidess />} />
                 <Route
                     path="/book-tour-package/:guideId/:packageId"
@@ -449,8 +560,44 @@ function AppContent() {
                         </ProtectedRoute>
                     }
                 />
+                <Route path="/vehicle" element={<VehicleAdminDashboard />}>
+                    <Route path="dashboard" element={<DashboardHome />} />
+                    <Route path="add" element={<AddVehicle />} />
+                    <Route path="manage" element={<ManageVehicles />} />
+                    <Route path="bookings" element={<Bookings />} />
+                    <Route index element={<DashboardHome />} />
+                </Route>
+                <Route path="/user/vehicles" element={<VehiclesPage />} />
+                <Route path="/user/vehicles/:id" element={<VehicleDetailPage />} />
+                <Route path="/user/vehicles/rent" element={<RentVehiclePage />} />
+                <Route
+                    path="/user/vehicles/payment"
+                    element={
+                        <ProtectedRoute>
+                            <RentingPaymentPage />
+                        </ProtectedRoute>
+                    }
+                />
+                <Route
+                    path="/user/vehicles/order-summary"
+                    element={<RentOrderSummaryPage />}
+                />
+                <Route
+                    path="/receipt"
+                    element={
+                        <ProtectedRoute>
+                            <ReceiptPage />
+                        </ProtectedRoute>
+                    }
+                />
+                <Route path="/dashboard/hotel/:id" element={<HotelManagePage />} />
+                <Route path="/faq" element={<FAQPage />} />
+                <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+                <Route path="/terms-conditions" element={<TermsAndConditions />} />
+                <Route path="*" element={<div>404 - Page Not Found</div>} />
             </Routes>
-        </>
+            <ScrollToTopButton />
+        </React.Fragment>
     );
 }
 

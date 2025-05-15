@@ -1,150 +1,136 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
-import Header from '../components/Header';
+import React, { useEffect, useState } from 'react';
+import { useParams, useNavigate, Link } from 'react-router-dom';
+import { FaStar } from 'react-icons/fa';
+import SimpleHeader from '../components/SimpleHeader';
+import Footer from '../components/Footer';
 
 const VehicleDetailPage = () => {
   const { id } = useParams();
   const [vehicle, setVehicle] = useState(null);
-  const [mainImage, setMainImage] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState('');
+  const [mainImage, setMainImage] = useState('');
+  const [owner, setOwner] = useState(null); // State for owner details
+  const [reviews, setReviews] = useState([]); // State for user reviews
   const navigate = useNavigate();
 
-  // Fetch vehicle by ID from the backend
   useEffect(() => {
     const fetchVehicle = async () => {
+      setLoading(true);
+      setError('');
       try {
-        const response = await fetch(`/api/vehicles/${id}`);
-        if (!response.ok) throw new Error('Vehicle not found');
-        const data = await response.json();
-        setVehicle(data);
-        setMainImage(data.imageArray[0] || data.image);
-        setLoading(false);
-      } catch (err) {
-        setError('Vehicle not found or failed to load.');
-        setLoading(false);
+        const res = await fetch(`http://localhost:5000/api/renting-vehicles/${id}`);
+        const data = await res.json();
+        if (res.ok && data.vehicle) {
+          setVehicle(data.vehicle);
+
+          // Fetch owner details
+          const ownerRes = await fetch(`http://localhost:5000/api/service-providers/${data.vehicle.providerId}`);
+          const ownerData = await ownerRes.json();
+          if (ownerRes.ok) {
+            setOwner(ownerData.provider);
+          }
+
+          // Fetch reviews for the vehicle (from VehicleOrderReview)
+          const reviewsRes = await fetch(`http://localhost:5000/api/vehicle-order-reviews/vehicle/${id}`);
+          const reviewsData = await reviewsRes.json();
+          if (reviewsRes.ok && Array.isArray(reviewsData)) {
+            setReviews(reviewsData);
+          } else if (reviewsRes.ok && Array.isArray(reviewsData.reviews)) {
+            setReviews(reviewsData.reviews);
+          } else {
+            setReviews([]);
+          }
+
+          // Use images array for mainImage
+          if (data.vehicle.images && data.vehicle.images.length > 0) {
+            const img = data.vehicle.images[0];
+            setMainImage(
+              img.startsWith('uploads/') || img.startsWith('/uploads/')
+                ? `http://localhost:5000/${img.replace(/^\//, '')}`
+                : img
+            );
+          } else {
+            setMainImage('');
+          }
+        } else {
+          setError(data.message || 'Vehicle not found');
+        }
+      } catch {
+        setError('Server error. Please try again.');
       }
+      setLoading(false);
     };
     fetchVehicle();
   }, [id]);
 
+  const handleRentNow = () => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      // Redirect to login page if the user is not logged in
+      navigate('/login', { state: { from: `/user/vehicles/rent`, vehicle } });
+    } else {
+      // Redirect to RentVehiclePage if the user is logged in
+      navigate('/user/vehicles/rent', { state: { vehicle } });
+    }
+  };
+
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-800">
-        <p className="text-xl font-semibold text-gray-300 animate-pulse">Loading vehicle details...</p>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-white">
+        <span className="text-lg text-blue-700 font-medium">Loading vehicle details...</span>
       </div>
     );
   }
 
   if (error || !vehicle) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-800">
-        <h1 className="text-3xl font-bold text-white mb-4">
-          {error || 'Vehicle Not Found'}
-        </h1>
-        <Link
-          to="/vehicles"
-          className="text-blue-400 hover:text-blue-300 text-lg font-medium transition-colors duration-200"
-        >
-          ← Back to Vehicles
-        </Link>
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-blue-50 to-white">
+        <h2 className="text-2xl font-bold text-red-600 mb-4">{error || 'Vehicle not found'}</h2>
+        <Link to="/user/vehicles" className="text-blue-600 underline">Back to Vehicles</Link>
       </div>
     );
   }
 
-  const {
-    name,
-    imageArray,
-    location,
-    price,
-    engine,
-    doors,
-    seats,
-    fuel,
-    transmission,
-    description,
-  } = vehicle;
-
-  const handleHireNow = () => {
-    navigate('/rent', { state: { totalPrice: price, vehicle } });
-  };
-
-  // Dummy reviews
-  const reviews = [
-    {
-      id: 1,
-      author: 'John Doe',
-      rating: 5,
-      comment: 'Absolutely loved this vehicle! Smooth ride, great fuel efficiency, and the interior was spotless. Highly recommend!',
-      date: 'October 15, 2024',
-    },
-    {
-      id: 2,
-      author: 'Sarah Smith',
-      rating: 4,
-      comment: 'Really enjoyed driving this car. It’s perfect for city trips, though I wish it had a bit more trunk space. Still a great choice!',
-      date: 'September 28, 2024',
-    },
-    {
-      id: 3,
-      author: 'Mike Johnson',
-      rating: 5,
-      comment: 'Fantastic experience! The staff was super helpful, and the vehicle was in top condition. Will definitely rent again.',
-      date: 'August 10, 2024',
-    },
-  ];
+  // Prepare image URLs from images array
+  const imageArray = (vehicle && vehicle.images ? vehicle.images : []).map(img =>
+    img && (img.startsWith('uploads/') || img.startsWith('/uploads/'))
+      ? `http://localhost:5000/${img.replace(/^\//, '')}`
+      : img
+  );
 
   return (
-    <div className="min-h-screen bg-gray-800">
-      <Header />
-      <div className="pt-20 py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-6xl mx-auto bg-white rounded-2xl shadow-2xl overflow-hidden transition-all duration-300 hover:shadow-3xl">
-          {/* Header Section */}
-          <div className="bg-gradient-to-r from-indigo-700 to-blue-600 p-6 text-white">
-            <Link
-              to="/vehicles"
-              className="inline-flex items-center text-white hover:text-gray-200 transition-colors duration-200 text-lg font-medium"
-            >
-              <svg
-                className="w-5 h-5 mr-2"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M15 19l-7-7 7-7"
-                />
-              </svg>
-              Back to Vehicles
+    <>
+      <div className="pt-8"> {/* Padding before header */}
+        <SimpleHeader />
+      </div>
+      <div className="pt-28 pb-12 min-h-screen bg-gradient-to-br from-blue-50 to-white">
+        <div className="max-w-5xl mx-auto bg-white rounded-xl shadow-lg p-8">
+          {/* Back Arrow */}
+          <div className="mb-6">
+            <Link to="/user/vehicles" className="text-blue-600 underline text-lg font-semibold">
+              &larr; Back to Vehicles
             </Link>
-            <h1 className="mt-4 text-4xl font-extrabold tracking-tight">{name}</h1>
           </div>
 
-          {/* Main Content */}
-          <div className="p-8 grid grid-cols-1 lg:grid-cols-2 gap-12">
+          <div className="flex flex-col md:flex-row gap-8">
             {/* Image Section */}
-            <div className="space-y-6">
-              <div className="relative group">
+            <div className="md:w-1/2 flex flex-col items-center">
+              <div className="w-full h-72 mb-4 relative">
                 <img
-                  src={mainImage || imageArray[0] || vehicle.image}
-                  alt={name}
-                  className="w-full h-96 object-cover rounded-xl shadow-lg transition-transform duration-300 group-hover:scale-105"
+                  src={mainImage || imageArray[0] || 'https://via.placeholder.com/400x200?text=No+Image'}
+                  alt={vehicle.vehicleName || vehicle.name}
+                  className="w-full h-72 object-cover rounded-lg shadow-md bg-gray-100"
                 />
               </div>
-              {imageArray && imageArray.length > 0 && (
-                <div className="grid grid-cols-5 gap-3">
-                  {imageArray.map((img, index) => (
+              {imageArray.length > 1 && (
+                <div className="flex gap-2 mt-2">
+                  {imageArray.map((img, idx) => (
                     <img
-                      key={index}
+                      key={idx}
                       src={img}
-                      alt={`${name} ${index + 1}`}
-                      className={`w-full h-20 object-cover rounded-md cursor-pointer transition-all duration-200 hover:scale-110 hover:shadow-md ${
-                        mainImage === img ? 'ring-2 ring-indigo-600' : 'ring-1 ring-gray-300'
-                      }`}
+                      alt={`Vehicle ${idx + 1}`}
+                      className={`w-16 h-16 object-cover rounded cursor-pointer border-2 ${mainImage === img ? 'border-blue-600' : 'border-gray-200'}`}
                       onClick={() => setMainImage(img)}
                     />
                   ))}
@@ -153,90 +139,89 @@ const VehicleDetailPage = () => {
             </div>
 
             {/* Details Section */}
-            <div className="space-y-8">
-              <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                <h2 className="text-2xl font-semibold text-gray-900 mb-4">Vehicle Details</h2>
-                <div className="grid grid-cols-2 gap-x-6 gap-y-4 text-gray-700 text-lg">
-                  <p>
-                    <strong className="font-medium">Location:</strong> {location}
-                  </p>
-                  <p>
-                    <strong className="font-medium">Engine:</strong> {engine}
-                  </p>
-                  <p>
-                    <strong className="font-medium">Doors:</strong> {doors}
-                  </p>
-                  <p>
-                    <strong className="font-medium">Seats:</strong> {seats}
-                  </p>
-                  <p>
-                    <strong className="font-medium">Fuel:</strong> {fuel}
-                  </p>
-                  <p>
-                    <strong className="font-medium">Transmission:</strong> {transmission}
-                  </p>
-                </div>
+            <div className="md:w-1/2 flex flex-col justify-between">
+              <div>
+                <h2 className="text-2xl font-bold text-[#203c8c] mb-2">{vehicle.name}</h2>
+                <p className="text-gray-700 mb-2"><strong>Location:</strong> {vehicle.location}</p>
+                {vehicle.price && <p className="text-gray-700 mb-2"><strong>Price per day:</strong> ${vehicle.price}</p>}
+                {vehicle.engine && <p className="text-gray-700 mb-2"><strong>Engine:</strong> {vehicle.engine}</p>}
+                {vehicle.doors && <p className="text-gray-700 mb-2"><strong>Doors:</strong> {vehicle.doors}</p>}
+                {vehicle.seats && <p className="text-gray-700 mb-2"><strong>Seats:</strong> {vehicle.seats}</p>}
+                {vehicle.fuel && <p className="text-gray-700 mb-2"><strong>Fuel:</strong> {vehicle.fuel}</p>}
+                {vehicle.transmission && <p className="text-gray-700 mb-2"><strong>Transmission:</strong> {vehicle.transmission}</p>}
+                {vehicle.description && <p className="text-gray-700 mt-4">{vehicle.description}</p>}
               </div>
-
-              {/* Price Section */}
-              <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                <h2 className="text-2xl font-semibold text-gray-900 mb-3">Pricing</h2>
-                <p className="text-gray-800 text-xl">
-                  <strong className="font-medium">Price per day:</strong> ${price}
-                </p>
-              </div>
-
               <button
-                onClick={handleHireNow}
-                className="w-full bg-indigo-600 text-white text-lg font-semibold py-4 rounded-lg hover:bg-indigo-700 transition-all duration-200 shadow-md hover:shadow-xl focus:outline-none focus:ring-4 focus:ring-indigo-300 focus:ring-opacity-50"
+                className="mt-8 bg-blue-600 text-white px-8 py-3 rounded-full font-semibold text-lg hover:bg-blue-700 transition-all duration-300 shadow-lg"
+                onClick={handleRentNow}
               >
-                Hire Now
+                Rent Now
               </button>
             </div>
           </div>
 
-          {/* Description Section */}
-          <div className="p-8 border-t border-gray-200">
-            <h2 className="text-2xl font-semibold text-gray-900 mb-4">Description</h2>
-            <p className="text-gray-600 leading-relaxed text-lg">{description}</p>
+          {/* Availability Section */}
+          <div className="mt-8 bg-gray-100 p-6 rounded-lg shadow-md">
+            <h3 className="text-xl font-bold text-[#203c8c] mb-4">Availability</h3>
+            {vehicle.availability && vehicle.availability.length > 0 ? (
+              <ul className="list-disc pl-6">
+                {vehicle.availability.map((range, idx) => (
+                  <li key={idx} className="text-gray-700">
+                    Not available from{' '}
+                    <strong>{new Date(range.startDate).toLocaleDateString()}</strong> to{' '}
+                    <strong>{new Date(range.endDate).toLocaleDateString()}</strong>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-gray-500">This vehicle is available for all dates.</p>
+            )}
           </div>
 
-          {/* Reviews Section */}
-          <div className="p-8 border-t border-gray-200">
-            <h2 className="text-2xl font-semibold text-gray-900 mb-6">Customer Reviews</h2>
-            <div className="space-y-6">
-              {reviews.map((review) => (
-                <div
-                  key={review.id}
-                  className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 transition-all duration-200 hover:shadow-md"
-                >
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center space-x-4">
-                      <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-semibold text-xl">
-                        {review.author[0]}
-                      </div>
-                      <div>
-                        <h3 className="text-lg font-semibold text-gray-800">{review.author}</h3>
-                        <p className="text-sm text-gray-500">{review.date}</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center">
-                      <span className="text-yellow-500 text-lg">
-                        {'★'.repeat(review.rating)}
-                      </span>
-                      <span className="text-gray-300 text-lg">
-                        {'★'.repeat(5 - review.rating)}
-                      </span>
-                    </div>
-                  </div>
-                  <p className="text-gray-600 leading-relaxed">{review.comment}</p>
-                </div>
-              ))}
+          {/* Owner Contact Section */}
+          {owner && (
+            <div className="mt-8 bg-gray-100 p-6 rounded-lg shadow-md">
+              <h3 className="text-xl font-bold text-[#203c8c] mb-4">Contact Owner</h3>
+              <p className="text-gray-700"><strong>Name:</strong> {owner.name}</p>
+              <p className="text-gray-700"><strong>Email:</strong> {owner.email}</p>
+              <p className="text-gray-700"><strong>Phone:</strong> {owner.phoneNumber}</p>
             </div>
+          )}
+
+          {/* User Reviews Section */}
+          <div className="mt-8">
+            <h3 className="text-xl font-bold text-[#203c8c] mb-4">User Reviews</h3>
+            {reviews.length > 0 ? (
+              <div className="space-y-4">
+                {reviews.map((review) => (
+                  <div key={review._id} className="bg-gradient-to-r from-blue-100 to-blue-50 p-5 rounded-lg shadow flex flex-col md:flex-row md:items-center gap-4">
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-blue-900 text-lg">
+                        {review.userId?.name || review.userName || 'User'}
+                      </span>
+                      <span className="flex items-center ml-2">
+                        {[...Array(5)].map((_, i) => (
+                          <FaStar key={i} className={i < review.rating ? 'text-yellow-400' : 'text-gray-300'} />
+                        ))}
+                      </span>
+                    </div>
+                    <div className="text-gray-700 italic flex-1">{review.comment}</div>
+                    <div className="text-xs text-gray-500 mt-2 md:mt-0 md:ml-4">{review.createdAt ? new Date(review.createdAt).toLocaleDateString() : ''}</div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-gray-500">No reviews available for this vehicle.</p>
+            )}
           </div>
         </div>
       </div>
-    </div>
+      <div className="pb-8"> {/* Padding before footer */}
+        <div className="mt-12 border-t-4 border-blue-300 shadow-lg">
+          <Footer />
+        </div>
+      </div>
+    </>
   );
 };
 

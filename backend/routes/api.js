@@ -15,8 +15,10 @@ const mongoose = require('mongoose');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
-const TourGuideBooking = require('../models/TourBookings');
+const TourGuideBooking = require('../models/TourBookings'); // Model name is 'TourBooking'
 const ContactMessage = require('../models/ContactMessage');
+const CashoutRequest = require('../models/CashoutRequest');
+const vehicleOrderReviewRoutes = require('./vehicleOrderReviewRoutes');
 
 // Load environment variables
 require('dotenv').config();
@@ -157,7 +159,7 @@ router.post('/login', async (req, res) => {
     const token = jwt.sign(
       { id: existingUser._id, username: existingUser.username },
       JWT_SECRET,
-      { expiresIn: '1h' }
+      { expiresIn: '24h' }
     );
     const userResponse = {
       _id: existingUser._id,
@@ -262,6 +264,90 @@ router.put('/user/update-profile-picture', upload.single('profilePicture'), asyn
   }
 });
 
+// Update user bank details
+router.put('/user/update-bank-details', async (req, res) => {
+  try {
+    const { userId, bankDetails } = req.body;
+    if (!userId || !bankDetails) {
+      return res.status(400).json({ message: 'User ID and bank details are required' });
+    }
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    user.bankDetails = bankDetails;
+    await user.save();
+    res.status(200).json({ message: 'Bank details updated successfully', bankDetails: user.bankDetails });
+  } catch (error) {
+    console.error('Update user bank details error:', error.stack);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Update tour guide bank details
+router.put('/tour-guide/update-bank-details', async (req, res) => {
+  try {
+    const { tourGuideId, bankDetails } = req.body;
+    if (!tourGuideId || !bankDetails) {
+      return res.status(400).json({ message: 'Tour guide ID and bank details are required' });
+    }
+    const tourGuide = await TourGuide.findById(tourGuideId);
+    if (!tourGuide) {
+      return res.status(404).json({ message: 'Tour guide not found' });
+    }
+    tourGuide.bankDetails = bankDetails;
+    await tourGuide.save();
+    res.status(200).json({ message: 'Bank details updated successfully', bankDetails: tourGuide.bankDetails });
+  } catch (error) {
+    console.error('Update tour guide bank details error:', error.stack);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Change user password
+router.put('/user/change-password', async (req, res) => {
+  try {
+    const { userId, currentPassword, newPassword } = req.body;
+    if (!userId || !currentPassword || !newPassword) {
+      return res.status(400).json({ message: 'All fields are required' });
+    }
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    if (!isMatch) {
+      return res.status(401).json({ message: 'Current password is incorrect' });
+    }
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(newPassword, salt);
+    user.password = hashedPassword;
+    await user.save();
+    res.json({ message: 'Password updated successfully' });
+  } catch (error) {
+    console.error('Change password error:', error.stack);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Delete user account
+router.delete('/user/delete-account', async (req, res) => {
+  try {
+    const { userId } = req.body;
+    if (!userId) {
+      return res.status(400).json({ message: 'User ID is required' });
+    }
+    const user = await User.findByIdAndDelete(userId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    res.json({ message: 'Account deleted successfully' });
+  } catch (error) {
+    console.error('Delete account error:', error.stack);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 // Route to handle contact form submission
 router.post('/contact', async (req, res) => {
   try {
@@ -278,22 +364,201 @@ router.post('/contact', async (req, res) => {
   }
 });
 
+// ADMIN: Get all contact form inquiries
+router.get('/admin/contact-inquiries', isAdmin, async (req, res) => {
+  try {
+    const inquiries = await ContactMessage.find().sort({ createdAt: -1 });
+    res.status(200).json(inquiries);
+  } catch (error) {
+    console.error('Error fetching contact inquiries:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// ADMIN: Mark a contact inquiry as replied
+router.patch('/admin/contact-inquiries/:id/reply', isAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const inquiry = await ContactMessage.findByIdAndUpdate(id, { replied: true }, { new: true });
+    if (!inquiry) return res.status(404).json({ message: 'Inquiry not found' });
+    res.status(200).json({ message: 'Inquiry marked as replied', inquiry });
+  } catch (error) {
+    console.error('Error marking inquiry as replied:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// ADMIN: System Reports Summary
+router.get('/admin/reports/summary', isAdmin, async (req, res) => {
+  try {
+    // Models
+    const User = require('../models/user');
+    const Booking = require('../models/Booking');
+    const TourBooking = require('../models/TourBookings');
+    const Order = require('../models/Order'); // Use Order model for vehicle bookings
+
+    // Total users
+    const totalUsers = await User.countDocuments();
+
+    // Hotel bookings
+    const hotelBookings = await Booking.find();
+    const totalHotelBookings = hotelBookings.length;
+    const hotelIncome = hotelBookings.reduce((sum, b) => sum + (b.totalPrice || 0), 0);
+
+    // Tour bookings
+    const tourBookings = await TourBooking.find();
+    const totalTourBookings = tourBookings.length;
+    const tourIncome = tourBookings.reduce((sum, b) => sum + (b.totalPrice || 0), 0);
+
+    // Vehicle bookings (Order model)
+    const vehicleOrders = await Order.find();
+    const totalVehicleBookings = vehicleOrders.length;
+    const vehicleIncome = vehicleOrders.reduce((sum, b) => sum + (b.totalPrice || 0), 0);
+
+    // System income
+    const systemIncome = hotelIncome + tourIncome + vehicleIncome;
+
+    // Daily income (last 14 days)
+    const today = new Date();
+    const days = 14;
+    const dailyIncome = [];
+    for (let i = days - 1; i >= 0; i--) {
+      const day = new Date(today);
+      day.setDate(today.getDate() - i);
+      const start = new Date(day.setHours(0,0,0,0));
+      const end = new Date(day.setHours(23,59,59,999));
+      const hotelDay = hotelBookings.filter(b => b.createdAt >= start && b.createdAt <= end).reduce((sum, b) => sum + (b.totalPrice || 0), 0);
+      const tourDay = tourBookings.filter(b => b.createdAt >= start && b.createdAt <= end).reduce((sum, b) => sum + (b.totalPrice || 0), 0);
+      const vehicleDay = vehicleOrders.filter(b => b.createdAt >= start && b.createdAt <= end).reduce((sum, b) => sum + (b.totalPrice || 0), 0);
+      dailyIncome.push({
+        date: start.toISOString().slice(0, 10),
+        hotel: hotelDay,
+        tour: tourDay,
+        vehicle: vehicleDay,
+        total: hotelDay + tourDay + vehicleDay
+      });
+    }
+
+    // User registrations (last 14 days)
+    const dailyUsers = [];
+    for (let i = days - 1; i >= 0; i--) {
+      const day = new Date(today);
+      day.setDate(today.getDate() - i);
+      const start = new Date(day.setHours(0,0,0,0));
+      const end = new Date(day.setHours(23,59,59,999));
+      const count = await User.countDocuments({ createdAt: { $gte: start, $lte: end } });
+      dailyUsers.push({ date: start.toISOString().slice(0, 10), count });
+    }
+
+    res.json({
+      totalUsers,
+      totalHotelBookings,
+      totalTourBookings,
+      totalVehicleBookings,
+      hotelIncome,
+      tourIncome,
+      vehicleIncome,
+      systemIncome,
+      dailyIncome,
+      dailyUsers
+    });
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to fetch admin reports', error: err.message });
+  }
+});
+
+// ADMIN: Get all hotels with owner info
+router.get('/admin/hotels', isAdmin, async (req, res) => {
+  try {
+    const AdminHotel = require('../models/AdminHotel');
+    const ServiceProvider = require('../models/ServiceProvider');
+    // Fetch all hotels from AdminHotel
+    const hotels = await AdminHotel.find().lean();
+    // Fetch all providers
+    const providers = await ServiceProvider.find().lean();
+    // Map providerId to provider
+    const providerMap = {};
+    providers.forEach(provider => {
+      providerMap[String(provider._id)] = provider;
+    });
+    // Attach provider info to each hotel (if available)
+    const hotelsWithProvider = hotels.map(hotel => {
+      const provider = providerMap[String(hotel.providerId)] || null;
+      return {
+        ...hotel,
+        owner: provider ? {
+          hotelName: provider.name,
+          email: provider.email,
+          providerType: provider.providerType,
+        } : null
+      };
+    });
+    res.json(hotelsWithProvider);
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to fetch hotels', error: err.message });
+  }
+});
+
+// ADMIN: Get all hotel owners
+router.get('/admin/hotel-owners', isAdmin, async (req, res) => {
+  try {
+    const ServiceProvider = require('../models/ServiceProvider');
+    // Only providers with providerType 'HotelProvider'
+    const owners = await ServiceProvider.find({ providerType: 'HotelProvider' })
+      .select('-password -__v')
+      .lean();
+    res.json(owners);
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to fetch hotel owners', error: err.message });
+  }
+});
+
+// ADMIN: Get hotel owner details (with hotels)
+router.get('/admin/hotel-owners/:id', isAdmin, async (req, res) => {
+  try {
+    const ServiceProvider = require('../models/ServiceProvider');
+    const AdminHotel = require('../models/AdminHotel');
+    const owner = await ServiceProvider.findById(req.params.id).select('-password -__v').lean();
+    if (!owner) return res.status(404).json({ message: 'Hotel owner not found' });
+    // Find hotels owned by this provider
+    const hotels = await AdminHotel.find({ providerId: owner._id }).select('name location');
+    res.json({ ...owner, hotels });
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to fetch hotel owner details', error: err.message });
+  }
+});
+
 // Service provider registration
 router.post('/service-provider/register', async (req, res) => {
-  const { name, email, password, providerType } = req.body;
-  if (!name || !email || !password || !providerType) {
+  const { name, email, password, providerType, phoneNumber, address } = req.body;
+
+  if (!name || !email || !password || !providerType || !phoneNumber || !address) {
     return res.status(400).json({ message: 'All fields are required' });
   }
+
   if (!['HotelProvider', 'TourGuide', 'VehicleProvider'].includes(providerType)) {
     return res.status(400).json({ message: 'Invalid provider type' });
   }
+
   try {
     const existingProvider = await ServiceProvider.findOne({ email });
     if (existingProvider) return res.status(400).json({ message: 'Email already exists' });
+
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
+
     const newProvider = new ServiceProvider({ name, email, password: hashedPassword, providerType });
     await newProvider.save();
+
+    if (providerType === 'VehicleProvider') {
+      const vehicleProvider = new VehicleProvider({
+        providerId: newProvider._id,
+        phoneNumber,
+        address,
+      });
+      await vehicleProvider.save();
+    }
+
     res.status(201).json({
       message: 'Basic details registered successfully',
       providerId: newProvider._id,
@@ -305,19 +570,36 @@ router.post('/service-provider/register', async (req, res) => {
   }
 });
 
-// Tour guide advanced registration
 router.post('/service-provider/register-advanced', async (req, res) => {
-  const { providerId, providerType, advancedDetails } = req.body;
-  if (!providerId || !providerType || !advancedDetails) {
-    return res.status(400).json({ message: 'All fields are required' });
+  const { providerId, providerType, acceptedTerms, advancedDetails } = req.body;
+
+  if (!providerId || !providerType) {
+    return res.status(400).json({ message: 'Provider ID and type are required' });
   }
+
   try {
     const provider = await ServiceProvider.findById(providerId);
     if (!provider) return res.status(404).json({ message: 'Service provider not found' });
     if (provider.providerType !== providerType) {
       return res.status(400).json({ message: 'Provider type mismatch' });
     }
+
+    // HotelProvider and VehicleProvider: Only require acceptedTerms
+    if (providerType === 'HotelProvider' || providerType === 'VehicleProvider') {
+      if (!acceptedTerms) {
+        return res.status(400).json({ message: 'You must accept the Terms and Conditions.' });
+      }
+      provider.isAdvancedRegistrationComplete = true;
+      provider.acceptedTerms = true;
+      await provider.save();
+      return res.status(200).json({ message: 'Registration complete. You may now log in.' });
+    }
+
+    // TourGuide: Still require advancedDetails
     if (providerType === 'TourGuide') {
+      if (!advancedDetails) {
+        return res.status(400).json({ message: 'All tour guide details are required' });
+      }
       const { yearsOfExperience, languages, certification, bio, location } = advancedDetails;
       if (!yearsOfExperience || !languages || !languages.length || !certification || !bio || !location) {
         return res.status(400).json({ message: 'All tour guide details are required' });
@@ -332,10 +614,71 @@ router.post('/service-provider/register-advanced', async (req, res) => {
         location,
       });
       await tourGuide.save();
-    } // Add other provider types as needed
-    provider.isAdvancedRegistrationComplete = true;
-    await provider.save();
-    res.status(201).json({ message: 'Advanced details registered successfully' });
+      provider.isAdvancedRegistrationComplete = true;
+      await provider.save();
+      return res.status(201).json({ message: 'Advanced details registered successfully' });
+    }
+
+    res.status(400).json({ message: 'Unsupported provider type' });
+  } catch (error) {
+    console.error('Advanced registration error:', error.stack);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Tour guide advanced registration
+router.post('/service-provider/register-advanced', async (req, res) => {
+  const { providerId, providerType, acceptedTerms, advancedDetails } = req.body;
+
+  if (!providerId || !providerType) {
+    return res.status(400).json({ message: 'Provider ID and type are required' });
+  }
+
+  try {
+    const provider = await ServiceProvider.findById(providerId);
+    if (!provider) return res.status(404).json({ message: 'Service provider not found' });
+    if (provider.providerType !== providerType) {
+      return res.status(400).json({ message: 'Provider type mismatch' });
+    }
+
+    // HotelProvider: Only require acceptedTerms
+    if (providerType === 'HotelProvider') {
+      if (!acceptedTerms) {
+        return res.status(400).json({ message: 'You must accept the Terms and Conditions.' });
+      }
+      provider.isAdvancedRegistrationComplete = true;
+      provider.acceptedTerms = true;
+      await provider.save();
+      return res.status(200).json({ message: 'Registration complete. You may now log in.' });
+    }
+
+    // TourGuide: Still require advancedDetails
+    if (providerType === 'TourGuide') {
+      if (!advancedDetails) {
+        return res.status(400).json({ message: 'All tour guide details are required' });
+      }
+      const { yearsOfExperience, languages, certification, bio, location } = advancedDetails;
+      if (!yearsOfExperience || !languages || !languages.length || !certification || !bio || !location) {
+        return res.status(400).json({ message: 'All tour guide details are required' });
+      }
+      const tourGuide = new TourGuide({
+        providerId,
+        name: provider.name,
+        yearsOfExperience,
+        languages,
+        certification,
+        bio,
+        location,
+      });
+      await tourGuide.save();
+      provider.isAdvancedRegistrationComplete = true;
+      await provider.save();
+      return res.status(201).json({ message: 'Advanced details registered successfully' });
+    }
+
+    // Add other provider types as needed...
+
+    res.status(400).json({ message: 'Unsupported provider type' });
   } catch (error) {
     console.error('Advanced registration error:', error.stack);
     res.status(500).json({ message: 'Server error' });
@@ -378,7 +721,7 @@ router.post('/service-provider/login', async (req, res) => {
     const token = jwt.sign(
       { id: existingProvider._id, email: existingProvider.email, providerType: existingProvider.providerType },
       JWT_SECRET,
-      { expiresIn: '1h' }
+      { expiresIn: '24h' }
     );
     const providerResponse = {
       _id: existingProvider._id,
@@ -406,6 +749,13 @@ router.get('/verify-provider-token', async (req, res) => {
     if (!provider) {
       return res.status(404).json({ message: 'Service provider not found' });
     }
+
+    // If the provider is a VehicleProvider, fetch additional details
+    let vehicleProviderDetails = null;
+    if (provider.providerType === 'VehicleProvider') {
+      vehicleProviderDetails = await VehicleProvider.findOne({ providerId: provider._id });
+    }
+
     res.status(200).json({
       message: 'Token is valid',
       provider: {
@@ -413,6 +763,8 @@ router.get('/verify-provider-token', async (req, res) => {
         name: provider.name,
         email: provider.email,
         providerType: provider.providerType,
+        phone: vehicleProviderDetails?.phoneNumber || null,
+        address: vehicleProviderDetails?.address || null,
         isAdvancedRegistrationComplete: provider.isAdvancedRegistrationComplete,
       },
     });
@@ -516,7 +868,7 @@ router.get('/tour-guide/:tourGuideId/tour-packages', async (req, res) => {
 router.get('/tour-guide/:tourGuideId/tour-guide-bookings', async (req, res) => {
   try {
     const { tourGuideId } = req.params;
-    // Use guideId field for TourBookings model
+    // Use guideId field for TourBooking model
     const tourBookings = await require('../models/TourBookings').find({ guideId: tourGuideId })
       .populate('userId', 'username')
       .populate('packageId', 'title');
@@ -534,7 +886,6 @@ router.get('/tour-guide/:tourGuideId/tour-guide-bookings', async (req, res) => {
 router.get('/tour-guide/:tourGuideId/earnings-summary', async (req, res) => {
   try {
     const { tourGuideId } = req.params;
-    // Populate packageId with title for recent transactions
     const bookings = await require('../models/TourBookings')
       .find({ guideId: tourGuideId })
       .populate('packageId', 'title');
@@ -542,45 +893,219 @@ router.get('/tour-guide/:tourGuideId/earnings-summary', async (req, res) => {
       return res.status(200).json({
         totalEarnings: 0,
         pendingEarnings: 0,
+        totalCashouts: 0,
         refunded: 0,
         recent: [],
       });
     }
     let totalEarnings = 0;
     let pendingEarnings = 0;
+    let totalCashouts = 0;
     let refunded = 0;
     bookings.forEach(b => {
-      if (b.status === 'confirmed' && !b.payoutReady) {
+      // Total Earnings: released, cashout_pending, cashout_done
+      if (["released", "cashout_pending", "cashout_done"].includes(b.paymentStatus)) {
         totalEarnings += b.totalPrice || 0;
-      } else if (b.payoutReady) {
+      }
+      // Pending Payout: released, cashout_pending
+      if (["released", "cashout_pending"].includes(b.paymentStatus)) {
         pendingEarnings += b.totalPrice || 0;
-      } else if (b.status === 'cancelled' || b.refundRequested) {
+      }
+      // Total Cashouts: cashout_done
+      if (b.paymentStatus === "cashout_done") {
+        totalCashouts += b.totalPrice || 0;
+      }
+      // Refunded/cancelled
+      if (b.paymentStatus === "refunded" || b.bookingStatus === "cancelled" || b.refundRequested) {
         refunded += b.totalPrice || 0;
       }
     });
-    // Sort by most recent
     const recent = bookings
       .sort((a, b) => b.createdAt - a.createdAt)
       .slice(0, 5)
       .map(b => ({
         _id: b._id,
-        status: b.status,
+        bookingStatus: b.bookingStatus,
+        paymentStatus: b.paymentStatus,
         totalPrice: b.totalPrice,
-        payoutReady: b.payoutReady,
-        refundRequested: b.refundRequested,
+        cashoutAmount: b.cashoutAmount,
         createdAt: b.createdAt,
         travelDate: b.travelDate,
-        packageId: b.packageId, // Now populated with { _id, title }
+        packageId: b.packageId,
         userId: b.userId,
       }));
     res.status(200).json({
       totalEarnings,
       pendingEarnings,
+      totalCashouts,
       refunded,
       recent,
     });
   } catch (error) {
     console.error('Earnings summary error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Tour guide requests cashout (manual payout request)
+router.post('/tour-guide/:tourGuideId/request-cashout', isProvider, async (req, res) => {
+  try {
+    const { tourGuideId } = req.params;
+    const { bookings } = req.body; // bookings: array of booking IDs
+    if (!Array.isArray(bookings) || bookings.length === 0) {
+      return res.status(400).json({ message: 'Select at least one trip to cash out.' });
+    }
+    const tourGuide = await TourGuide.findById(tourGuideId);
+    if (!tourGuide) {
+      return res.status(404).json({ message: 'Tour guide not found' });
+    }
+    // Prevent multiple pending requests
+    const existingRequest = await CashoutRequest.findOne({ tourGuideId, status: 'pending' });
+    if (existingRequest) {
+      return res.status(400).json({ message: 'You already have a pending cashout request.' });
+    }
+    // Fetch and validate selected bookings
+    const TourBooking = require('../models/TourBookings');
+    const selectedBookings = await TourBooking.find({
+      _id: { $in: bookings },
+      guideId: tourGuideId,
+      paymentStatus: 'released',
+      refundRequested: false,
+      bookingStatus: { $in: ['approved', 'completed'] },
+    });
+    if (selectedBookings.length !== bookings.length) {
+      return res.status(400).json({ message: 'One or more selected trips are not eligible for cashout.' });
+    }
+    // Mark selected bookings as cashout_pending
+    let sum = 0;
+    for (const booking of selectedBookings) {
+      booking.paymentStatus = 'cashout_pending';
+      booking.cashoutAmount = booking.totalPrice || 0;
+      sum += booking.totalPrice || 0;
+      await booking.save();
+    }
+    // Create a cashout request entry
+    const cashoutRequest = new CashoutRequest({
+      tourGuideId,
+      amount: sum,
+      bookings: selectedBookings.map(b => b._id),
+      status: 'pending',
+      requestedAt: new Date(),
+    });
+    await cashoutRequest.save();
+    res.status(200).json({ message: 'Cashout request submitted', payoutAmount: sum, requestId: cashoutRequest._id });
+  } catch (error) {
+    console.error('Cashout request error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// ADMIN: List all pending cashout requests
+router.get('/admin/cashout-requests', isAdmin, async (req, res) => {
+  try {
+    const requests = await require('../models/CashoutRequest')
+      .find({ status: 'pending' })
+      .populate('tourGuideId', 'name email location')
+      .populate('bookings');
+    res.status(200).json(requests);
+  } catch (error) {
+    console.error('Error fetching cashout requests:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// ADMIN: Approve a cashout request
+router.post('/admin/cashout-requests/:id/approve', isAdmin, async (req, res) => {
+  try {
+    const CashoutRequest = require('../models/CashoutRequest');
+    const TourBooking = require('../models/TourBookings');
+    const request = await CashoutRequest.findById(req.params.id);
+    if (!request || request.status !== 'pending') {
+      return res.status(404).json({ message: 'Pending cashout request not found' });
+    }
+    // Mark all included bookings as cashout_done
+    await TourBooking.updateMany(
+      { _id: { $in: request.bookings } },
+      { $set: { paymentStatus: 'cashout_done', cashoutAmount: 0 } }
+    );
+    request.status = 'approved';
+    request.processedAt = new Date();
+    await request.save();
+    res.status(200).json({ message: 'Cashout request approved' });
+  } catch (error) {
+    console.error('Error approving cashout request:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// ADMIN: Reject a cashout request
+router.post('/admin/cashout-requests/:id/reject', isAdmin, async (req, res) => {
+  try {
+    const CashoutRequest = require('../models/CashoutRequest');
+    const TourBooking = require('../models/TourBookings');
+    const request = await CashoutRequest.findById(req.params.id);
+    if (!request || request.status !== 'pending') {
+      return res.status(404).json({ message: 'Pending cashout request not found' });
+    }
+    // Revert all included bookings to released
+    await TourBooking.updateMany(
+      { _id: { $in: request.bookings } },
+      { $set: { paymentStatus: 'released', cashoutAmount: 0 } }
+    );
+    request.status = 'rejected';
+    request.processedAt = new Date();
+    await request.save();
+    res.status(200).json({ message: 'Cashout request rejected' });
+  } catch (error) {
+    console.error('Error rejecting cashout request:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Update booking status (tour progress only)
+router.put('/tour-bookings/:id/booking-status', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { bookingStatus } = req.body;
+    const allowedStatuses = ['pending', 'approved', 'rejected', 'cancelled', 'completed'];
+    if (!allowedStatuses.includes(bookingStatus)) {
+      return res.status(400).json({ message: 'Invalid booking status value' });
+    }
+    const booking = await require('../models/TourBookings').findById(id);
+    if (!booking) {
+      return res.status(404).json({ message: 'Booking not found' });
+    }
+    booking.bookingStatus = bookingStatus;
+    await booking.save();
+    res.status(200).json({ message: 'Booking status updated successfully', booking });
+  } catch (error) {
+    console.error('Update booking status error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Update payment status (admin payout/cashout flow)
+router.put('/tour-bookings/:id/payment-status', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { paymentStatus } = req.body;
+    const allowedStatuses = ['holding', 'released', 'refunded', 'cashout_pending', 'cashout_done'];
+    if (!allowedStatuses.includes(paymentStatus)) {
+      return res.status(400).json({ message: 'Invalid payment status value' });
+    }
+    const booking = await require('../models/TourBookings').findById(id);
+    if (!booking) {
+      return res.status(404).json({ message: 'Booking not found' });
+    }
+    booking.paymentStatus = paymentStatus;
+    // Reset cashoutAmount if cashout is done
+    if (paymentStatus === 'cashout_done') {
+      booking.cashoutAmount = 0;
+    }
+    await booking.save();
+    res.status(200).json({ message: 'Payment status updated successfully', booking });
+  } catch (error) {
+    console.error('Update payment status error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });
@@ -608,7 +1133,7 @@ router.get('/user/tour-guide-bookings', async (req, res) => {
     console.error('Error fetching user tour guide bookings:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
-});
+}); 
 
 // Get all tour bookings for the logged-in user (tourist)
 router.get('/user/tour-bookings', async (req, res) => {
@@ -635,6 +1160,48 @@ router.get('/user/tour-bookings', async (req, res) => {
   }
 });
 
+// USER: Monthly booking statistics (hotel, tour, vehicle) for dashboard
+router.get('/user/booking-stats/monthly', async (req, res) => {
+  const token = req.headers['authorization']?.split(' ')[1];
+  if (!token) {
+    return res.status(401).json({ message: 'No token provided' });
+  }
+  let userId;
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    userId = decoded.id;
+  } catch (error) {
+    return res.status(401).json({ message: 'Invalid token' });
+  }
+  try {
+    const Booking = require('../models/Booking');
+    const TourBooking = require('../models/TourBookings');
+    const Order = require('../models/Order');
+    // Get all bookings for this user
+    const hotelBookings = await Booking.find({ userId });
+    const tourBookings = await TourBooking.find({ userId });
+    const vehicleOrders = await Order.find({ userId });
+    // Prepare months
+    const months = Array.from({ length: 12 }, (_, i) => {
+      const year = new Date().getFullYear();
+      const start = new Date(year, i, 1);
+      const end = new Date(year, i + 1, 0, 23, 59, 59, 999);
+      return { label: start.toLocaleString('default', { month: 'short' }), start, end };
+    });
+    // Aggregate counts per month
+    const stats = months.map(({ label, start, end }) => {
+      const hotel = hotelBookings.filter(b => b.createdAt >= start && b.createdAt <= end).length;
+      const tour = tourBookings.filter(b => b.createdAt >= start && b.createdAt <= end).length;
+      const vehicle = vehicleOrders.filter(b => b.createdAt >= start && b.createdAt <= end).length;
+      return { month: label, hotel, tour, vehicle };
+    });
+    res.status(200).json({ stats });
+  } catch (error) {
+    console.error('User monthly booking stats error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
 // Get user by ID
 router.get('/user/:id', async (req, res) => {
   try {
@@ -650,11 +1217,24 @@ router.get('/user/:id', async (req, res) => {
       country: user.country,
       createdAt: user.createdAt,
       profilePicture: user.profilePicture || 'https://via.placeholder.com/150',
+      bankDetails: user.bankDetails || null, // Add bankDetails to response
     };
     res.status(200).json(userResponse);
   } catch (error) {
     console.error('Fetch user error:', error.stack);
     res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Get all reviews received by a user (tourist)
+router.get('/user/:userId/reviews', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const reviews = await Review.find({ touristId: userId }).populate('tourGuideId', 'name');
+    res.status(200).json({ reviews });
+  } catch (error) {
+    console.error('Fetch user reviews error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
 
@@ -691,6 +1271,139 @@ router.put('/tour-bookings/:id/status', async (req, res) => {
     res.status(200).json({ message: 'Booking status updated successfully', booking });
   } catch (error) {
     console.error('Update booking status error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Get a single tour booking by ID (with user, guide, and package details)
+router.get('/tour-bookings/:id', async (req, res) => {
+  try {
+    const booking = await require('../models/TourBookings').findById(req.params.id)
+      .populate('userId', 'username email phoneNumber country')
+      .populate('guideId', 'name email phoneNumber')
+      .populate('packageId', 'title');
+    if (!booking) return res.status(404).json({ message: 'Booking not found' });
+    res.status(200).json(booking);
+  } catch (error) {
+    console.error('Fetch single booking error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Mark a tour booking as completed
+router.put('/tour-bookings/:id/complete', async (req, res) => {
+  try {
+    const booking = await require('../models/TourBookings').findById(req.params.id);
+    if (!booking) return res.status(404).json({ message: 'Booking not found' });
+    booking.status = 'completed';
+    await booking.save();
+    res.status(200).json({ message: 'Booking marked as completed', booking });
+  } catch (error) {
+    console.error('Complete booking error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Submit a review after booking is completed (tourist or guide)
+router.post('/tour-bookings/:id/review', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { reviewerType, rating, comment } = req.body;
+    if (!['tourist', 'guide'].includes(reviewerType)) {
+      return res.status(400).json({ message: 'Invalid reviewer type' });
+    }
+    if (!rating || !comment) {
+      return res.status(400).json({ message: 'Rating and comment are required' });
+    }
+    const booking = await require('../models/TourBookings').findById(id);
+    if (!booking || booking.status !== 'completed') {
+      return res.status(400).json({ message: 'Booking not found or not completed' });
+    }
+    const Review = require('../models/Review');
+    let reviewData = { rating, comment, reviewerType };
+    if (reviewerType === 'tourist') {
+      // Only the user who made the booking can review the guide
+      if (!req.headers.authorization) return res.status(401).json({ message: 'No token provided' });
+      const token = req.headers.authorization.split(' ')[1];
+      const jwt = require('jsonwebtoken');
+      const JWT_SECRET = process.env.JWT_SECRET;
+      let userId;
+      try {
+        userId = jwt.verify(token, JWT_SECRET).id;
+      } catch {
+        return res.status(401).json({ message: 'Invalid token' });
+      }
+      if (String(booking.userId) !== String(userId)) {
+        return res.status(403).json({ message: 'You can only review bookings you made.' });
+      }
+      reviewData.tourGuideId = booking.guideId;
+      reviewData.touristId = booking.userId;
+    } else if (reviewerType === 'guide') {
+      // Only the guide assigned to the booking can review the tourist
+      if (!req.headers.authorization) return res.status(401).json({ message: 'No token provided' });
+      const token = req.headers.authorization.split(' ')[1];
+      const jwt = require('jsonwebtoken');
+      const JWT_SECRET = process.env.JWT_SECRET;
+      let providerId;
+      try {
+        providerId = jwt.verify(token, JWT_SECRET).id;
+      } catch {
+        return res.status(401).json({ message: 'Invalid token' });
+      }
+      // Find the guide's providerId
+      const TourGuide = require('../models/TourGuide');
+      const guide = await TourGuide.findById(booking.guideId);
+      if (!guide || String(guide.providerId) !== String(providerId)) {
+        return res.status(403).json({ message: 'You can only review tourists from your own bookings.' });
+      }
+      reviewData.tourGuideId = booking.guideId;
+      reviewData.touristId = booking.userId;
+    }
+    // Add bookingId to reviewData to satisfy Review model
+    reviewData.bookingId = id;
+    // Prevent duplicate review by same party for this booking
+    const existing = await Review.findOne({
+      tourGuideId: booking.guideId,
+      touristId: booking.userId,
+      reviewerType,
+      bookingId: id // Ensure only one review per booking per user
+    });
+    if (existing) {
+      return res.status(400).json({ message: 'You have already reviewed this booking.' });
+    }
+    const review = new Review(reviewData);
+    await review.save();
+    res.status(201).json({ message: 'Review submitted successfully', review });
+  } catch (error) {
+    console.error('Submit review error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Get review for a specific booking (tourist or guide)
+router.get('/reviews/booking/:bookingId', async (req, res) => {
+  try {
+    const { bookingId } = req.params;
+    const review = await require('../models/Review').findOne({ bookingId });
+    res.status(200).json({ review: review || null });
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to fetch review', error: err.message });
+  }
+});
+
+// Admin: Submit a complaint about a review
+router.post('/reviews/:id/complaint', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { complaint } = req.body;
+    const Review = require('../models/Review');
+    const review = await Review.findById(id);
+    if (!review) return res.status(404).json({ message: 'Review not found' });
+    review.complaint = complaint;
+    await review.save();
+    res.status(200).json({ message: 'Complaint submitted for review', review });
+  } catch (error) {
+    console.error('Review complaint error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });
@@ -737,6 +1450,7 @@ router.post('/admin/tour-guide-bookings/:id/payout', isAdmin, async (req, res) =
     if (!booking.payoutReady) return res.status(400).json({ message: 'Payout not ready for this booking' });
     // Here, trigger actual payout logic if needed
     booking.payoutReady = false;
+    booking.cashoutAmount = 0; // Reset cashoutAmount after payout
     booking.status = 'confirmed'; // Mark as paid out
     await booking.save();
     res.status(200).json({ message: 'Payout approved and booking marked as confirmed', booking });
@@ -746,7 +1460,7 @@ router.post('/admin/tour-guide-bookings/:id/payout', isAdmin, async (req, res) =
   }
 });
 
-// Tour guide reviews
+// Tour guide reviews (only reviews from tourists to guide)
 router.get('/tour-guide/:tourGuideId/reviews', async (req, res) => {
   try {
     const { tourGuideId } = req.params;
@@ -757,7 +1471,8 @@ router.get('/tour-guide/:tourGuideId/reviews', async (req, res) => {
     if (!tourGuide) {
       return res.status(404).json({ message: 'Tour guide not found' });
     }
-    const reviews = await Review.find({ tourGuideId }).populate('touristId', 'username');
+    // Only fetch reviews written by tourists about this guide
+    const reviews = await Review.find({ tourGuideId, reviewerType: 'tourist' }).populate('touristId', 'username');
     const averageRating = reviews.length
       ? reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length
       : 0;
@@ -827,6 +1542,21 @@ router.post(
     }
   }
 );
+
+// Update tour package
+router.put('/tour-guide/tour-package/:id', isProvider, async (req, res) => {
+  try {
+    const updated = await TourPackage.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { new: true }
+    );
+    if (!updated) return res.status(404).json({ message: 'Package not found' });
+    res.json(updated);
+  } catch (error) {
+    res.status(500).json({ message: 'Error updating package', error: error.message });
+  }
+});
 
 // Publish tour package
 router.put('/tour-guide/tour-package/:id/publish', isProvider, async (req, res) => {
@@ -900,6 +1630,30 @@ router.get('/tour-guides', async (req, res) => {
   }
 });
 
+// Get average ratings for all tour guides
+router.get('/tour-guides/ratings', async (req, res) => {
+  try {
+    const ratings = await Review.aggregate([
+      { $group: {
+        _id: "$tourGuideId",
+        avgRating: { $avg: "$rating" },
+        reviewCount: { $sum: 1 }
+      }}
+    ]);
+    // Convert to map for easier frontend use
+    const result = {};
+    ratings.forEach(r => {
+      result[r._id] = {
+        avgRating: r.avgRating,
+        reviewCount: r.reviewCount
+      };
+    });
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to fetch ratings', error: error.message });
+  }
+});
+
 // Admin Registration Route
 router.post('/admin/register', isAdmin, async (req, res) => {
   const { username, email, password } = req.body;
@@ -940,7 +1694,7 @@ router.post('/admin/login', async (req, res) => {
     const token = jwt.sign(
       { id: admin._id, email: admin.email, role: 'admin' },
       JWT_SECRET,
-      { expiresIn: '1h' }
+      { expiresIn: '24h' }
     );
     const adminResponse = {
       _id: admin._id,
@@ -1070,7 +1824,7 @@ router.post('/api/admin/generate-registration-token', isAdmin, async (req, res) 
     const registrationToken = jwt.sign(
       { issuer: req.adminId, purpose: 'admin-registration' },
       JWT_SECRET,
-      { expiresIn: '1h' }
+      { expiresIn: '24h' }
     );
     res.status(200).json({ token: registrationToken });
   } catch (error) {
@@ -1217,5 +1971,132 @@ router.get('/tour-packages/:packageId', async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 });
+
+// Admin: Get all reviews and stats
+router.get('/admin/reviews', isAdmin, async (req, res) => {
+  try {
+    // Get all reviews, populate tour guide and tourist info
+    const reviews = await Review.find()
+      .populate('tourGuideId', 'name email')
+      .populate('touristId', 'username email');
+
+    // Calculate stats
+    const stats = {
+      total: reviews.length,
+      ratings: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
+      good: 0, // 4 or 5 stars
+      bad: 0,  // 1 or 2 stars
+      neutral: 0 // 3 stars
+    };
+    reviews.forEach(r => {
+      const rating = r.rating;
+      if (stats.ratings[rating] !== undefined) stats.ratings[rating]++;
+      if (rating >= 4) stats.good++;
+      else if (rating <= 2) stats.bad++;
+      else stats.neutral++;
+    });
+
+    res.status(200).json({ reviews, stats });
+  } catch (error) {
+    console.error('Admin fetch all reviews error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Update provider profile
+router.put('/provider/update-profile', upload.single('profilePic'), async (req, res) => {
+  const { name, email, phone, address } = req.body;
+  const providerId = req.providerId;
+
+  try {
+    const provider = await ServiceProvider.findById(providerId);
+    if (!provider) {
+      return res.status(404).json({ message: 'Provider not found' });
+    }
+
+    provider.name = name || provider.name;
+    provider.email = email || provider.email;
+
+    const vehicleProvider = await VehicleProvider.findOne({ providerId });
+    if (vehicleProvider) {
+      vehicleProvider.phoneNumber = phone || vehicleProvider.phoneNumber;
+      vehicleProvider.address = address || vehicleProvider.address;
+      await vehicleProvider.save();
+    }
+
+    if (req.file) {
+      provider.profilePic = `/uploads/${req.file.filename}`;
+    }
+
+    await provider.save();
+
+    res.status(200).json({ message: 'Profile updated successfully', provider });
+  } catch (error) {
+    console.error('Error updating profile:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Get service provider by ID
+router.get('/service-providers/:id', async (req, res) => {
+  try {
+    const provider = await ServiceProvider.findById(req.params.id);
+    if (!provider) {
+      return res.status(404).json({ message: 'Service provider not found' });
+    }
+
+    // If the provider is a VehicleProvider, fetch additional details
+    const vehicleProvider = await VehicleProvider.findOne({ providerId: provider._id });
+
+    res.status(200).json({
+      provider: {
+        _id: provider._id,
+        name: provider.name,
+        email: provider.email,
+        phoneNumber: vehicleProvider?.phoneNumber || null,
+        address: vehicleProvider?.address || null,
+      },
+    });
+  } catch (error) {
+    console.error('Error fetching service provider:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Update vehicle provider profile (for vehicle providers only)
+const auth = require('../Middleware/auth');
+router.put('/vehicle-provider/update-profile', auth, upload.single('profilePic'), async (req, res) => {
+  const { name, email, phone, address } = req.body;
+  const providerId = req.user._id;
+
+  try {
+    // Update ServiceProvider
+    const provider = await ServiceProvider.findById(providerId);
+    if (!provider || provider.providerType !== 'VehicleProvider') {
+      return res.status(404).json({ message: 'Vehicle provider not found' });
+    }
+    provider.name = name || provider.name;
+    provider.email = email || provider.email;
+    if (req.file) {
+      provider.profilePic = `/uploads/${req.file.filename}`;
+    }
+    await provider.save();
+
+    // Update VehicleProvider
+    let vehicleProvider = await VehicleProvider.findOne({ providerId });
+    if (vehicleProvider) {
+      vehicleProvider.phoneNumber = phone || vehicleProvider.phoneNumber;
+      vehicleProvider.address = address || vehicleProvider.address;
+      await vehicleProvider.save();
+    }
+
+    res.status(200).json({ message: 'Profile updated successfully', provider });
+  } catch (error) {
+    console.error('Error updating vehicle provider profile:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+router.use('/vehicle-order-reviews', vehicleOrderReviewRoutes);
 
 module.exports = router;

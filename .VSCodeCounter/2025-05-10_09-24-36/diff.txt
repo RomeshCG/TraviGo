@@ -1,0 +1,160 @@
+Date : 2025-05-10 09:24:36
+Directory : d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo
+Total : 106 files,  10618 codes, 240 comments, 597 blanks, all 11455 lines
+
+Languages
++----------------+------------+------------+------------+------------+------------+
+| language       | files      | code       | comment    | blank      | total      |
++----------------+------------+------------+------------+------------+------------+
+| JavaScript JSX |         72 |      6,792 |        141 |        487 |      7,420 |
+| JSON           |          7 |      2,215 |          0 |          1 |      2,216 |
+| JavaScript     |         25 |      1,708 |         99 |        122 |      1,929 |
+| CSS            |          2 |        -97 |          0 |        -13 |       -110 |
++----------------+------------+------------+------------+------------+------------+
+
+Directories
++--------------------------------------------------------------------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| path                                                                                                                                             | files      | code       | comment    | blank      | total      |
++--------------------------------------------------------------------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| .                                                                                                                                                |        106 |     10,618 |        240 |        597 |     11,455 |
+| . (Files)                                                                                                                                        |          1 |          6 |          0 |          1 |          7 |
+| admin                                                                                                                                            |         17 |      2,961 |         20 |         78 |      3,059 |
+| admin (Files)                                                                                                                                    |          3 |      1,709 |          0 |          0 |      1,709 |
+| admin\src                                                                                                                                        |         14 |      1,252 |         20 |         78 |      1,350 |
+| admin\src (Files)                                                                                                                                |          4 |        -89 |          2 |        -12 |        -99 |
+| admin\src\context                                                                                                                                |          1 |         26 |          0 |          6 |         32 |
+| admin\src\pages                                                                                                                                  |          9 |      1,315 |         18 |         84 |      1,417 |
+| backend                                                                                                                                          |         26 |      1,984 |         99 |        122 |      2,205 |
+| backend (Files)                                                                                                                                  |          3 |        294 |          1 |          1 |        296 |
+| backend\Middleware                                                                                                                               |          1 |         30 |          0 |          6 |         36 |
+| backend\config                                                                                                                                   |          2 |         25 |          0 |          4 |         29 |
+| backend\controllers                                                                                                                              |          1 |         37 |          0 |          6 |         43 |
+| backend\models                                                                                                                                   |          9 |        198 |          3 |         13 |        214 |
+| backend\routes                                                                                                                                   |         10 |      1,400 |         95 |         92 |      1,587 |
+| frontend                                                                                                                                         |         62 |      5,667 |        121 |        396 |      6,184 |
+| frontend (Files)                                                                                                                                 |          2 |        224 |          0 |          0 |        224 |
+| frontend\src                                                                                                                                     |         60 |      5,443 |        121 |        396 |      5,960 |
+| frontend\src (Files)                                                                                                                             |          1 |        237 |          1 |          6 |        244 |
+| frontend\src\components                                                                                                                          |         14 |        269 |          9 |         22 |        300 |
+| frontend\src\pages                                                                                                                               |         45 |      4,937 |        111 |        368 |      5,416 |
+| frontend\src\pages (Files)                                                                                                                       |         16 |      2,270 |         49 |        178 |      2,497 |
+| frontend\src\pages\Admin                                                                                                                         |          6 |        887 |         29 |         65 |        981 |
+| frontend\src\pages\hotel                                                                                                                         |         10 |      1,437 |         20 |        100 |      1,557 |
+| frontend\src\pages\hotel (Files)                                                                                                                 |          9 |      1,411 |         20 |         94 |      1,525 |
+| frontend\src\pages\hotel\context                                                                                                                 |          1 |         26 |          0 |          6 |         32 |
+| frontend\src\pages\tourguide                                                                                                                     |         11 |         55 |          3 |         17 |         75 |
+| frontend\src\pages\user                                                                                                                          |          2 |        288 |         10 |          8 |        306 |
++--------------------------------------------------------------------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+
+Files
++--------------------------------------------------------------------------------------------------------------------------------------------------+----------------+------------+------------+------------+------------+
+| filename                                                                                                                                         | language       | code       | comment    | blank      | total      |
++--------------------------------------------------------------------------------------------------------------------------------------------------+----------------+------------+------------+------------+------------+
+| d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\admin\package-lock.json                                       | JSON           |      1,702 |          0 |          0 |      1,702 |
+| d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\admin\package.json                                            | JSON           |          6 |          0 |          0 |          6 |
+| d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\admin\src\App.css                                             | CSS            |        -37 |          0 |         -5 |        -42 |
+| d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\admin\src\App.jsx                                             | JavaScript JSX |          2 |          1 |          2 |          5 |
+| d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\admin\src\context\AuthContext.jsx                             | JavaScript JSX |         26 |          0 |          6 |         32 |
+| d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\admin\src\index.css                                           | CSS            |        -60 |          0 |         -8 |        -68 |
+| d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\admin\src\main.jsx                                            | JavaScript JSX |          6 |          1 |         -1 |          6 |
+| d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\admin\src\pages\AddHotel.jsx                                  | JavaScript JSX |        292 |          0 |         17 |        309 |
+| d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\admin\src\pages\Dashboard.jsx                                 | JavaScript JSX |         91 |          0 |          5 |         96 |
+| d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\admin\src\pages\Home.jsx                                      | JavaScript JSX |        129 |          8 |         13 |        150 |
+| d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\admin\src\pages\HotelDetails.jsx                              | JavaScript JSX |        361 |          3 |         16 |        380 |
+| d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\admin\src\pages\IncomingBookings.jsx                          | JavaScript JSX |        127 |          2 |          8 |        137 |
+| d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\admin\src\pages\Login.jsx                                     | JavaScript JSX |         55 |          0 |          7 |         62 |
+| d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\admin\src\pages\PreviousBookings.jsx                          | JavaScript JSX |         62 |          1 |          5 |         68 |
+| d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\admin\src\pages\Reports.jsx                                   | JavaScript JSX |        134 |          4 |         11 |        149 |
+| d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\admin\src\pages\Sidebar.jsx                                   | JavaScript JSX |         64 |          0 |          2 |         66 |
+| d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\admin\vite.config.js                                          | JavaScript     |          1 |          0 |          0 |          1 |
+| d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\backend\Middleware\verifyToken.js                             | JavaScript     |         30 |          0 |          6 |         36 |
+| d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\backend\config\cloudinary.js                                  | JavaScript     |          9 |          0 |          2 |         11 |
+| d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\backend\config\mongodb.js                                     | JavaScript     |         16 |          0 |          2 |         18 |
+| d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\backend\controllers\bookingController.js                      | JavaScript     |         37 |          0 |          6 |         43 |
+| d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\backend\models\AdminHotel.js                                  | JavaScript     |         26 |          0 |          2 |         28 |
+| d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\backend\models\Booking.js                                     | JavaScript     |         19 |          0 |          2 |         21 |
+| d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\backend\models\CashoutRequest.js                              | JavaScript     |         10 |          0 |          2 |         12 |
+| d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\backend\models\Hotel.js                                       | JavaScript     |         25 |          0 |          2 |         27 |
+| d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\backend\models\RentalRequest.js                               | JavaScript     |         54 |          0 |          2 |         56 |
+| d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\backend\models\Review.js                                      | JavaScript     |          6 |          2 |          0 |          8 |
+| d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\backend\models\TourBookings.js                                | JavaScript     |         42 |          0 |          0 |         42 |
+| d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\backend\models\Vehicle.js                                     | JavaScript     |         15 |          0 |          2 |         17 |
+| d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\backend\models\user.js                                        | JavaScript     |          1 |          1 |          1 |          3 |
+| d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\backend\package-lock.json                                     | JSON           |        271 |          0 |          0 |        271 |
+| d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\backend\package.json                                          | JSON           |          6 |          0 |          0 |          6 |
+| d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\backend\routes\api.js                                         | JavaScript     |        649 |         59 |         -7 |        701 |
+| d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\backend\routes\bookingRoutes.js                               | JavaScript     |        147 |          9 |         16 |        172 |
+| d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\backend\routes\emailRoutes.js                                 | JavaScript     |         58 |          4 |         13 |         75 |
+| d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\backend\routes\hotelRoutes.js                                 | JavaScript     |        139 |          6 |         22 |        167 |
+| d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\backend\routes\payment.js                                     | JavaScript     |         27 |          0 |          6 |         33 |
+| d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\backend\routes\paymentRoutes.js                               | JavaScript     |         78 |          6 |         11 |         95 |
+| d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\backend\routes\rental.js                                      | JavaScript     |         20 |          0 |          3 |         23 |
+| d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\backend\routes\rentalRoutes.js                                | JavaScript     |         79 |          4 |          6 |         89 |
+| d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\backend\routes\tourGuideBookingRoutes.js                      | JavaScript     |         16 |          1 |          3 |         20 |
+| d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\backend\routes\vehicleRoutes.js                               | JavaScript     |        187 |          6 |         19 |        212 |
+| d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\backend\server.js                                             | JavaScript     |         17 |          1 |          1 |         19 |
+| d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\package-lock.json                                    | JSON           |        217 |          0 |          0 |        217 |
+| d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\package.json                                         | JSON           |          7 |          0 |          0 |          7 |
+| d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\App.jsx                                          | JavaScript JSX |        237 |          1 |          6 |        244 |
+| d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\components\ConfirmationModal.jsx                 | JavaScript JSX |         49 |          0 |          3 |         52 |
+| d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\components\Header.jsx                            | JavaScript JSX |         51 |          1 |          0 |         52 |
+| d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\components\HotelItem.jsx                         | JavaScript JSX |         42 |          3 |          4 |         49 |
+| d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\components\MessageBox.jsx                        | JavaScript JSX |         19 |          0 |          2 |         21 |
+| d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\components\MessageModal.jsx                      | JavaScript JSX |         22 |          0 |          2 |         24 |
+| d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\components\Navbar.jsx                            | JavaScript JSX |         66 |          4 |          5 |         75 |
+| d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\components\SearchBar.jsx                         | JavaScript JSX |         18 |          0 |          2 |         20 |
+| d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\components\SidebarAdmin.jsx                      | JavaScript JSX |         67 |          1 |          0 |         68 |
+| d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\components\SidebarTourGuide.jsx                  | JavaScript JSX |       -218 |         -3 |         -8 |       -229 |
+| d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\components\SidebarUser.jsx                       | JavaScript JSX |         20 |          2 |          0 |         22 |
+| d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\components\SimpleHeader.jsx                      | JavaScript JSX |         52 |          1 |          1 |         54 |
+| d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\components\TourGuideHeader.jsx                   | JavaScript JSX |         35 |          0 |          5 |         40 |
+| d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\components\UserTopBar.jsx                        | JavaScript JSX |         23 |          0 |          3 |         26 |
+| d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\components\VehicleCard.jsx                       | JavaScript JSX |         23 |          0 |          3 |         26 |
+| d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\AboutUs.jsx                                | JavaScript JSX |         29 |          2 |          3 |         34 |
+| d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\Admin\AdminContactInquiries.jsx            | JavaScript JSX |         59 |          0 |          6 |         65 |
+| d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\Admin\ContactInquiries.jsx                 | JavaScript JSX |         88 |          0 |          6 |         94 |
+| d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\Admin\ReviewManagement.jsx                 | JavaScript JSX |        318 |          7 |         28 |        353 |
+| d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\Admin\TourGuidePayments.jsx                | JavaScript JSX |        320 |         16 |         19 |        355 |
+| d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\Admin\TourGuideReports.jsx                 | JavaScript JSX |         19 |          0 |          3 |         22 |
+| d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\Admin\Users.jsx                            | JavaScript JSX |         83 |          6 |          3 |         92 |
+| d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\BookingPage.jsx                            | JavaScript JSX |        371 |          2 |         23 |        396 |
+| d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\Home.jsx                                   | JavaScript JSX |         44 |         -8 |          4 |         40 |
+| d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\HotelCollection.jsx                        | JavaScript JSX |         65 |          0 |          6 |         71 |
+| d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\HotelDetails.jsx                           | JavaScript JSX |        148 |          6 |         12 |        166 |
+| d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\HotelListingsService.jsx                   | JavaScript JSX |        103 |          6 |          6 |        115 |
+| d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\PaymentPage.jsx                            | JavaScript JSX |        333 |          6 |         23 |        362 |
+| d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\ServiceProviderLogin.jsx                   | JavaScript JSX |          1 |         -1 |          0 |          0 |
+| d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\TourGuidePaymentPage.jsx                   | JavaScript JSX |        192 |          0 |         23 |        215 |
+| d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\TourGuideProfile.jsx                       | JavaScript JSX |        155 |         10 |         13 |        178 |
+| d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\TourGuides.jsx                             | JavaScript JSX |         46 |          2 |          4 |         52 |
+| d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\TourGuidesService.jsx                      | JavaScript JSX |        106 |          6 |          6 |        118 |
+| d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\VehicleDetailPage.jsx                      | JavaScript JSX |        224 |          9 |         15 |        248 |
+| d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\VehicleListingsService.jsx                 | JavaScript JSX |        103 |          6 |          6 |        115 |
+| d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\VehicleRentPage.jsx                        | JavaScript JSX |        293 |          0 |         28 |        321 |
+| d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\VehiclesPage.jsx                           | JavaScript JSX |         57 |          3 |          6 |         66 |
+| d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\hotel\AddHotel.jsx                         | JavaScript JSX |        325 |          0 |         18 |        343 |
+| d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\hotel\Dashboard.jsx                        | JavaScript JSX |        154 |          2 |         14 |        170 |
+| d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\hotel\Home.jsx                             | JavaScript JSX |        129 |          8 |         13 |        150 |
+| d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\hotel\HotelDetails.jsx                     | JavaScript JSX |        361 |          3 |         16 |        380 |
+| d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\hotel\IncomingBookings.jsx                 | JavaScript JSX |        127 |          2 |          8 |        137 |
+| d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\hotel\Login.jsx                            | JavaScript JSX |         55 |          0 |          7 |         62 |
+| d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\hotel\PreviousBookings.jsx                 | JavaScript JSX |         62 |          1 |          5 |         68 |
+| d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\hotel\Reports.jsx                          | JavaScript JSX |        134 |          4 |         11 |        149 |
+| d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\hotel\Sidebar.jsx                          | JavaScript JSX |         64 |          0 |          2 |         66 |
+| d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\hotel\context\AuthContext.jsx              | JavaScript JSX |         26 |          0 |          6 |         32 |
+| d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\tourguide\TourGuideBookingConfirmation.jsx | JavaScript JSX |         15 |          0 |          2 |         17 |
+| d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\tourguide\TourGuideBookingForm.jsx         | JavaScript JSX |        141 |          0 |          9 |        150 |
+| d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\tourguide\TourGuideBookings.jsx            | JavaScript JSX |        -99 |          0 |         -5 |       -104 |
+| d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\tourguide\TourGuideChat.jsx                | JavaScript JSX |       -111 |          0 |         -6 |       -117 |
+| d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\tourguide\TourGuideCreatePackage.jsx       | JavaScript JSX |         63 |         -1 |          5 |         67 |
+| d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\tourguide\TourGuideDashboard.jsx           | JavaScript JSX |        501 |          4 |         22 |        527 |
+| d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\tourguide\TourGuideEarnings.jsx            | JavaScript JSX |        -86 |          0 |         -5 |        -91 |
+| d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\tourguide\TourGuideEditPackages.jsx        | JavaScript JSX |       -112 |          0 |         -7 |       -119 |
+| d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\tourguide\TourGuideEditProfile.jsx         | JavaScript JSX |       -231 |          0 |         -8 |       -239 |
+| d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\tourguide\TourGuidePaymentPage.jsx         | JavaScript JSX |         97 |          0 |         17 |        114 |
+| d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\tourguide\TourGuideReviews.jsx             | JavaScript JSX |       -123 |          0 |         -7 |       -130 |
+| d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\user\TourGuideBookings.jsx                 | JavaScript JSX |        224 |          6 |          6 |        236 |
+| d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\frontend\src\pages\user\UserDashboard.jsx                     | JavaScript JSX |         64 |          4 |          2 |         70 |
+| d:\Romesh\Educational\SLIIT PC\2nd Year\2nd Sem\IT Project\Project\TraviGo\TraviGo\package-lock.json                                             | JSON           |          6 |          0 |          1 |          7 |
+| Total                                                                                                                                            |                |     10,618 |        240 |        597 |     11,455 |
++--------------------------------------------------------------------------------------------------------------------------------------------------+----------------+------------+------------+------------+------------+
