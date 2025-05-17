@@ -25,7 +25,7 @@ Built with the **MERN Stack (MongoDB, Express.js, React.js, Node.js)**, TraviGo 
 - Track earnings and request payouts
 - View booking details and contact tourists
 
-### 🏨 Hotel & 🚗 Vehicle Providers *(in progress or extendable)*
+### 🏨 Hotel & 🚗 Vehicle Providers 
 - Add and manage listings
 - Accept tourist bookings
 - View booking calendar (optional enhancement)
@@ -37,19 +37,6 @@ Built with the **MERN Stack (MongoDB, Express.js, React.js, Node.js)**, TraviGo 
 - View guide bank details for payouts
 - Manage user reports and feedback
 
----
-
-## 📸 Screenshots
-
-> _Coming soon..._  
-> Add screenshots for:
-> - Home Page
-> - Booking Interface
-> - Admin Dashboard
-> - Tour Guide Dashboard
-> - Contact Forms
-
----
 
 ## 💻 Tech Stack
 
